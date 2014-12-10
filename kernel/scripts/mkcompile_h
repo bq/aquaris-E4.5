@@ -57,7 +57,7 @@ UTS_VERSION="#$VERSION"
 CONFIG_FLAGS=""
 if [ -n "$SMP" ] ; then CONFIG_FLAGS="SMP"; fi
 if [ -n "$PREEMPT" ] ; then CONFIG_FLAGS="$CONFIG_FLAGS PREEMPT"; fi
-UTS_VERSION="$UTS_VERSION $CONFIG_FLAGS $TIMESTAMP"
+UTS_VERSION="$UTS_VERSION $CONFIG_FLAGS $TIMESTAMP $(git describe  --tags --dirty --always)"
 
 # Truncate to maximum length
 
