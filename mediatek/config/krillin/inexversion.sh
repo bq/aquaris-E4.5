@@ -1,5 +1,6 @@
 #!/system/bin/sh
 
+<<<<<<< HEAD
 # Create CKT specified 'internal' and 'external' version strings from
 # the available ubuntu data, and seed them in specified android
 # properties
@@ -62,6 +63,49 @@ update_version() {
     external_version=$projectandoem"_L"$current_langs$default_language"_"$version"_"$short_date
     internal_version=$external_version$fake_build_time
 
+=======
+external_version_prop="ro.build.display.id"
+internal_version_prop="internal.version"
+
+external_version=""
+internal_version=""
+
+ver_header="KRILLIN01A-S10A_BQ_L40"
+
+check_null_value() {
+    ret=$(echo $1 | cut -c$2)
+    if [ -z $ret ];then
+        ret="0"
+    fi
+    if [ $2 == 10 ];then
+        echo "$((ret+1))"
+    else
+        echo "$ret"
+    fi
+}
+
+find_internal_ubuntu() {
+    date_int=$(echo $(getprop persist.ubuntu.version.rootfs))
+    tag[0]="0"
+    tag[1]="0"
+    tag[2]="0"
+    tag[3]=$(check_null_value "$date_int" "10")
+    tag[4]=$(check_null_value "$date_int" "11")
+    tag[5]=$(check_null_value "$date_int" "12")
+    echo "${tag[*]}" | tr -d '[ ]'
+}
+
+update_version() {
+    date=$(echo $(getprop persist.ubuntu.version.rootfs) | cut -c3-8)
+    rev=$(echo $(getprop persist.ubuntu.version))
+
+    int=$(find_internal_ubuntu)
+
+    language=$(echo $(getprop persist.ubuntu.default_language))
+
+    external_version=$ver_header$language"_"$rev"_"$date
+    internal_version=$ver_header$language"_"$rev"_"$date$int
+>>>>>>> 1b28dcc... factory: add internal/external version for manufacturing
     setprop $external_version_prop $external_version
     setprop $internal_version_prop $internal_version
 }
@@ -71,8 +115,17 @@ for i in 1 2 3 4 5; do
     update_version
     ext_ver=$(getprop $external_version_prop)
     int_ver=$(getprop $internal_version_prop)
+<<<<<<< HEAD
 
     if [ "$ext_ver" == $external_version ] && [ "$int_ver" == $internal_version ];then
+=======
+    #echo "i -ext: $external_version"
+    #echo "v -ext: $ext_ver"
+    #echo "i -int: $internal_version"
+    #echo "v -int: $int_ver"
+    if [ "$ext_ver" == $external_version ] && [ "$int_ver" == $internal_version ];then
+        #echo "matched, finish"
+>>>>>>> 1b28dcc... factory: add internal/external version for manufacturing
         exit
     fi
 done
