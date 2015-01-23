@@ -1,5 +1,6 @@
 /dev/uboot       				  /uboot       emmc      defaults        defaults
 /dev/bootimg       				  /boot       emmc      defaults        defaults
+/dev/logo       				  /logo       emmc      defaults        defaults
 /dev/block/mmcblk0p5      /cache      ext4      defaults        defaults
 /dev/block/mmcblk0p7      /data       ext4      defaults        defaults
 misc      				  /misc       emmc      defaults        defaults
