@@ -70,7 +70,7 @@ internal_version_prop="internal.version"
 external_version=""
 internal_version=""
 
-ver_header="KRILLIN01A-S10A_BQ_L40"
+ver_header="KRILIN01A-S15A_BQ_L100"
 
 check_null_value() {
     ret=$(echo $1 | cut -c$2)
