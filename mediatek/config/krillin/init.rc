@@ -1075,7 +1075,7 @@ service upstart-watcher /sbin/upstart-property-watcher
 
 on property:selinux.reload_policy=1
     restart ueventd
-    restart installd
+#    restart installd
 
 service console /system/bin/sh
     class core
@@ -1137,9 +1137,9 @@ service servicemanager /system/bin/servicemanager
 #    socket mdns stream 0660 root system
 
 
-service netdiag /system/bin/netdiag
-    class main
-    socket netdiag stream 0664 root inet
+#service netdiag /system/bin/netdiag
+#    class main
+#    socket netdiag stream 0664 root inet
 
 
 service nvram_daemon /system/bin/nvram_daemon
@@ -1370,9 +1370,9 @@ service DMAgent /system/bin/dm_agent_binder
     user system
     group system nvram cache
 
-service PPLAgent /system/bin/ppl_agent
-    user system
-    group system nvram cache
+#service PPLAgent /system/bin/ppl_agent
+#    user system
+#    group system nvram cache
 
 #make sure drm server has rights to read and write sdcard
 service drm /system/bin/drmserver
@@ -1470,9 +1470,9 @@ service emd_daemon /system/bin/emd_daemon
 #
 
 
-service installd /system/bin/installd
-    class main
-    socket installd stream 600 system system
+#service installd /system/bin/installd
+#    class main
+#    socket installd stream 600 system system
 
 service flash_recovery /system/etc/install-recovery.sh
     class main
