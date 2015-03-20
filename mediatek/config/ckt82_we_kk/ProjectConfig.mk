@@ -1613,8 +1613,8 @@ MTK_WLAN_SUPPORT=yes
 # ckt zhangyan 20140326 add begin
 BQ_PRODUCT_MODEL = Aquaris E 5.0 HD
 BQ_PRODUCT_BRAND = bq
-BQ_PRODUCT_NAME = Aquaris_E_5.0_HD
-BQ_TARGET_DEVICE = Aquaris_E_5.0_HD
+BQ_PRODUCT_NAME = Aquaris_E_5_HD
+BQ_TARGET_DEVICE = Aquaris_E_5_HD
 # ckt zhangyan 20140326 add end
 
 

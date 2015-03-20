@@ -1217,7 +1217,7 @@ MTK_SHARED_SDCARD=yes
 MTK_SHOW_MSENSOR_TOAST_SUPPORT=no
 
 # A mechanism for customer to enable their own sign key.
-MTK_SIGNATURE_CUSTOMIZATION=no
+MTK_SIGNATURE_CUSTOMIZATION=yes
 MTK_SIGNMODEM_SUPPORT=yes
 
 # MTK_SIM1_SOCKET_TYPE=1: support type 1 socket type

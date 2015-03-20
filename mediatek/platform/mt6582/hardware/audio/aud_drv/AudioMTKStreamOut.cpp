@@ -1487,7 +1487,7 @@ status_t AudioMTKStreamOut::setCallBack(stream_callback_t callback, void *cookie
 
 status_t AudioMTKStreamOut::getPresentationPosition(uint64_t *frames, struct timespec *timestamp)
 {
-
+	return INVALID_OPERATION;
     ALOGV("%s()",__FUNCTION__);
 
     *frames = mPresentedBytes / (uint64_t) (mDL1Attribute->mChannels * (mDL1Attribute->mFormat == AUDIO_FORMAT_PCM_8_BIT ? 1 : 2));

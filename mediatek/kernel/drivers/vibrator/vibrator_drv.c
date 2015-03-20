@@ -180,6 +180,11 @@ static struct timed_output_dev mtk_vibrator =
 	.enable = vibrator_enable,
 };
 
+void custom_vibration_enable(int value)
+{
+    vibrator_enable(&mtk_vibrator,value);
+}
+
 static int vib_probe(struct platform_device *pdev)
 {
 	return 0;
@@ -330,6 +335,7 @@ static void vib_mod_exit(void)
 	printk("[vibrator]vib_mod_exit Done \n");
 }
 
+EXPORT_SYMBOL(custom_vibration_enable);
 module_init(vib_mod_init);
 module_exit(vib_mod_exit);
 MODULE_AUTHOR("MediaTek Inc.");

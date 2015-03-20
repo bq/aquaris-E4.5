@@ -47,6 +47,7 @@
 #define MMC3516X_CTRL_NOBOOST            0x10
 #define MMC3516X_CTRL_SET  	        0x20
 #define MMC3516X_CTRL_RESET              0x40
+// 苏 勇 2014年07月21日 18:27:08#define MMC3516X_CTRL_RESET              0x20
 #define MMC3516X_CTRL_REFILL             0x80
 
 #define MMC3516X_BITS_SLOW_16            0x00

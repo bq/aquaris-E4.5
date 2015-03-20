@@ -14,7 +14,8 @@
 #include <mach/mt_pm_ldo.h>
 #include <mach/mt_typedefs.h>
 #include <mach/mt_boot.h>
-
+//#include <hardware_legacy/vibrator.h>
+#include <cust_vibrator.h>
 #include "cust_gpio_usage.h"
 #define FTS_GESTRUE
 #ifdef FTS_GESTRUE
@@ -63,7 +64,7 @@ unsigned char GestrueEnable=0; //0-不支持 1-支持
 
 //lenovo_sw liaohj merged from putaoya 2012-09-12
  #define TPD_MAX_PONIT       5 
-
+extern void custom_vibration_enable(int);
 extern kal_bool check_charger_exist(void); 
 
 extern struct tpd_device *tpd;
@@ -87,7 +88,7 @@ static int __devinit tpd_probe(struct i2c_client *client, const struct i2c_devic
 static int tpd_detect (struct i2c_client *client, struct i2c_board_info *info);
 static int __devexit tpd_remove(struct i2c_client *client);
 static int touch_event_handler(void *unused);
- 
+
 static int boot_mode = 0;
 static int tpd_halt=0; 
 static int tpd_flag = 0;
@@ -1742,6 +1743,7 @@ static void check_gesture(int gesture_id)
 			//input_report_key(tpd->dev, KEY_U, 0);
 			input_report_key(tpd->dev, KEY_POWER, 0);
 			input_sync(tpd->dev);
+            custom_vibration_enable(50);
 			}
 			break;
 		case GESTURE_O:
@@ -1939,7 +1941,7 @@ static int ft5x0x_read_Touchdata(void)
 
 	 return 0;
  }
- 
+
  static int tpd_detect (struct i2c_client *client, struct i2c_board_info *info) 
  {
 	 strcpy(info->type, TPD_DEVICE);	

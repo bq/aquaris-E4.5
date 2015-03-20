@@ -524,7 +524,7 @@ on post-fs-data
     chown radio radio /sys/devices/platform/battery/Charging_CallState
 
     mkdir /data/amit/ 0770 system system
-		mkdir /data/misc/sensor 0774 system system
+		mkdir /data/misc/sensors 0774 system system
     mkdir /data/misc/akmd 0770 system system
     mkdir /data/misc/s62x 0771 compass compass
     mkdir /data/misc/acdapi/ 0770 system system
