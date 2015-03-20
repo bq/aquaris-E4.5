@@ -225,6 +225,7 @@
 
 #define OV8865_SENSOR_ID                         0x8865
 
+#define OV13850_SENSOR_ID                        0xd850
 /* CAMERA DRIVER NAME */
 #define CAMERA_HW_DEVNAME            "kd_camera_hw"
 
@@ -297,6 +298,7 @@
 #define SENSOR_DRVNAME_OV16825_MIPI_RAW   "OV16825mipiraw"
 #define SENSOR_DRVNAME_T4K04_MIPI_RAW   "t4k04mipiraw"
 #define SENSOR_DRVNAME_OV8865_MIPI_RAW "ov8865mipiraw"
+#define SENSOR_DRVNAME_OV13850_MIPI_RAW "ov13850mipiraw"
 /*******************************************************************************
 *
 ********************************************************************************/

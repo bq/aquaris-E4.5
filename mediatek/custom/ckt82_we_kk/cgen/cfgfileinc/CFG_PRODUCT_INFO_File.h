@@ -39,8 +39,8 @@ typedef struct
 typedef struct{
 		unsigned char barcode[64];
 		nvram_ef_imei_imeisv_struct IMEI[4];
-		char ps_cali_nvram_data[20];  //add by sen.luo 用来存储ps 的offset
 		unsigned char reserved[1024-40-64-20];
+		char ps_cali_nvram_data[20];  //add by sen.luo 用来存储ps 的offset
 }PRODUCT_INFO;
 
 //the record size and number of PRODUCT_INFO nvram file

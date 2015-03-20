@@ -34,7 +34,7 @@
 #define RELEASE_BUILD_TIME_TOKEN    "ro.build.date"
 #define RELEASE_BUILD_DISP_ID_TOKEN "ro.build.display.id"
 #define RELEASE_CUSTOM_BUILD_VER_TOKEN  "ro.custom.build.version"
-#define RELEASE_CKT_INTERNAL_VER_TOKEN  "ckt.internal.version"
+#define RELEASE_CKT_INTERNAL_VER_TOKEN  "internal.version"
 
 #define FT_PREFIX   "FT: "
 #define FT_LOG(fmt, arg ...) META_LOG(FT_PREFIX fmt, ##arg)

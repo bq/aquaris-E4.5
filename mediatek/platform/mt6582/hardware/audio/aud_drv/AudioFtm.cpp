@@ -1176,8 +1176,8 @@ int AudioFtm::PhoneMic_SpkLR_Loopback(char echoflag)
     }
     else if (echoflag == MIC2_ON)
     {
-        //LoopbackManager::GetInstance()->SetLoopbackOn(AP_REF_MIC_AFE_LOOPBACK, LOOPBACK_OUTPUT_SPEAKER);
-        LoopbackManager::GetInstance()->SetLoopbackOn(AP_REF_MIC_AFE_LOOPBACK, LOOPBACK_OUTPUT_RECEIVER);
+        LoopbackManager::GetInstance()->SetLoopbackOn(AP_REF_MIC_AFE_LOOPBACK, LOOPBACK_OUTPUT_SPEAKER);
+        //LoopbackManager::GetInstance()->SetLoopbackOn(AP_REF_MIC_AFE_LOOPBACK, LOOPBACK_OUTPUT_RECEIVER);
     }
     else
     {

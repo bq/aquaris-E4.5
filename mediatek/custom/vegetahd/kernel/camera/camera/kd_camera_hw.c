@@ -193,7 +193,8 @@ u32 pinSet[2][8] = {
 		}
 
 	}
-	else if(currSensorName && (0 == strcmp(SENSOR_DRVNAME_OV12830_MIPI_RAW,currSensorName)))
+	else if((currSensorName && (0 == strcmp(SENSOR_DRVNAME_OV12830_MIPI_RAW,currSensorName)))\
+		   ||(currSensorName && (0 == strcmp(SENSOR_DRVNAME_OV13850_MIPI_RAW,currSensorName))))
 		{
 				//PK_DBG("kdCISModulePowerOn get in---  SENSOR_DRVNAME_OV8825_MIPI_RAW \n");
 				//PK_DBG("[ON_general 2.8V]sensorIdx:%d \n",SensorIdx);

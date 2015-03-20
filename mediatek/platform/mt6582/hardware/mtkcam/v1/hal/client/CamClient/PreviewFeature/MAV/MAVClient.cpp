@@ -432,6 +432,10 @@ mHalCamFeatureMerge()
         MY_LOGE("mHal3dfMerge Err");
         return err;
     }
+    
+    // Align 16 for 89 because JPEG Encoder needs to align 16.
+    mpMAVResult.ClipWidth = (mpMAVResult.ClipWidth>>4)<<4;
+    mpMAVResult.ClipHeight = (mpMAVResult.ClipHeight>>4)<<4;
       
     MavPipeImageInfo ImageInfo;
 

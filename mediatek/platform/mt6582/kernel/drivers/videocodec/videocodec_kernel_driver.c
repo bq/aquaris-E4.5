@@ -65,6 +65,8 @@ static DEFINE_MUTEX(DecEMILock);
 static DEFINE_MUTEX(DriverOpenCountLock);
 static DEFINE_MUTEX(DecHWLockEventTimeoutLock);
 static DEFINE_MUTEX(EncHWLockEventTimeoutLock);
+static DEFINE_MUTEX(VdecPWRLock);
+static DEFINE_MUTEX(VencPWRLock);
 
 static DEFINE_SPINLOCK(DecIsrLock);
 static DEFINE_SPINLOCK(EncIsrLock);
@@ -86,6 +88,8 @@ static VAL_UINT32_T gu4L2CCounter = 0;      //mutex : L2CLock
 static VAL_BOOL_T bIsOpened = VAL_FALSE;    //mutex : IsOpenedLock
 static VAL_UINT32_T gu4HwVencIrqStatus = 0; //hardware VENC IRQ status (VP8/H264)
 
+static VAL_UINT32_T gu4VdecPWRCounter = 0;  //mutex : VdecPWRLock
+static VAL_UINT32_T gu4VencPWRCounter = 0;  //mutex : VencPWRLock
 //#define MT6582_VCODEC_DEBUG
 #ifdef MT6582_VCODEC_DEBUG
 #undef VCODEC_DEBUG
@@ -175,6 +179,10 @@ extern int config_L2(int size);
 
 void vdec_power_on(void)
 {
+    mutex_lock(&VdecPWRLock);
+    gu4VdecPWRCounter++;
+    mutex_unlock(&VdecPWRLock);
+    
     // Central power on
     enable_clock(MT_CG_DISP0_SMI_COMMON, "VDEC");
     enable_clock(MT_CG_VDEC0_VDEC, "VDEC");
@@ -190,17 +198,30 @@ void vdec_power_on(void)
 
 void vdec_power_off(void)
 {
-    // Central power off
-    disable_clock(MT_CG_VDEC0_VDEC, "VDEC");
-    disable_clock(MT_CG_VDEC1_LARB, "VDEC");
-    disable_clock(MT_CG_DISP0_SMI_COMMON, "VDEC");
-#ifdef VDEC_USE_L2C    
-    disable_clock(MT_CG_INFRA_L2C_SRAM, "VDEC");
+    mutex_lock(&VdecPWRLock);
+    if (gu4VdecPWRCounter == 0)
+    {
+    }
+    else
+    {
+        gu4VdecPWRCounter--;
+        // Central power off
+        disable_clock(MT_CG_VDEC0_VDEC, "VDEC");
+        disable_clock(MT_CG_VDEC1_LARB, "VDEC");
+        disable_clock(MT_CG_DISP0_SMI_COMMON, "VDEC");
+#ifdef VDEC_USE_L2C
+        disable_clock(MT_CG_INFRA_L2C_SRAM, "VDEC");
 #endif
+    }
+    mutex_unlock(&VdecPWRLock);
 }
 
 void venc_power_on(void)
 {
+    mutex_lock(&VencPWRLock);
+    gu4VencPWRCounter++;
+    mutex_unlock(&VencPWRLock);
+    
     MFV_LOGD("venc_power_on +\n");
 #ifdef VENC_PWR_FPGA
     // Cheng-Jung 20120621 VENC power physical base address (FPGA only, should use API) [
@@ -228,11 +249,20 @@ void venc_power_on(void)
 
 void venc_power_off(void)
 {
-    MFV_LOGD("venc_power_off +\n");
-    disable_clock(MT_CG_IMAGE_VENC_JPENC, "VENC");
-    disable_clock(MT_CG_IMAGE_LARB2_SMI, "VENC");
-    disable_clock(MT_CG_DISP0_SMI_COMMON, "VENC");
-    MFV_LOGD("venc_power_off -\n");
+    mutex_lock(&VencPWRLock);
+    if (gu4VencPWRCounter == 0)
+    {
+    }
+    else
+    {
+        gu4VencPWRCounter--;
+        MFV_LOGD("venc_power_off +\n");
+        disable_clock(MT_CG_IMAGE_VENC_JPENC, "VENC");
+        disable_clock(MT_CG_IMAGE_LARB2_SMI, "VENC");
+        disable_clock(MT_CG_DISP0_SMI_COMMON, "VENC");
+        MFV_LOGD("venc_power_off -\n");
+    }
+    mutex_unlock(&VencPWRLock);
 }
 
 
@@ -570,6 +600,7 @@ static long vcodec_unlocked_ioctl(struct file *file, unsigned int cmd, unsigned 
                     }
                     else if (VAL_RESULT_RESTARTSYS == eValRet)
                     {
+                        MFV_LOGE("[WARNING] VAL_RESULT_RESTARTSYS return when HWLock!!\n");
                         return -ERESTARTSYS;
                     }
 
@@ -585,6 +616,11 @@ static long vcodec_unlocked_ioctl(struct file *file, unsigned int cmd, unsigned 
                             grVcodecDecHWLock.pvHandle, current->pid, grVcodecDecHWLock.rLockedTime.u4Sec, grVcodecDecHWLock.rLockedTime.u4uSec);
                     
                         bLockedHW = VAL_TRUE;
+                        if (VAL_RESULT_INVALID_ISR == eValRet && FirstUseDecHW != 1) {
+                            MFV_LOGE("[WARNING] reset power/irq when HWLock!!\n");
+                            vdec_power_off();
+                            disable_irq(MT_VDEC_IRQ_ID);
+                        }
                         vdec_power_on();
                         enable_irq(MT_VDEC_IRQ_ID);
                     }
@@ -1593,6 +1629,14 @@ static int __init vcodec_driver_init(void)
     spin_lock_irqsave(&EncISRCountLock, ulFlagsISR);
     gu4EncISRCount = 0;
     spin_unlock_irqrestore(&EncISRCountLock, ulFlagsISR);
+
+    mutex_lock(&VdecPWRLock);
+    gu4VdecPWRCounter = 0;
+    mutex_unlock(&VdecPWRLock);
+
+    mutex_lock(&VencPWRLock);
+    gu4VencPWRCounter = 0;
+    mutex_unlock(&VencPWRLock);
 
     mutex_lock(&IsOpenedLock);
     if (VAL_FALSE == bIsOpened) {

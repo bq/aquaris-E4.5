@@ -9,7 +9,7 @@ CKT_AUTO_ADD_GLOBAL_DEFINE_BY_VALUE = PROJ_NAME
 PROJ_NAME = KRILLIN
 CUST_NAME = BQ
 SOFTCODE = S0B
-BASEVERNO = 208
+BASEVERNO = 211
 #############################
 #会用他设置ro.product.model
 CKT_PRODUCT_MODEL=CKT_$(strip $(PROJ_NAME) )
@@ -19,7 +19,11 @@ TIMEZONE=Europe/Amsterdam
 
 ############usb相关#################
 USB_MANUFACTURER_STRING=$(strip $(CUST_NAME) )
-USB_PRODUCT_STRING=Aquaris_E4.5
+#[CTS TEST] com.android.cts.usb.TestUsbTest#testUsbSerial FAIL
+#junit.framework.ComparisonFailure: adb serial != ro.serialno
+#Modity by EminHuang 20140523
+#USB_PRODUCT_STRING=Aquaris_E4.5
+USB_PRODUCT_STRING=0123456789ABCDEF
 USB_STRING_SERIAL_IDX=$(strip $(USB_PRODUCT_STRING) )
 ############exif相关#################
 CUSTOM_EXIF_STRING_MAKE=$(strip $(CUST_NAME) )
@@ -41,8 +45,8 @@ TESTC = testc_none
 #############################
 
 #如果要固定版本号,请在这设置,否则注释调它,而不是留空!!!
-CKT_BUILD_VERNO = KRILLIN01A-S10A_BQ_L40ES_208_140516
-CKT_BUILD_INTERNAL_VERNO =KRILLIN01A-S10A_BQ_L40ES_208_140516115632
+CKT_BUILD_VERNO = KRILLIN01A-S10A_BQ_L40ES_211_140606
+CKT_BUILD_INTERNAL_VERNO =KRILLIN01A-S10A_BQ_L40ES_211_140606131432
 
 #############################
 #摄像头软件插值
@@ -81,7 +85,7 @@ export CKT_VERSION_AUTO_SWITCH
 
 
 #ckt helin 20131202 make adb devices name to be random
-CKT_MAKE_ADB_DEVICES_NAME_TO_RANDOM=yes
+CKT_MAKE_ADB_DEVICES_NAME_TO_RANDOM=no
 export CKT_MAKE_ADB_DEVICES_NAME_TO_RANDOM
 
 #ckt helin 20131210 add FlashLight apk to System 20140410 open

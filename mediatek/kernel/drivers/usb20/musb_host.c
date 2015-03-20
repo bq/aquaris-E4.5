@@ -953,7 +953,7 @@ finish:
         if (/*(is_cppi_enabled() || tusb_dma_omap()) &&*/ dma_channel) {
 		/* Candidate for DMA */
 //ALPS00798316, Enable DMA RxMode1
-#if 0
+#if 1
 //ALPS00798316, Enable DMA RxMode1
                 dma_channel->actual_len = 0L;
                 qh->segsize = len;
@@ -1813,7 +1813,7 @@ void musb_host_rx(struct musb *musb, u8 epnum)
 
 //ALPS00798316, Enable DMA RxMode1
 		//DBG(7, "urb->actual_length = %d, xfer_len = %d, urb->transfer_buffer_length = %d, dma->actual_len=%d, qh->maxpacket = %d \n", urb->actual_length, xfer_len, urb->transfer_buffer_length, dma->actual_len, qh->maxpacket);
-		#if 0
+		#if 1
 //ALPS00798316, Enable DMA RxMode1
 		val &= ~(MUSB_RXCSR_DMAENAB
 			| MUSB_RXCSR_H_AUTOREQ

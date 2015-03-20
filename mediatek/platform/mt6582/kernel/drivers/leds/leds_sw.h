@@ -11,13 +11,22 @@
 #define PWM_DIV_NUM 8
 #define ERROR_BL_LEVEL 0xFFFFFFFF
 
+#ifdef RESPIRATION_LAMP
+#include <linux/ioctl.h>
+#define RGB_BLINK 'R'
+#define RGB_BLINK_SET_LEVEL			_IOW(RGB_BLINK, 0x01, u32)
+#define RGB_BLINK_SET_DELAY_ON		_IOW(RGB_BLINK, 0x02, int)
+#define RGB_BLINK_SET_DELAY_OFF		_IOW(RGB_BLINK, 0x03, int)
+#define RGB_BLINK_START_BLINKING		_IO(RGB_BLINK, 0x04)
+#endif
+
 struct nled_setting
 {
 	u8 nled_mode; //0, off; 1, on; 2, blink;
 	u32 blink_on_time ;
 	u32 blink_off_time;
 	#ifdef RESPIRATION_LAMP
-	int level;
+	u32 level;
 	#endif
 };
  

@@ -54,6 +54,12 @@ unsigned char GestrueEnable=0; //0-不支持 1-支持
 #define FT_PRESS	0x08
 #endif
 
+#define FTS_CTL_IIC
+
+#ifdef FTS_CTL_IIC
+#include "focaltech_ctl.h"
+#endif
+
 
 //lenovo_sw liaohj merged from putaoya 2012-09-12
  #define TPD_MAX_PONIT       5 
@@ -115,7 +121,7 @@ static int tpd_state = 0;
 /* Lenovo-sw yexm1 modify, 2012-10-18, open the FW upgrade fun */
 #define CONFIG_SUPPORT_FTS_CTP_UPG
 
-#define ESD_CHECK
+//#define ESD_CHECK
 
 #define TPD_RESET_ISSUE_WORKAROUND
 
@@ -769,12 +775,14 @@ static unsigned char CTPM_FW[]=
 //#include "FT5336_HiKe_Vegeta_OGS_720X1280_Truly0x5a_Ver0x10_20140307_app.i"
 //#include "FT5336_HiKe_Vegeta_OGS_720X1280_Truly0x5a_Ver0x11_20140324_app.i"
 //#include "FT5336_HiKe_Vegeta_OGS_720X1280_Truly0x5a_Ver0x12_20140331_app.i"
-#include "FT5336_HiKe_Vegeta_OGS_720X1280_Truly0x5a_Ver0x13_20140403_app.i"
+//#include "FT5336_HiKe_Vegeta_OGS_720X1280_Truly0x5a_Ver0x13_20140403_app.i"
+//#include "FT5336_HiKe_Vegeta_OGS_720X1280_Truly0x5a_Ver0x14_20140521_app.i"
+#include "FT5336_HiKe_Vegeta_OGS_720X1280_Truly0x5a_Ver0x15_20140528_app.i"
 };
 #elif defined(KRILLIN)
 static unsigned char CTPM_FW[]=
 {
-#include "FT5336_HiKe_Krilin_OGS_540X960_Truly0x5a_Ver0x14_20140529_app.i"
+#include "FT5336_HiKe_Krilin_OGS_540X960_Truly0x5a_Ver0x15_20140618_app.i"
 };
 #endif
 #define IC_FT5X06	0
@@ -2021,7 +2029,11 @@ reset_proc:
     	printk("[TSP] ret =%d\n",ret);
 	#endif
 //end
-	
+	#ifdef FTS_CTL_IIC
+	if (ft_rw_iic_drv_init(client) < 0)
+		dev_err(&client->dev, "%s:[FTS] create fts control iic driver failed\n",
+				__func__);
+    #endif
 	ft5336_thread = kthread_run(touch_event_handler, 0, TPD_DEVICE);
 	 if (IS_ERR(ft5336_thread))
 		 { 
@@ -2054,6 +2066,9 @@ reset_proc:
 #endif	
 #ifdef ESD_CHECK	
 	destroy_workqueue(ctp_read_id_workqueue);
+#endif	
+#ifdef FTS_CTL_IIC
+   ft_rw_iic_drv_exit();
 #endif	
    return 0;
  }

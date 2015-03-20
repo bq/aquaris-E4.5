@@ -116,7 +116,7 @@ typedef enum
 
 /* audio volume custom file version */
 #define AP_CFG_RDCL_FILE_AUDIO_VOLUME_CUSTOM_LID_VERNO  "001"
-#define AP_CFG_RDCL_FILE_AUDIO_VER1_VOLUME_CUSTOM_LID_VERNO  "001"
+#define AP_CFG_RDCL_FILE_AUDIO_VER1_VOLUME_CUSTOM_LID_VERNO  "002"
 
 /* dual mic custom file version */
 #define AP_CFG_RDCL_FILE_DUAL_MIC_CUSTOM_LID_VERNO  "002"

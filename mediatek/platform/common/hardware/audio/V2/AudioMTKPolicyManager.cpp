@@ -4188,18 +4188,18 @@ status_t AudioMTKPolicyManager::checkAndSetVolume(int stream,
         {
 #endif
 
-		int OutputDevice = getNewDevice(output,false); 
+		/*int OutputDevice = getNewDevice(output,false); 
 		if(OutputDevice == AudioSystem::DEVICE_OUT_SPEAKER) 
 		{ 
-			if(volume == 0 && mOutputs.valueFor(output)->mCurVolume[stream] > 0) 
+			if(volume == 0 && mOutputs.valueFor(output)->mCurVolume[stream] > 0 && stream == AudioSystem::MUSIC) 
 			{ 
 				mpClientInterface->setParameters(output, String8("close_pa=1")); 
 			} 
-			else if(volume > 0 && mOutputs.valueFor(output)->mCurVolume[stream] == 0) 
+			else if(volume > 0 && mOutputs.valueFor(output)->mCurVolume[stream] == 0 && stream == AudioSystem::MUSIC) 
 			{ 
 				mpClientInterface->setParameters(output, String8("close_pa=0")); 
 			} 
-		}
+		}*/
 
         mOutputs.valueFor(output)->mCurVolume[stream] = volume;
         ALOGD("checkAndSetVolume() for output %d stream %d, volume %f, delay %d", output, stream, volume, delayMs);

@@ -433,6 +433,104 @@ static ssize_t show_pwm_register(struct device *dev,struct device_attribute *att
 
 static DEVICE_ATTR(pwm_register, 0664, show_pwm_register, store_pwm_register);
 
+#if defined(RESPIRATION_LAMP) // phil added for RGB led controled by ioctl
+#include <linux/miscdevice.h>
+#include <asm/uaccess.h>
+static DEFINE_MUTEX(blink_mutex);
+static struct nled_setting rgb_blink_setting;
+static long rgb_unlocked_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+{
+	struct nled_setting * blink_setting = (struct nled_setting *)file->private_data;
+	long err = 0;
+	void __user *ptr = (void __user*) arg;
+	uint32_t level,delay_on,delay_off;
+	switch (cmd)
+	{
+		case RGB_BLINK_SET_LEVEL:
+			// please set delay on and delay off first
+			if(copy_from_user(&level, ptr, sizeof(level)))
+			{
+				err = -EFAULT;
+				goto err_out;
+			}
+			mutex_lock(&blink_mutex);
+			blink_setting->level = level;
+			blink_setting->nled_mode = NLED_BLINK;
+			mt_led_blink_pmic_cust(blink_setting);
+			mutex_unlock(&blink_mutex);
+			break;
+		case RGB_BLINK_SET_DELAY_ON:
+			if(copy_from_user(&delay_on, ptr, sizeof(delay_on)))
+			{
+				err = -EFAULT;
+				goto err_out;
+			}
+			mutex_lock(&blink_mutex);
+			blink_setting->blink_on_time = delay_on;
+			mutex_unlock(&blink_mutex);
+			break;
+		case RGB_BLINK_SET_DELAY_OFF:
+			if(copy_from_user(&delay_off, ptr, sizeof(delay_off)))
+			{
+				err = -EFAULT;
+				goto err_out;
+			}
+			mutex_lock(&blink_mutex);
+			blink_setting->blink_off_time = delay_off;
+			mutex_unlock(&blink_mutex);
+			break;
+		case RGB_BLINK_START_BLINKING:
+			// has put this procedure in set level control
+			/*
+			mutex_lock(&blink_mutex);
+			blink_setting->nled_mode = NLED_BLINK;
+			mt_led_blink_pmic_cust(blink_setting);
+			mutex_unlock(&blink_mutex);
+			*/
+			break;
+		default:
+			err = -ENOIOCTLCMD;
+			goto err_out;
+			break;
+	}
+	//LEDS_DRV_DEBUG("[LED][phil]set RGB blink success\n");
+	return err;
+err_out:
+	LEDS_DRV_DEBUG("[LED][phil]copy from user failed\n");
+	return err;
+}
+
+static int rgb_misc_open(struct inode *inode, struct file *file)
+{
+	file->private_data = &rgb_blink_setting;
+	if (!file->private_data)
+	{
+		LEDS_DRV_DEBUG("null pointer!!\n");
+		return -EINVAL;
+	}
+	//LEDS_DRV_DEBUG("[LED][phil]rgb_misc_open success\n");
+	return nonseekable_open(inode, file);
+}
+/*----------------------------------------------------------------------------*/
+static int rgb_misc_release(struct inode *inode, struct file *file)
+{
+	file->private_data = NULL;
+	return 0;
+}
+
+static struct file_operations rgb_fops = {
+	.open = rgb_misc_open,
+	.release = rgb_misc_release,
+	.unlocked_ioctl = rgb_unlocked_ioctl,
+};
+/*----------------------------------------------------------------------------*/
+static struct miscdevice rgb_misc_device = {
+	.minor = MISC_DYNAMIC_MINOR,
+	.name = "rgb_blink",
+	.fops = &rgb_fops,
+};
+
+#endif
 
 /****************************************************************************
  * driver functions
@@ -511,6 +609,13 @@ static int __init mt65xx_leds_probe(struct platform_device *pdev)
 		LEDS_DRV_DEBUG("[LED]led probe last_level = %d, limit = %d, limit_flag = %d, current_level = %d\n",last_level,limit,limit_flag,current_level);
 #endif
 
+	#ifdef RESPIRATION_LAMP
+	if((ret = misc_register(&rgb_misc_device)))
+	{
+		LEDS_DRV_DEBUG("RGB blink device register failed\n");
+		goto err;
+	}
+	#endif
 
 	return 0;
 
@@ -540,6 +645,9 @@ static int mt65xx_leds_remove(struct platform_device *pdev)
 		kfree(g_leds_data[i]);
 		g_leds_data[i] = NULL;
 	}
+	#ifdef RESPIRATION_LAMP
+	misc_deregister(&rgb_misc_device);
+	#endif
 
 	return 0;
 }
