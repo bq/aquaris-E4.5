@@ -887,9 +887,9 @@ static int mtk_sysinfo_get_info(unsigned int mask)
 {
     int nBattVol, nBattTemp;
     int i;
-    int nocpucores, *cpufreqs, *cpuloadings;
-    int nogpucores, *gpufreqs, *gpuloadings;
-    int noextraattr, *attrvalues;
+    int nocpucores = 0, *cpufreqs, *cpuloadings;
+    int nogpucores = 0, *gpufreqs, *gpuloadings;
+    int noextraattr = 0, *attrvalues;
     char **attrnames, **attrunits;
 
     if (mask == 0x0)

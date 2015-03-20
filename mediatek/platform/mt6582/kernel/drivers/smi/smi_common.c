@@ -413,7 +413,8 @@ static int smi_bwc_config( MTK_SMI_BWC_CONFIG* p_conf , unsigned long * pu4Local
         M4U_WriteReg32(REG_SMI_L1ARB0 , 0 , 0xC57);//1111/4096 maximum grant counts, soft limiter
         M4U_WriteReg32(REG_SMI_L1ARB1 , 0 , 0x9F7);//503/4096 maximum grant counts, soft limiter
         M4U_WriteReg32(REG_SMI_L1ARB2 , 0 , 0x961);//353/4096 maximum grant counts, soft limiter
-        M4U_WriteReg32(REG_SMI_L1ARB3 , 0 , 0x885A25);//549/4096 maximum grant counts, hard limiter, 2 read 2 write outstanding limit
+        //M4U_WriteReg32(REG_SMI_L1ARB3 , 0 , 0x885A25);//549/4096 maximum grant counts, hard limiter, 2 read 2 write outstanding limit
+        M4U_WriteReg32(REG_SMI_L1ARB3 , 0 , 0xA11FFF);
 
         M4U_WriteReg32(LARB0_BASE , 0x200 , 0xC);//OVL
         M4U_WriteReg32(LARB0_BASE , 0x204 , 0x1);//RDMA

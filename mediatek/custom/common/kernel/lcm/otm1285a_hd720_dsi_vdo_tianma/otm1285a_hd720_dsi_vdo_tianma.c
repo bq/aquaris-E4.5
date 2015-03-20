@@ -77,6 +77,7 @@ void dct_pmic_VGP2_enable(bool dctEnable);
 
 extern void DSI_clk_ULP_mode(bool enter);
 extern void DSI_lane0_ULP_mode(bool enter);
+extern void DSI_clk_HS_mode(unsigned char enter);
 static void DSI_Enter_ULPM(bool enter)
 {
 	DSI_clk_ULP_mode(enter);  //enter ULPM
@@ -331,9 +332,12 @@ static unsigned int lcm_esd_check(void)
 
 	array[0] = 0x00013700;
 	dsi_set_cmdq(array, 1, 1);
+	DSI_clk_HS_mode(1);
 
 	read_reg_v2(0x0A, buffer, 1);
-	printk("[%s]buffer[0]=0x%x",__func__,buffer[0]);
+	//printk("[%s]buffer[0]=0x%x",__func__,buffer[0]);
+	DSI_clk_HS_mode(0);
+
 	if(buffer[0]==0x9C)
 	{
 		return FALSE;

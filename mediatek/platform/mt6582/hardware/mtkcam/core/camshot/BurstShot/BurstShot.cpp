@@ -860,6 +860,13 @@ createSensorRawImgN(SensorParam const & rSensorParam, ImgBufInfo *rRawImgBufInfo
             }
         }
 
+        // (4). get result
+        CPTLogStr(Event_BShot_createSensorRawImg, CPTFlagSeparator, "deque result");
+        rQRawOutBuf.vBufInfo.clear();
+        mpCamIOPipe->dequeBuf(PortID(EPortType_MemoryOut, 0, 1), rQRawOutBuf);
+        MY_LOGD("camio deque VA should be %p", rRawImgBufInfo[i].u4BufVA);
+        MY_LOGD("camio deque timestamp %d.%d", rQRawOutBuf.i4TimeStamp_sec, rQRawOutBuf.i4TimeStamp_us/1000);
+
         // (3). apply exposure
         CPTLogStr(Event_BShot_createSensorRawImg, CPTFlagSeparator, "apply exposure");
         if(mCap3AParam && i<u4ShotCount-1)
@@ -867,13 +874,6 @@ createSensorRawImgN(SensorParam const & rSensorParam, ImgBufInfo *rRawImgBufInfo
         	p3AObj->updateCaptureParams(mCap3AParam[i+1]);
             p3AObj->sendCommand(ECmd_CaptureStart, 0);
         }
-
-        // (4). get result
-        CPTLogStr(Event_BShot_createSensorRawImg, CPTFlagSeparator, "deque result");
-        rQRawOutBuf.vBufInfo.clear();
-        mpCamIOPipe->dequeBuf(PortID(EPortType_MemoryOut, 0, 1), rQRawOutBuf);
-        MY_LOGD("camio deque VA should be %p", rRawImgBufInfo[i].u4BufVA);
-        MY_LOGD("camio deque timestamp %d.%d", rQRawOutBuf.i4TimeStamp_sec, rQRawOutBuf.i4TimeStamp_us/1000);
 
         // (5). enque next one
         CPTLogStr(Event_BShot_createSensorRawImg, CPTFlagSeparator, "enque next one");

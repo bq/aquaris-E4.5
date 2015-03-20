@@ -72,7 +72,7 @@ CUSTOM_HAL_MAIN_BACKUP_IMGSENSOR=ov12830_mipi_raw
 CUSTOM_HAL_MAIN_LENS=fm50af
 
 # M-sensor hal layer library including daemon
-CUSTOM_HAL_MSENSORLIB=mmc328x akm8975 ami304 yamaha530 mag3110 akmd8963 bmm050 mc6420 mmc3416x s62xd lsm303md hscdtd006 qmc5983 akmd09911 bmm056
+CUSTOM_HAL_MSENSORLIB=st480d mmc328x akm8975 ami304 yamaha530 mag3110 akmd8963 bmm050 mc6420 mmc3416x s62xd lsm303md hscdtd006 qmc5983 akmd09911 bmm056
 
 # sensor hal layer common part
 CUSTOM_HAL_SENSORS=sensor

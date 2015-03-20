@@ -4,6 +4,9 @@
 #include <math.h>
 
 #include "MediaTypes.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <cutils/xlog.h>	// For XLOG?().
 
 //#include "lens_custom_cfg.h"
 //#include "msdk_lens_exp.h"
@@ -26,14 +29,10 @@ extern PFUNC_GETLENSDEFAULT pOV8865AF_getDefaultData;
 extern PFUNC_GETLENSDEFAULT pDW9714A_getDefaultData;
 #endif
 
-
 MSDK_LENS_INIT_FUNCTION_STRUCT LensList[MAX_NUM_OF_SUPPORT_LENS] =
 {
-	{DUMMY_SENSOR_ID, DUMMY_LENS_ID, "Dummy", pDummy_getDefaultData},
-
 #if defined(SENSORDRIVE)
-    //	{DUMMY_SENSOR_ID, SENSOR_DRIVE_LENS_ID, "kd_camera_hw", pSensorDrive_getDefaultData},	
-
+	{DUMMY_SENSOR_ID, SENSOR_DRIVE_LENS_ID, "kd_camera_hw", pSensorDrive_getDefaultData},	
     //  for backup lens, need assign correct SensorID
     //{OV3640_SENSOR_ID, SENSOR_DRIVE_LENS_ID, "kd_camera_hw", pSensorDrive_getDefaultData},
 #endif
@@ -46,10 +45,12 @@ MSDK_LENS_INIT_FUNCTION_STRUCT LensList[MAX_NUM_OF_SUPPORT_LENS] =
 #endif
 #if defined(BU6424AF)
 	//{OV12830_SENSOR_ID, OV12830AF_LENS_ID, "FM50AF", pOV13850AF_getDefaultData},
-#endif
+    {OV13850_SENSOR_ID, BU6424AF_LENS_ID, "BU6424AF", pOV13850AF_getDefaultData},
+ #endif
 #if defined(OV8825AF)
 		{OV8825_SENSOR_ID, OV8825AF_LENS_ID, "OV8825AF", pOV8825AF_getDefaultData},
 #endif
+	{DUMMY_SENSOR_ID, DUMMY_LENS_ID, "Dummy", pDummy_getDefaultData},
     //  for new added lens, need assign correct SensorID
 
 };
@@ -57,8 +58,14 @@ MSDK_LENS_INIT_FUNCTION_STRUCT LensList[MAX_NUM_OF_SUPPORT_LENS] =
 
 UINT32 GetLensInitFuncList(PMSDK_LENS_INIT_FUNCTION_STRUCT pLensList)
 {
-        memcpy(pLensList, &LensList[0], sizeof(MSDK_LENS_INIT_FUNCTION_STRUCT)* MAX_NUM_OF_SUPPORT_LENS);
-        return MHAL_NO_ERROR;
+	char xbuf[128];
+	int fd = open("/sys/devices/platform/image_sensor/currSensorName",O_RDONLY);
+	read(fd,xbuf,128);
+	close(fd);
+
+	XLOGD("[GetLensInitFuncList]current working sensor:%s  ",xbuf);  
+	memcpy(pLensList, &LensList[0], sizeof(MSDK_LENS_INIT_FUNCTION_STRUCT)* MAX_NUM_OF_SUPPORT_LENS);
+       	return MHAL_NO_ERROR;
 } // GetLensInitFuncList()
 
 

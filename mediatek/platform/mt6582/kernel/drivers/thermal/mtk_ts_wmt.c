@@ -859,7 +859,7 @@ ssize_t wmt_wifi_algo_write( struct file *filp, const char __user *buf, unsigned
 		return -EFAULT;
 	}
 
-	if (sscanf(desc, "%d %d/%d, %d %d/%d, %d", &tmp_up_dur, &tmp_up_num, &tmp_up_den, &tmp_low_dur, \
+	if (sscanf(desc, "%d %d/%d %d %d/%d %d", &tmp_up_dur, &tmp_up_num, &tmp_up_den, &tmp_low_dur, \
 								&tmp_low_num, &tmp_low_den, &tmp_low_rst_max) == 7) {
 
 		up_duration = tmp_up_dur;

@@ -632,9 +632,12 @@ static ssize_t  show_sensordata_calidata(struct device_driver *ddri, char *buf)
 {
 	int tmp[3];
 	char strbuf[MMC3516X_BUFSIZE];
-	tmp[0] = sensor_data[4];				
-	tmp[1] = sensor_data[5];
-	tmp[2] = sensor_data[6];
+// 苏 勇 2014年06月09日 11:49:08	tmp[0] = sensor_data[4]* 1000*CONVERT_M/CONVERT_M_DIV;				
+// 苏 勇 2014年06月09日 11:49:08	tmp[1] = sensor_data[5]* 1000*CONVERT_M/CONVERT_M_DIV;
+// 苏 勇 2014年06月09日 11:49:08	tmp[2] = sensor_data[6]* 1000*CONVERT_M/CONVERT_M_DIV;
+	tmp[0] = sensor_data[4]* 125*CONVERT_M/1024;				
+	tmp[1] = sensor_data[5]* 125*CONVERT_M/1024;
+	tmp[2] = sensor_data[6]* 125*CONVERT_M/1024;
 	sprintf(strbuf, "%d  %d  %d\n", tmp[0],tmp[1], tmp[2]);
 	return sprintf(buf, "%s\n", strbuf);;           
 }
@@ -751,7 +754,7 @@ static DRIVER_ATTR(posturedata, S_IRUGO, show_posturedata_value, NULL);
 static DRIVER_ATTR(layout,      S_IRUGO | S_IWUSR, show_layout_value, store_layout_value);
 static DRIVER_ATTR(status,      S_IRUGO, show_status_value, NULL);
 static DRIVER_ATTR(trace,       S_IRUGO | S_IWUSR, show_trace_value, store_trace_value);
-static DRIVER_ATTR(calidata,  S_IRUGO, show_sensordata_calidata, NULL);
+static DRIVER_ATTR(calidata1,  S_IRUGO, show_sensordata_calidata, NULL);
 /*----------------------------------------------------------------------------*/
 static struct driver_attribute *mmc3516x_attr_list[] = {
     &driver_attr_daemon,
@@ -761,7 +764,7 @@ static struct driver_attribute *mmc3516x_attr_list[] = {
 	&driver_attr_layout,
 	&driver_attr_status,
 	&driver_attr_trace,
-	&driver_attr_calidata
+	&driver_attr_calidata1
 };
 /*----------------------------------------------------------------------------*/
 static int mmc3516x_create_attr(struct device_driver *driver) 

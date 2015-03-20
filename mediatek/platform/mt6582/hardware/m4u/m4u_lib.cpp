@@ -884,57 +884,6 @@ M4U_STATUS_ENUM MTKM4UDrv::m4u_cache_flush_all(M4U_MODULE_ID_ENUM eModuleID)
 }
 
 
-unsigned int MTKM4UDrv::m4u_set_reg(unsigned int addr, unsigned int val)
-{
-
-    if(mFileDescriptor<0 )
-    {
-        M4UMSG("m4u_reset_mva_release_tlb failed \n");
-        m4u_dump_backtrace();
-        return M4U_STATUS_INVALID_HANDLE;
-    }
-
-    unsigned int para[2];
-    para[0] = addr;
-    para[1] = val;
-    if(ioctl(mFileDescriptor, MTK_M4U_T_REG_SET, &para))
-    {
-        M4UMSG(" ioctl MTK_M4U_T_RESET_MVA_RELEASE_TLB fail! fd=%d, %d, %s \n", mFileDescriptor, errno, strerror(errno));
-        m4u_dump_backtrace();
-        return M4U_STATUS_KERNEL_FAULT;
-    }
-    else
-    {
-        return val;
-    }
-}
-
-unsigned int MTKM4UDrv::m4u_get_reg(unsigned int addr)
-{
-
-    if(mFileDescriptor<0 )
-    {
-        M4UMSG("m4u_reset_mva_release_tlb failed \n");
-        m4u_dump_backtrace();
-        return M4U_STATUS_INVALID_HANDLE;
-    }
-
-    unsigned int para[2];
-    para[0] = addr;
-    if(ioctl(mFileDescriptor, MTK_M4U_T_REG_GET, &para))
-    {
-        M4UMSG(" ioctl MTK_M4U_T_RESET_MVA_RELEASE_TLB fail! fd=%d, %d, %s \n", mFileDescriptor, errno, strerror(errno));
-        m4u_dump_backtrace();
-        return M4U_STATUS_KERNEL_FAULT;
-    }
-    else
-    {
-        return para[1];
-    }
-}
-
-
-
 #ifdef __PMEM_WRAP_LAYER_EN__
 
     bool MTKM4UDrv::mUseM4U[M4U_CLNTMOD_MAX] = {false};

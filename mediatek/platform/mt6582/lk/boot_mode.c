@@ -125,7 +125,16 @@ void boot_mode_select(void)
     printf("MT65XX_RECOVERY_KEY 0x%x\n",MT65XX_RECOVERY_KEY);
     while(get_timer(begin)<50)
     {
-
+     #ifdef MT65XX_RECOVERY_KEY
+            if(mtk_detect_key(MT65XX_RECOVERY_KEY)&& mtk_detect_key(MT65XX_FACTORY_KEY))
+           {
+                printf("%s Detect cal key\n",MODULE_NAME);
+                printf("%s Enable recovery mode\n",MODULE_NAME);
+                g_boot_mode = RECOVERY_BOOT;
+                //video_printf("%s : detect recovery mode !\n",MODULE_NAME);
+                return;
+            }
+ #endif          
 
         if(!factory_forbidden){
                    if(mtk_detect_key(MT65XX_FACTORY_KEY))
@@ -147,16 +156,7 @@ void boot_mode_select(void)
                            mtk_wdt_init();
                            return;  
          }
-#ifdef MT65XX_RECOVERY_KEY
-            if(mtk_detect_key(MT65XX_RECOVERY_KEY))
-           {
-                printf("%s Detect cal key\n",MODULE_NAME);
-                printf("%s Enable recovery mode\n",MODULE_NAME);
-                g_boot_mode = RECOVERY_BOOT;
-                //video_printf("%s : detect recovery mode !\n",MODULE_NAME);
-                return;
-            }
-#endif                   
+         
     }
 #else
 

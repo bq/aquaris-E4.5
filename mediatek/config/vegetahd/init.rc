@@ -449,6 +449,9 @@ on post-fs-data
 
     chmod 0666 /dev/pmem_multimedia    
 
+    chown system system /sys/devices/platform/mtk-tpd/control_double_tap
+    chmod 0664 /sys/devices/platform/mtk-tpd/control_double_tap
+
     # watch dog kicker
     write /proc/wdk "0 20 30"
 
@@ -500,6 +503,10 @@ on post-fs-data
     chown system /sys/class/misc/m_mag_misc/magdelay
     chown system /sys/class/misc/m_mag_misc/magoactive
     chown system /sys/class/misc/m_mag_misc/magodelay
+    
+    # rgb blink
+    chmod 0660 /dev/rgb_blink
+    chown system system /dev/rgb_blink
         
     #Accdet
     chown root radio /sys/devices/platform/Accdet_Driver/driver/accdet_call_state

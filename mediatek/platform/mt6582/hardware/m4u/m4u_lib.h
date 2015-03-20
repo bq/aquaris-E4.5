@@ -213,8 +213,6 @@ public:
 								  unsigned int *pRetMVAAddr);
 
     M4U_STATUS_ENUM m4u_cache_flush_all(M4U_MODULE_ID_ENUM eModuleID);
-    unsigned int m4u_get_reg(unsigned int addr);
-    unsigned int m4u_set_reg(unsigned int addr, unsigned int val);
     
 #ifdef __PMEM_WRAP_LAYER_EN__
     bool m4u_enable_m4u_func(M4U_MODULE_ID_ENUM eModuleID);

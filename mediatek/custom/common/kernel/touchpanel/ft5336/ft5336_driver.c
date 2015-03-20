@@ -63,7 +63,9 @@ unsigned char GestrueEnable=0; //0-不支持 1-支持
 
 //lenovo_sw liaohj merged from putaoya 2012-09-12
  #define TPD_MAX_PONIT       5 
- 
+
+extern kal_bool check_charger_exist(void); 
+
 extern struct tpd_device *tpd;
  
 struct i2c_client *ft5336_i2c_client = NULL;
@@ -777,7 +779,8 @@ static unsigned char CTPM_FW[]=
 //#include "FT5336_HiKe_Vegeta_OGS_720X1280_Truly0x5a_Ver0x12_20140331_app.i"
 //#include "FT5336_HiKe_Vegeta_OGS_720X1280_Truly0x5a_Ver0x13_20140403_app.i"
 //#include "FT5336_HiKe_Vegeta_OGS_720X1280_Truly0x5a_Ver0x14_20140521_app.i"
-#include "FT5336_HiKe_Vegeta_OGS_720X1280_Truly0x5a_Ver0x15_20140528_app.i"
+//#include "FT5336_HiKe_Vegeta_OGS_720X1280_Truly0x5a_Ver0x15_20140528_app.i"
+#include "FT5336_HiKe_Vegeta_OGS_720X1280_Truly0x5a_Ver0x16_20140618_app.i"
 };
 #elif defined(KRILLIN)
 static unsigned char CTPM_FW[]=
@@ -785,6 +788,25 @@ static unsigned char CTPM_FW[]=
 #include "FT5336_HiKe_Krilin_OGS_540X960_Truly0x5a_Ver0x15_20140618_app.i"
 };
 #endif
+
+// the macro below is defined for dual tp vendor hw firmware upgrade  compatible
+#define FTS_DUAL_VENDOR_COMPAT
+
+#if defined(FTS_DUAL_VENDOR_COMPAT) // phil added 20140529 for truly & tianma compatible
+// the macro below is defined for dual tp vendor distinct by lcm name
+#define FTS_VENDOR_DISTINCT_BY_LCM
+
+static unsigned char CTPM_FW2[]=
+{
+#include "FT5336_HiKe_Vegeta_OGS_720X1280_TianMa0x55_Ver0x12_20140528_app.i"
+};
+static int compat_fw_ver = 0xff;
+#if defined(FTS_VENDOR_DISTINCT_BY_LCM)
+#include "lcm_drv.h"
+extern const LCM_DRIVER  *lcm_drv;
+#endif
+#endif
+
 #define IC_FT5X06	0
 #define IC_FT5606	1
 #define IC_FT5316	2
@@ -1326,7 +1348,37 @@ static int fts_ctpm_fw_upgrade_with_i_file(void)
     FTS_BYTE flag;
     FTS_DWRD i = 0;
     //=========FW upgrade========================*/
-   pbt_buf = CTPM_FW;
+#if defined(FTS_DUAL_VENDOR_COMPAT) //phil add 20140529 for tianma & truly compatible
+	int chipID = ft5x0x_read_ID_ver();
+	int fw_len = 0;
+	printk("[TSP]ID_ver=%x, fw_ver=%x\n", chipID, ft5x0x_read_fw_ver());
+	#if defined(FTS_VENDOR_DISTINCT_BY_LCM)
+	if(strcmp(lcm_drv->name,"hx8394_hd720_dsi_vdo_truly")==0) // truly TP's ID is 0x5a
+	#else
+	if(chipID == CTPM_FW[sizeof(CTPM_FW)-1])
+	#endif
+	{
+		fw_len = sizeof(CTPM_FW);
+		pbt_buf = CTPM_FW;
+		compat_fw_ver = pbt_buf[fw_len-2];
+	}
+	#if defined(FTS_VENDOR_DISTINCT_BY_LCM)
+	else if(strcmp(lcm_drv->name,"otm1285a_hd720_dsi_vdo_tianma")==0) // tianma TP's ID is 0x55
+	#else
+	else if(chipID == CTPM_FW2[sizeof(CTPM_FW2)-1])
+	#endif
+	{
+		fw_len = sizeof(CTPM_FW2);
+		pbt_buf = CTPM_FW2;
+		compat_fw_ver = pbt_buf[fw_len-2];
+	}
+	else
+	{
+		return 0;
+	}
+	i_ret =  fts_ctpm_fw_upgrade(pbt_buf,fw_len);
+#else
+	pbt_buf = CTPM_FW;
 	
 	printk("version=%x ,pbt_buf[sizeof(CTPM_FW)-2]=%d\n",version,pbt_buf[sizeof(CTPM_FW)-2]);
 	printk("[TSP]ID_ver=%x, fw_ver=%x\n", ft5x0x_read_ID_ver(), ft5x0x_read_fw_ver());
@@ -1353,6 +1405,7 @@ if(0xa8 != ft5x0x_read_ID_ver())
 #endif
    /*call the upgrade function*/
    i_ret =  fts_ctpm_fw_upgrade(pbt_buf,sizeof(CTPM_FW));
+#endif
    if (i_ret != 0)
    {
 	printk("[TSP]upgrade error\n");
@@ -1371,6 +1424,9 @@ if(0xa8 != ft5x0x_read_ID_ver())
 unsigned char fts_ctpm_get_upg_ver(void)
 {
     unsigned int ui_sz;
+#if defined(FTS_DUAL_VENDOR_COMPAT) // phil added 20140529 for try
+	return compat_fw_ver;
+#else
     ui_sz = sizeof(CTPM_FW);
     if (ui_sz > 2)
     {
@@ -1381,6 +1437,7 @@ unsigned char fts_ctpm_get_upg_ver(void)
         //TBD, error handling?
         return 0xff; //default value
     }
+#endif
 }
 
 static void tpd_resume( struct early_suspend *h );
@@ -2112,6 +2169,18 @@ reset_proc:
     return 0; 
  }
 
+void tp_write_reg0(void)
+{
+ft5x0x_write_reg(0x8B,0x00);
+}
+EXPORT_SYMBOL(tp_write_reg0);
+
+void tp_write_reg1(void)
+{
+ft5x0x_write_reg(0x8B,0x01);
+}
+EXPORT_SYMBOL(tp_write_reg1);
+
  static void tpd_resume( struct early_suspend *h )
  {
   //int retval = TPD_OK;
@@ -2172,6 +2241,11 @@ reset_proc:
 	if((i2c_smbus_read_i2c_block_data(ft5336_i2c_client, 0x00, 1, &data))< 0)
 	{
 		TPD_DMESG("resume I2C transfer error, line: %d\n", __LINE__);
+	}
+
+    if(check_charger_exist()==KAL_TRUE)
+    {
+	ft5x0x_write_reg(0x8B,0x01);
 	}
 	tpd_halt = 0;//add this line 
 	tpd_up(0,0,0);
@@ -2245,8 +2319,18 @@ static ssize_t show_chipinfo(struct device *dev,struct device_attribute *attr, c
 	//printk("[TSP]ID_ver=%x, fw_ver=%x\n", ft5x0x_read_ID_ver(), ft5x0x_read_fw_ver());
 	//ft5x0x_read_reg(client,TOUCH_FMV_ID,&ver);
 	//return sprintf(buf, "[ft5336] ID_ver=%x,fw_ver=%x\n", ft5x0x_read_ID_ver(), ft5x0x_read_fw_ver()); 
-
+	#if defined(FTS_VENDOR_DISTINCT_BY_LCM)
+	if(strcmp(lcm_drv->name,"hx8394_hd720_dsi_vdo_truly") == 0)
+	{
+		id = 0x5a; // truly TP's ID
+	}
+	else if(strcmp(lcm_drv->name,"otm1285a_hd720_dsi_vdo_tianma") == 0)
+	{
+		id = 0x55; // tianma TP's ID
+	}
+	#else
 	id=ft5x0x_read_ID_ver();
+	#endif
 	ver=ft5x0x_read_fw_ver();
 	doubleclick = ft5x0x_read_doubleclick_flag();
 	// 为了配合后续的处理,版本信息的应该按照id: ver: ic: vendor:进行处理,请都用小写 苏 勇 2013年11月07日 09:08:34
@@ -2257,6 +2341,13 @@ static ssize_t show_chipinfo(struct device *dev,struct device_attribute *attr, c
 			return sprintf(buf,"ID:0x%x VER:0x%x IC:ft5336 VENDOR:truely%s\n",id, ver, doubleclickstr[doubleclick]);	
 			#else
 			return sprintf(buf,"ID:0x%x VER:0x%x IC:ft5336 VENDOR:truely\n",id, ver);
+			#endif
+			break;
+		case 0x55: // tianma 20140529 phil added
+			#ifdef FTS_GESTRUE
+			return sprintf(buf,"ID:0x%x VER:0x%x IC:ft5336 VENDOR:tianma%s\n",id, ver, doubleclickstr[doubleclick]);	
+			#else
+			return sprintf(buf,"ID:0x%x VER:0x%x IC:ft5336 VENDOR:tianma\n",id, ver);
 			#endif
 			break;
 		default:
@@ -2270,7 +2361,7 @@ static ssize_t show_chipinfo(struct device *dev,struct device_attribute *attr, c
 
 }
 
-static DEVICE_ATTR(chipinfo, 0444, show_chipinfo, NULL);
+static DEVICE_ATTR(chipinfo, 0664, show_chipinfo, NULL);	//Modify by EminHuang 20120613   0444 -> 0664 [CTS Test]				android.permission.cts.FileSystemPermissionTest#testAllFilesInSysAreNotWritable FAIL
 
 
 #ifdef FTS_GESTRUE
@@ -2294,7 +2385,7 @@ static ssize_t store_control_double_tap(struct device *dev,struct device_attribu
 }
 
 
-static DEVICE_ATTR(control_double_tap, 0666, show_control_double_tap, store_control_double_tap);
+static DEVICE_ATTR(control_double_tap, 0664, show_control_double_tap, store_control_double_tap);
 #endif
 
 static const struct device_attribute * const ctp_attributes[] = {

@@ -449,6 +449,9 @@ on post-fs-data
 
     chmod 0666 /dev/pmem_multimedia    
 
+    chown system  system   /sys/devices/platform/mtk-tpd/control_double_tap
+    chmod 0664 /sys/devices/platform/mtk-tpd/control_double_tap
+
     # watch dog kicker
     write /proc/wdk "0 20 30"
 

@@ -1046,9 +1046,16 @@ static ssize_t show_reset_cali(struct device_driver *ddri, char *buf)
 
 /*----------------------------------------------------------------------------*/
 
-static DRIVER_ATTR(chipinfo,             S_IWUGO | S_IRUGO, show_chipinfo_value,      NULL);
+//Modify by EminHuang 20120613   S_IWUGO | S_IRUGO -> 0664 
+//[CTS Test] android.permission.cts.FileSystemPermissionTest#testAllFilesInSysAreNotWritable FAIL
+//static DRIVER_ATTR(chipinfo,             S_IWUGO | S_IRUGO, show_chipinfo_value,      NULL);
+static DRIVER_ATTR(chipinfo,             0664, show_chipinfo_value,      NULL);	
+	
 static DRIVER_ATTR(sensordata,           S_IRUGO, show_sensordata_value,    NULL);
-static DRIVER_ATTR(trace,      S_IWUGO | S_IRUGO, show_trace_value,         store_trace_value);
+//Modify by EminHuang 20120613   S_IWUGO | S_IRUGO -> 0664
+//static DRIVER_ATTR(trace,      S_IWUGO | S_IRUGO, show_trace_value,         store_trace_value);
+static DRIVER_ATTR(trace,      0664, show_trace_value,         store_trace_value);
+
 static DRIVER_ATTR(status,               S_IRUGO, show_status_value,        NULL);
 static DRIVER_ATTR(power,                S_IRUGO, show_power_status,          NULL);
 
