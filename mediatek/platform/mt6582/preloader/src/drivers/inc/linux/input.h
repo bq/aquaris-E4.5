@@ -252,7 +252,7 @@
 #define KEY_BATTERY 236
 
 #define KEY_UNKNOWN 240
-
+#define KEY_APP_SWITCH 252
 
 
 #define KEY_OK 0x160

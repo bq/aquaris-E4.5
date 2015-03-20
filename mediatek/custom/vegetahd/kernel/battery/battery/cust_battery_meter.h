@@ -34,21 +34,21 @@
 
 #define FG_METER_RESISTANCE 	0
 
-/* Qmax for battery  */
-#define Q_MAX_POS_50	2583
-#define Q_MAX_POS_25	2591
-#define Q_MAX_POS_0		2584
-#define Q_MAX_NEG_10	2241
-
-#define Q_MAX_POS_50_H_CURRENT	2568
-#define Q_MAX_POS_25_H_CURRENT	2567
-#define Q_MAX_POS_0_H_CURRENT	2273
-#define Q_MAX_NEG_10_H_CURRENT	1010
-
-
-/* Discharge Percentage */
-#define OAM_D5		 1		//  1 : D5,   0: D2
-
+// 苏 勇 2014年06月27日 16:20:19/* Qmax for battery  */
+// 苏 勇 2014年06月27日 16:20:19#define Q_MAX_POS_50	2583
+// 苏 勇 2014年06月27日 16:20:19#define Q_MAX_POS_25	2591
+// 苏 勇 2014年06月27日 16:20:19#define Q_MAX_POS_0		2584
+// 苏 勇 2014年06月27日 16:20:19#define Q_MAX_NEG_10	2241
+// 苏 勇 2014年06月27日 16:20:19
+// 苏 勇 2014年06月27日 16:20:19#define Q_MAX_POS_50_H_CURRENT	2568
+// 苏 勇 2014年06月27日 16:20:19#define Q_MAX_POS_25_H_CURRENT	2567
+// 苏 勇 2014年06月27日 16:20:19#define Q_MAX_POS_0_H_CURRENT	2273
+// 苏 勇 2014年06月27日 16:20:19#define Q_MAX_NEG_10_H_CURRENT	1010
+// 苏 勇 2014年06月27日 16:20:19
+// 苏 勇 2014年06月27日 16:20:19
+// 苏 勇 2014年06月27日 16:20:19/* Discharge Percentage */
+// 苏 勇 2014年06月27日 16:20:19#define OAM_D5		 1		//  1 : D5,   0: D2
+#include "vegeta_cust_battery_meter.h"
 
 /* battery meter parameter */
 #define CUST_TRACKING_POINT  14
@@ -69,10 +69,10 @@
 #define FG_VBAT_AVERAGE_SIZE 18
 #define R_FG_VALUE 			0 // mOhm, base is 20
 
-#define CUST_POWERON_DELTA_CAPACITY_TOLRANCE	40
+#define CUST_POWERON_DELTA_CAPACITY_TOLRANCE	60
 #define CUST_POWERON_LOW_CAPACITY_TOLRANCE		5
 #define CUST_POWERON_MAX_VBAT_TOLRANCE			90
-#define CUST_POWERON_DELTA_VBAT_TOLRANCE		30
+#define CUST_POWERON_DELTA_VBAT_TOLRANCE		20
 
 /* Disable Battery check for HQA */
 #ifdef MTK_DISABLE_POWER_ON_OFF_VOLTAGE_LIMITATION

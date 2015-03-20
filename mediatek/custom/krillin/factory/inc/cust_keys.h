@@ -59,7 +59,7 @@ struct key {
 #define DEFINE_KEYS_KEYMAP(x)		\
 struct key x[] = {			\
 	KEYS_PWRKEY_MAP,		\
-	{ KEY_MENU,       "Menu" },	\
+	{ KEY_APP_SWITCH,       "Menu" },	\
 	{ KEY_HOMEPAGE,       "Home" },	\
 	{ KEY_BACK,       "Back" },	\
 	{ KEY_VOLUMEUP,   "VLUp" },	\
@@ -70,7 +70,7 @@ struct key x[] = {			\
 #define CUST_KEY_VOLUP		KEY_VOLUMEUP //KEY_BACK
 #define CUST_KEY_DOWN		KEY_DOWN
 #define CUST_KEY_VOLDOWN	KEY_VOLUMEDOWN
-#define CUST_KEY_LEFT		KEY_MENU
+#define CUST_KEY_LEFT		KEY_APP_SWITCH
 #define CUST_KEY_CENTER		KEY_HOMEPAGE
 #define CUST_KEY_RIGHT		KEY_BACK
 

@@ -790,6 +790,12 @@ static unsigned char CTPM_FW[]=
 };
 #endif
 
+/*
+two steps:
+1.open FTS_DUAL_VENDOR_COMPAT,then customize CTPM_FW[] and CTPM_FW2[].
+2.open FTS_VENDOR_DISTINCT_BY_LCM,then customize LCM_NAME1 and LCM_NAME2 match with CTPM_FW[] and CTPM_FW2[].
+*/
+
 // the macro below is defined for dual tp vendor hw firmware upgrade  compatible
 #define FTS_DUAL_VENDOR_COMPAT
 
@@ -797,10 +803,28 @@ static unsigned char CTPM_FW[]=
 // the macro below is defined for dual tp vendor distinct by lcm name
 #define FTS_VENDOR_DISTINCT_BY_LCM
 
+#ifdef FTS_VENDOR_DISTINCT_BY_LCM // phil added for customize lcm_name at here!
+#if defined(VEGETAHD)
+#define LCM_NAME1 "hx8394_hd720_dsi_vdo_truly"
+#define LCM_NAME2 "otm1285a_hd720_dsi_vdo_tianma"
+#elif defined(KRILLIN)
+#define LCM_NAME1 "hx8389_qhd_dsi_vdo_truly"
+#define LCM_NAME2 "hx8389b_qhd_dsi_vdo_tianma"
+#endif
+#endif
+
+#if defined(VEGETAHD)
 static unsigned char CTPM_FW2[]=
 {
 #include "FT5336_HiKe_Vegeta_OGS_720X1280_TianMa0x55_Ver0x12_20140528_app.i"
 };
+#elif defined(KRILLIN)
+static unsigned char CTPM_FW2[]=
+{
+/* TianMa lcm used LaiBao tpd */
+#include "FT5336_Hike_Krilin_540X960_LaiBao0x55_Ver0x12_20140729_app.i"
+};
+#endif
 static int compat_fw_ver = 0xff;
 #if defined(FTS_VENDOR_DISTINCT_BY_LCM)
 #include "lcm_drv.h"
@@ -1354,7 +1378,7 @@ static int fts_ctpm_fw_upgrade_with_i_file(void)
 	int fw_len = 0;
 	printk("[TSP]ID_ver=%x, fw_ver=%x\n", chipID, ft5x0x_read_fw_ver());
 	#if defined(FTS_VENDOR_DISTINCT_BY_LCM)
-	if(strcmp(lcm_drv->name,"hx8394_hd720_dsi_vdo_truly")==0) // truly TP's ID is 0x5a
+	if(strcmp(lcm_drv->name,LCM_NAME1)==0 || strcmp(lcm_drv->name,"hx8394d_hd720_dsi_vdo_truly")==0) // truly TP's ID is 0x5a
 	#else
 	if(chipID == CTPM_FW[sizeof(CTPM_FW)-1])
 	#endif
@@ -1364,7 +1388,7 @@ static int fts_ctpm_fw_upgrade_with_i_file(void)
 		compat_fw_ver = pbt_buf[fw_len-2];
 	}
 	#if defined(FTS_VENDOR_DISTINCT_BY_LCM)
-	else if(strcmp(lcm_drv->name,"otm1285a_hd720_dsi_vdo_tianma")==0) // tianma TP's ID is 0x55
+	else if(strcmp(lcm_drv->name,LCM_NAME2)==0) // tianma TP's ID is 0x55
 	#else
 	else if(chipID == CTPM_FW2[sizeof(CTPM_FW2)-1])
 	#endif
@@ -2322,11 +2346,11 @@ static ssize_t show_chipinfo(struct device *dev,struct device_attribute *attr, c
 	//ft5x0x_read_reg(client,TOUCH_FMV_ID,&ver);
 	//return sprintf(buf, "[ft5336] ID_ver=%x,fw_ver=%x\n", ft5x0x_read_ID_ver(), ft5x0x_read_fw_ver()); 
 	#if defined(FTS_VENDOR_DISTINCT_BY_LCM)
-	if(strcmp(lcm_drv->name,"hx8394_hd720_dsi_vdo_truly") == 0)
+	if(strcmp(lcm_drv->name,LCM_NAME1) == 0 || strcmp(lcm_drv->name,"hx8394d_hd720_dsi_vdo_truly") == 0)
 	{
 		id = 0x5a; // truly TP's ID
 	}
-	else if(strcmp(lcm_drv->name,"otm1285a_hd720_dsi_vdo_tianma") == 0)
+	else if(strcmp(lcm_drv->name,LCM_NAME2) == 0)
 	{
 		id = 0x55; // tianma TP's ID
 	}

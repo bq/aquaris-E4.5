@@ -62,6 +62,8 @@
 #define MTKFB_ERROR_INDEX_UPDATE_TIMEOUT       MTK_IO(103)
 #define MTKFB_ERROR_INDEX_UPDATE_TIMEOUT_AEE   MTK_IO(104)
 
+//Extension FB active option
+#define FB_ACTIVATE_NO_UPDATE  512       /* Skip frame update */
 //----------------------------------------------------------------------
 
 // --------------------------------------------------------------------------

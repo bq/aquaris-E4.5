@@ -104,10 +104,10 @@ FTABLE_SCENE_INDEP()
     FTABLE_CONFIG_AS_TYPE_OF_DEFAULT_VALUES(
         KEY_AS_(MtkCameraParameters::KEY_VIDEO_SIZE), 
         SCENE_AS_DEFAULT_SCENE(
-            ITEM_AS_DEFAULT_("1920x1080"), 
+            ITEM_AS_DEFAULT_("1920x1088"), 
             ITEM_AS_VALUES_(
                 "176x144",      "480x320",      "640x480", 
-                "864x480",      "1280x720",     "1920x1080", 
+                "864x480",      "1280x720",     "1920x1088", 
             )
         ), 
     )

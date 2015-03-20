@@ -650,8 +650,9 @@ EXIT:
     }
 }
 
-static bool first_update = false;
+static bool first_update = true;
 static bool first_enable_esd = true;
+static bool no_update = false;
 static int cnt=3;
 static int mtkfb_pan_display_impl(struct fb_var_screeninfo *var, struct fb_info *info)
 {
@@ -661,7 +662,7 @@ static int mtkfb_pan_display_impl(struct fb_var_screeninfo *var, struct fb_info 
     int ret = 0;
     int wait_ret = 0;
     int layer = FB_LAYER;
-    if(first_update){
+    if(first_update && no_update){
         first_update = false;
         return ret;
     }
@@ -915,6 +916,10 @@ static int mtkfb_check_var(struct fb_var_screeninfo *var, struct fb_info *fbi)
     var->red.msb_right = var->green.msb_right =
     var->blue.msb_right = var->transp.msb_right = 0;
 
+    if(var->activate & FB_ACTIVATE_NO_UPDATE)
+        no_update = true;
+    else
+        no_update = false;
     var->activate = FB_ACTIVATE_NOW;
 
     var->height    = UINT_MAX;
@@ -2966,6 +2971,7 @@ int hdmi_disc_disp_path(void)
 int hdmi_conn_disp_path(void)
 {
     printk("[FB Driver] enter hdmi_conn_disp_path\n");
+    extern LCM_PARAMS *lcm_params;
  
     if (is_ipoh_bootup)
     {
@@ -2975,6 +2981,21 @@ int hdmi_conn_disp_path(void)
     else
     {
         disp_hdmi_path_clock_on("mtkfb");
+#ifdef SINGLE_PANEL_OUTPUT
+        if(LCM_TYPE_DPI == lcm_params->type)
+        {		
+            int i=0;
+            for(i=0; i<4; i++)
+            {
+                //disable ovl all layer
+                OVLLayerSwitch(i,FALSE);
+            }
+            //to make restore register is active
+            disp_path_get_mutex();
+            disp_path_release_mutex();
+            disp_path_wait_reg_update();
+        }
+#endif
     }
     printk("[FB LR] 1\n");
     DISP_CHECK_RET(DISP_PauseVsync(FALSE));
@@ -2992,7 +3013,10 @@ int hdmi_conn_disp_path(void)
     }
     else
     {
-        mtkfb_clear_lcm();
+        if(LCM_TYPE_DPI != lcm_params->type)
+        {
+            mtkfb_clear_lcm();
+        }
     }
 
     printk("[FB Driver] hdmi_conn_disp_path\n");

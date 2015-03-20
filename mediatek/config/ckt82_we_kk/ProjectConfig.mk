@@ -10,7 +10,7 @@ AUTO_ADD_GLOBAL_DEFINE_BY_VALUE=MTK_PLATFORM CUSTOM_KERNEL_LENS CUSTOM_KERNEL_MA
 
 # support build CTS or not
 BUILD_CTS=yes
-BUILD_GMS=no
+BUILD_GMS=yes
 
 # Decide whether to build kernel or not.
 BUILD_KERNEL=yes

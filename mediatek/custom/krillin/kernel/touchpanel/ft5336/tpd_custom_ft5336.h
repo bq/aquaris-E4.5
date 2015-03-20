@@ -26,7 +26,7 @@
 #define TPD_HAVE_BUTTON
 #define TPD_BUTTON_HEIGH        (100)
 #define TPD_KEY_COUNT           3
-#define TPD_KEYS                { KEY_MENU, KEY_HOMEPAGE ,KEY_BACK}
+#define TPD_KEYS                { KEY_APP_SWITCH, KEY_HOMEPAGE ,KEY_BACK}
 #define TPD_KEYS_DIM            {{80,1020,100,100},{240,1020,100,100},{400,1020,100,100}}
 
 

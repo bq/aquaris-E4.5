@@ -104,7 +104,7 @@ FTABLE_SCENE_INDEP()
         SCENE_AS_DEFAULT_SCENE(
             ITEM_AS_DEFAULT_("1280x720"), 
             ITEM_AS_VALUES_(
-                "176x144",    "640x480",  "1280x720",     "1920x1080", 
+                "176x144",    "640x480",  "1280x720",     "1920x1088", 
             )
         ), 
     )

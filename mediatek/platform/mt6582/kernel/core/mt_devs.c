@@ -1095,7 +1095,7 @@ int indexOf(char *str1,char *str2)  //dongyin
     }  
     return i;  
 }  
-
+ 
 void mt_fixup(struct tag *tags, char **cmdline, struct meminfo *mi)
 {
     struct tag *cmdline_tag = NULL;

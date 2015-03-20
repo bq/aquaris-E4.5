@@ -263,7 +263,7 @@
 #define KEY_DOCUMENTS 235
 
 #define KEY_UNKNOWN 240
-
+#define KEY_APP_SWITCH 252
 #define KEY_OPTION 0x165
 #define KEY_INFO 0x166
 #define KEY_POWER2 0x164
