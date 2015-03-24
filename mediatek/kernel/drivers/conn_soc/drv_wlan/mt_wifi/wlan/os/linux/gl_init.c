@@ -3401,14 +3401,10 @@ static int __init initWlan(void)
         aucDebugModule[i] = DBG_CLASS_MASK; //enable all
     }
 #else
-    // Initial debug level is D1
+    // Initial debug level is D0 + ERROR + WARN
     for (i = 0; i < DBG_MODULE_NUM; i++) {
         aucDebugModule[i] = DBG_CLASS_ERROR | \
-            DBG_CLASS_WARN | \
-            DBG_CLASS_STATE | \
-            DBG_CLASS_EVENT | \
-            DBG_CLASS_TRACE | \
-            DBG_CLASS_INFO;
+            DBG_CLASS_WARN;
     }
     aucDebugModule[DBG_TX_IDX] &= ~(DBG_CLASS_EVENT | \
         DBG_CLASS_TRACE | \

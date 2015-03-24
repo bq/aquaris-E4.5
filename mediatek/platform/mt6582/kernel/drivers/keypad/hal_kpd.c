@@ -3,7 +3,7 @@
 #include <mach/mt_clkmgr.h>
 #include <linux/kpd.h>
 
-#define KPD_DEBUG	KPD_YES
+#define KPD_DEBUG	KPD_NO
 
 #define KPD_SAY		"kpd: "
 #if KPD_DEBUG
@@ -18,7 +18,7 @@ extern struct input_dev *kpd_input_dev;
 static u8 kpd_pwrkey_state = !KPD_PWRKEY_POLARITY;
 #endif
 
-static int kpd_show_hw_keycode = 1;
+static int kpd_show_hw_keycode = 0;
 static int kpd_enable_lprst = 1;
 static void mtk_kpd_get_gpio_col(unsigned int COL_REG[]);
 
@@ -314,7 +314,7 @@ void kpd_get_keymap_state(u16 state[])
 	state[2] = *(volatile u16 *)KP_MEM3;
 	state[3] = *(volatile u16 *)KP_MEM4;
 	state[4] = *(volatile u16 *)KP_MEM5;
-	printk(KPD_SAY "register = %x %x %x %x %x\n",state[0], state[1], state[2], state[3], state[4]);
+	kpd_print("register = %x %x %x %x %x\n",state[0], state[1], state[2], state[3], state[4]);
 	
 }
 

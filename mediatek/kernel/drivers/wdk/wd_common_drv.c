@@ -36,6 +36,15 @@
 #define dbgmsg(...)
 #endif
 
+
+#ifdef CONFIG_MT_ENG_BUILD
+  #define genmsg    printk
+  #define schmsg    printk_sched
+#else /* CONFIG_MT_ENG_BUILD */
+  #define genmsg(msg...) ((void)0)
+  #define schmsg(msg...) ((void)0)
+#endif /* CONFIG_MT_ENG_BUILD */
+
 #define msg(msg...) printk(KERN_INFO PFX msg);
 #define warnmsg(msg...) printk(KERN_WARNING PFX msg);
 #define errmsg(msg...) printk(KERN_WARNING PFX msg);
@@ -110,7 +119,7 @@ static int wk_proc_cmd_write(struct file *file, const char *buf, size_t count, l
 
 	sscanf(cmd_buf, "%d %d %d %d %d", &mode, &kinterval, &timeout, &debug_sleep,&en);
 
-	printk("[WDK] mode=%d interval=%d timeout=%d enable =%d\n", mode, kinterval, timeout,en);
+	dbgmsg("[WDK] mode=%d interval=%d timeout=%d enable =%d\n", mode, kinterval, timeout,en);
 
 	if (timeout < kinterval) {
 		errmsg("The interval(%d) value should be smaller than timeout value(%d)\n", kinterval, timeout);
@@ -139,18 +148,18 @@ static int wk_proc_cmd_write(struct file *file, const char *buf, size_t count, l
 	  mtk_wdt_enable(WK_WDT_EN);
 	  #ifdef CONFIG_LOCAL_WDT
 	  local_wdt_enable(WK_WDT_EN);
-	  printk("[WDK] enable local wdt \n");
+	  genmsg("[WDK] enable local wdt \n");
 	  #endif
-	  printk("[WDK] enable wdt \n");
+	  genmsg("[WDK] enable wdt \n");
 	}
 	if(0 == en)
 	{
 	  mtk_wdt_enable(WK_WDT_DIS);
 	  #ifdef CONFIG_LOCAL_WDT
 	  local_wdt_enable(WK_WDT_DIS);
-	  printk("[WDK] disable local wdt \n");
+	  genmsg("[WDK] disable local wdt \n");
 	  #endif
-	  printk("[WDK] disable wdt \n");
+	  genmsg("[WDK] disable wdt \n");
 	}
 			
     spin_lock(&lock);
@@ -169,11 +178,11 @@ static int wk_proc_cmd_write(struct file *file, const char *buf, size_t count, l
 	{
 		//reboot mode only usefull to 75
 		mtk_wdt_swsysret_config(0x20000000,0); 
-		printk("[WDK] use reboot mod \n");
+		genmsg("[WDK] use reboot mod \n");
 	}
 	else
 	{
-		printk("[WDK] mode err \n");
+		printk(KERN_ERR "[WDK] mode err \n");
 	}
    
 	g_timeout = timeout;
@@ -197,7 +206,7 @@ static int start_kicker_thread_with_default_setting(void)
     spin_unlock(&lock);	
 	start_kicker();
 
-    printk("[WDK] fwq start_kicker_thread_with_default_setting done\n" );
+    genmsg("[WDK] fwq start_kicker_thread_with_default_setting done\n" );
 	return ret;
 }
 
@@ -206,12 +215,16 @@ void wk_start_kick_cpu(int cpu)
 {
 	if(IS_ERR(wk_tsk[cpu]))
 	{
-		printk("[wdk]wk_task[%d] is NULL\n",cpu);
+		printk(KERN_ERR "[wdk]wk_task[%d] is NULL\n",cpu);
 	}
 	else
 	{
+		/* Need to be alseep *before* we do a kthread_bind */
+		__set_task_state(wk_tsk[cpu], TASK_UNINTERRUPTIBLE);
+		set_tsk_need_resched(wk_tsk[cpu]);
+
 		kthread_bind(wk_tsk[cpu], cpu);
-		printk("[wdk]bind thread[%d] to cpu[%d]\n",wk_tsk[cpu]->pid,cpu);
+		genmsg("[wdk]bind thread[%d] to cpu[%d]\n",wk_tsk[cpu]->pid,cpu);
 		wake_up_process(wk_tsk[cpu]);
 	}
 }
@@ -252,10 +265,10 @@ int wk_proc_init(void) {
 	struct proc_dir_entry *de = proc_create(PROC_WK, 0660, NULL, &wk_proc_cmd_fops);
 	if (!de)
 	{
-		printk("[wk_proc_init]: create /proc/wdk failed\n");
+		printk(KERN_ERR "[wk_proc_init]: create /proc/wdk failed\n");
 	}
 
-	printk("[WDK] Initialize proc\n");
+	genmsg("[WDK] Initialize proc\n");
 
 //	de->read_proc = wk_proc_cmd_read;
 //	de->write_proc = wk_proc_cmd_write;
@@ -284,20 +297,20 @@ static int kwdt_thread(void *arg)
 	int local_bit = 0, loc_need_config = 0, loc_timeout = 0;
 	struct wd_api  *loc_wk_wdt = NULL;
 	
-    sched_setscheduler(current, SCHED_FIFO, &param);
-    set_current_state(TASK_INTERRUPTIBLE);
+	sched_setscheduler(current, SCHED_FIFO, &param);
+	set_current_state(TASK_INTERRUPTIBLE);
 
-	for(;;)
-	{
-		
-		if (kthread_should_stop()) break;
+	for (;;) {
+		if (kthread_should_stop())
+			break;
+
 		spin_lock(&lock);		
 		cpu = smp_processor_id();
 		loc_wk_wdt = g_wd_api;
 		loc_need_config = g_need_config;
 		loc_timeout = g_timeout;
 		spin_unlock(&lock);	
-		//printk("fwq loc_wk_wdt(%x),loc_wk_wdt->ready(%d)\n",loc_wk_wdt ,loc_wk_wdt->ready);
+		//genmsg("fwq loc_wk_wdt(%x),loc_wk_wdt->ready(%d)\n",loc_wk_wdt ,loc_wk_wdt->ready);
 		if (loc_wk_wdt && loc_wk_wdt->ready && g_enable) 
 		{	
 			if (loc_need_config)
@@ -308,23 +321,23 @@ static int kwdt_thread(void *arg)
 				g_need_config = 0;
 				spin_unlock(&lock);
 			}
-			//printk("[WDK]  cpu-task=%d, current_pid=%d\n",  wk_tsk[cpu]->pid,  current->pid);
+			//genmsg("[WDK]  cpu-task=%d, current_pid=%d\n",  wk_tsk[cpu]->pid,  current->pid);
 			if(wk_tsk[cpu]->pid == current->pid)
 			{
 			   //only process WDT info if thread-x is on cpu-x
 			   spin_lock(&lock);
 			   local_bit = kick_bit;
-			   printk_sched("[WDK], local_bit:0x%x, cpu:%d,RT[%lld]\n", local_bit, cpu,sched_clock());
+			   genmsg("[WDK], local_bit:0x%x, cpu:%d,RT[%lld]\n", local_bit, cpu,sched_clock());
 			   if((local_bit&(1<<cpu)) == 0)
 			   {
-				//printk("[WDK]: set  WDT kick_bit\n");
+				//genmsg("[WDK]: set  WDT kick_bit\n");
 				local_bit |= (1<<cpu);
 				//aee_rr_rec_wdk_kick_jiffies(jiffies);
 			   }
-			   printk_sched("[WDK], local_bit:0x%x, cpu:%d, check bit0x:%x,RT[%lld]\n", local_bit, cpu, wk_check_kick_bit(),sched_clock());
+			   schmsg("[WDK], local_bit:0x%x, cpu:%d, check bit0x:%x,RT[%lld]\n", local_bit, cpu, wk_check_kick_bit(),sched_clock());
 			   if(local_bit == wk_check_kick_bit())
 			   {
-			      printk_sched("[WDK]: kick Ex WDT,RT[%lld]\n",sched_clock());
+			      schmsg("[WDK]: kick Ex WDT,RT[%lld]\n",sched_clock());
 			      mtk_wdt_restart(WD_TYPE_NORMAL);// for KICK external wdt
 			      local_bit = 0;
 			   }
@@ -332,7 +345,7 @@ static int kwdt_thread(void *arg)
 			   spin_unlock(&lock);
 			   
                #ifdef CONFIG_LOCAL_WDT
-			   printk_sched("[WDK]: cpu:%d, kick local wdt,RT[%lld]\n", cpu,sched_clock());
+			   schmsg("[WDK]: cpu:%d, kick local wdt,RT[%lld]\n", cpu,sched_clock());
 			   // kick local wdt
 			   mpcore_wdt_restart(WD_TYPE_NORMAL); 
 			   #endif
@@ -340,7 +353,7 @@ static int kwdt_thread(void *arg)
 		}
 		else if(0 == g_enable)
 		{
-		    printk("WDK stop to kick \n");
+		    genmsg("WDK stop to kick \n");
 		}
 		else 
 		{
@@ -351,7 +364,7 @@ static int kwdt_thread(void *arg)
 		if(wk_tsk[cpu]->pid == current->pid)	
 		{
 		   #if (DEBUG_WDK==1)
-		   msleep(debug_sleep * 1000);
+		   msleep_interruptible(debug_sleep * 1000);
 		   dbgmsg("WD kicker woke up %d\n", debug_sleep);
 		   #endif
 		   do_gettimeofday(&tv);
@@ -359,7 +372,7 @@ static int kwdt_thread(void *arg)
 		   rtc_time_to_tm(tv.tv_sec, &tm);
 		   tv_android.tv_sec -= sys_tz.tz_minuteswest*60;
 		   rtc_time_to_tm(tv_android.tv_sec, &tm_android);
-		   printk_sched("[thread:%d][RT:%lld] %d-%02d-%02d %02d:%02d:%02d.%u UTC; android time %d-%02d-%02d %02d:%02d:%02d.%03d\n",  current->pid,sched_clock(),
+		   schmsg("[thread:%d][RT:%lld] %d-%02d-%02d %02d:%02d:%02d.%u UTC; android time %d-%02d-%02d %02d:%02d:%02d.%03d\n",  current->pid,sched_clock(),
 		   tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
 		   tm.tm_hour, tm.tm_min, tm.tm_sec,
 		   (unsigned int) tv.tv_usec,
@@ -368,10 +381,9 @@ static int kwdt_thread(void *arg)
 		   (unsigned int) tv_android.tv_usec	);
 		}
 		
-		msleep((g_kinterval) * 1000);
-
+		msleep_interruptible((g_kinterval) * 1000);
 	}
-	printk("[WDK] WDT kicker thread stop, cpu:%d, pid:%d\n", cpu, current->pid);
+	genmsg("[WDK] WDT kicker thread stop, cpu:%d, pid:%d\n", cpu, current->pid);
 	return 0;
 }	
 
@@ -392,7 +404,7 @@ static int start_kicker(void)
 	    wk_start_kick_cpu(i);
     }
 	g_kicker_init = 1;
-	printk("[WDK] WDT start kicker  done\n" );
+	genmsg("[WDK] WDT start kicker  done\n" );
 	return 0;
 }
 
@@ -498,7 +510,7 @@ ssize_t mtk_rgu_pause_wdt_store(struct kobject *kobj, const char *buffer, size_t
 	int res = sscanf(buffer, "%x", &pause_wdt);
 
 	if (res != 1) {
-		printk("%s: expect 1 numbers\n", __FUNCTION__);
+		printk(KERN_ERR "%s: expect 1 numbers\n", __FUNCTION__);
 	}else
 	{
 		// For real case, pause wdt if get value is not zero. Suspend and resume may enable wdt again
@@ -534,12 +546,12 @@ wk_cpu_callback(struct notifier_block *nfb, unsigned long action, void *hcpu)
 		
 		mtk_wdt_restart(WD_TYPE_NORMAL);// for KICK external wdt
 		#ifdef CONFIG_LOCAL_WDT
-		printk("[WDK]cpu %d plug on kick local wdt\n", hotcpu);
+		genmsg("[WDK]cpu %d plug on kick local wdt\n", hotcpu);
 		// kick local wdt
 		mpcore_wdt_restart(WD_TYPE_NORMAL); 
 		#endif
 	
-		printk("[WDK]cpu %d plug on kick wdt\n", hotcpu);
+		genmsg("[WDK]cpu %d plug on kick wdt\n", hotcpu);
 		break;
 #ifdef CONFIG_HOTPLUG_CPU
 	case CPU_UP_CANCELED:
@@ -549,12 +561,12 @@ wk_cpu_callback(struct notifier_block *nfb, unsigned long action, void *hcpu)
 		
 		mtk_wdt_restart(WD_TYPE_NORMAL);// for KICK external wdt
 		#ifdef CONFIG_LOCAL_WDT
-		printk("[WDK]cpu %d plug off kick local wdt\n", hotcpu);
+		genmsg("[WDK]cpu %d plug off kick local wdt\n", hotcpu);
 		// kick local wdt
 		mpcore_wdt_restart(WD_TYPE_NORMAL); 
 		#endif
 		wk_cpu_update_bit_flag(hotcpu,0);
-		printk("[WDK]cpu %d plug off, kick wdt\n", hotcpu);
+		genmsg("[WDK]cpu %d plug off, kick wdt\n", hotcpu);
 		break;
 #endif /* CONFIG_HOTPLUG_CPU */
 	}
@@ -576,7 +588,7 @@ static int __init init_wk(void)
 	res = get_wd_api(&g_wd_api);
 	if(res)
 	{
-	   printk("get public api error in wd common driver %d",res);
+	   genmsg("get public api error in wd common driver %d",res);
 	}
 	
 	#ifdef __ENABLE_WDT_SYSFS__
@@ -591,7 +603,7 @@ static int __init init_wk(void)
 
 	wk_proc_init();	
 	register_cpu_notifier(&cpu_nfb);
-	printk("[WDK] init_wk done\n" );
+	genmsg("[WDK] init_wk done\n" );
 	return 0;
 }
 

@@ -446,7 +446,9 @@ ccif_t* ccif_create_instance(ccif_hw_info_t *info, void* ctl_b, int md_id)
 	if (info->md_id != md_id) {
 		CCCI_MSG_INF(md_id, "cci", "[error]ccif_instance_md_id is mis-match to hw_info_md_id: (%d, %d)\n",
 			md_id, info->md_id);
-		return NULL;
+		kfree(ccif);
+        ccif = NULL;
+        return NULL;
 	}
 
 	switch(info->type){

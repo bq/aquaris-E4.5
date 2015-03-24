@@ -455,7 +455,7 @@ static int BMA255_ReadData(struct i2c_client *client, s16 data[BMA255_AXES_NUM])
 /*----------------------------------------------------------------------------*/
 static int BMA255_ReadOffset(struct i2c_client *client, s8 ofs[BMA255_AXES_NUM])
 {    
-	int err;
+	int err = BMA255_SUCCESS;
 #ifdef SW_CALIBRATION
 	ofs[0]=ofs[1]=ofs[2]=0x0;
 #else
@@ -473,7 +473,7 @@ static int BMA255_ResetCalibration(struct i2c_client *client)
 {
 	struct bma255_i2c_data *obj = i2c_get_clientdata(client);
 
-	int err;
+	int err = BMA255_SUCCESS;
 	
 	#ifdef SW_CALIBRATION
 		

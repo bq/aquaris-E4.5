@@ -555,25 +555,27 @@ int autok_io_rw_extended(struct msdc_host *host, unsigned int u4Addr, unsigned i
     unsigned remainder = u4Len;
     unsigned max_blocks;
     unsigned size;
-    u32 base = host->base;
-    
+    u32 base;
+
     if((pBuffer==NULL) || (host==NULL))
     {
         printk("[%s] [ERR] pBuffer = 0x%x, host = 0x%x\n", __func__, (unsigned int)pBuffer, (unsigned int)host);
         return -1;
     }
-    
+
     if( u4Len < 4 )
     {
         printk("[%s] [ERR] u4Len = %d\n", __func__, u4Len);
         return -1;
     }
-    
+
+    base = host->base;
+
     /* Setup mrq */
     mrq.cmd = &cmd;
     mrq.data = &data;
     host->mrq = &mrq;
-    
+
     /* Setup cmd */
     cmd.opcode = SD_IO_RW_EXTENDED;
     cmd.arg = 0;
@@ -704,8 +706,8 @@ stop:
 int autok_io_rw_direct(struct msdc_host *host, unsigned int u4Addr, unsigned int u4Func, void *pBuffer, unsigned int u4Len, bool write)
 {
     int ret = 0;
-    u8 *value = (u8 *) pBuffer;
-    u32 base = host->base;
+    u8 *value = NULL;
+    u32 base;
     struct mmc_command cmd = {0};
     struct mmc_request mrq = {NULL};
     
@@ -714,6 +716,9 @@ int autok_io_rw_direct(struct msdc_host *host, unsigned int u4Addr, unsigned int
         printk("[%s] [ERR] pBuffer = 0x%x, host = 0x%x\n", __func__, (unsigned int)pBuffer, (unsigned int)host);
         return -1;
     }
+
+    value = (u8 *) pBuffer;
+    base = host->base;
     
     if( u4Len > 1 )
     {
@@ -4213,7 +4218,8 @@ autok_tune_rd(
     unsigned int FBoundCnt = 0, FBoundCKGEN = 0, FBoundLMargin = 0, FBoundLDeMar = 0;
     unsigned int IntBound = 0;
     unsigned int DataPassWin, DataMargin;
-    unsigned int RealCKGEN, RealPadDelay;
+    unsigned int RealCKGEN = 0;
+    unsigned int RealPadDelay = 0;
     unsigned int RBoundPad = 0;
     unsigned int RDlyRefCMD, RDlyRefSTG1;
     unsigned int baseCKGEN = 0;
@@ -5510,7 +5516,7 @@ static void autok_vcore_set(unsigned int vcore_uv)
     } else if (vcore_uv >= mt65x2_vcore_tbl[size - 1]) {
         vcore_sel = size - 1;
     } else {		
-        for (idx = 0 ; idx < size ; idx ++) {
+        for (idx = 0 ; idx < size-1 ; idx ++) {
             if ((vcore_uv >= mt65x2_vcore_tbl[idx]) && 
                 (vcore_uv < mt65x2_vcore_tbl[idx+1])) {
 
@@ -5601,6 +5607,11 @@ static void autok_show_parameters(struct msdc_host *host, void *pData)
 
 static void autok_setup_envir(struct msdc_host *host)
 {
+    if (host == NULL)
+    {
+        return;
+    }
+
     freq_mhz = host->mclk/1000000;
 
     #if defined(MT6582LTE)

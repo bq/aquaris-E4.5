@@ -29,10 +29,11 @@
 ******************************************************************************/ 
 #define C_I2C_FIFO_SIZE         8       /*according i2c_mt6516.c*/
 #define HWM_TAG					"<HWMSEN> "
-#define HWM_FUN(f)				printk(HWM_TAG"%s\n", __func__)
-#define HWM_ERR(fmt, args...)	printk(HWM_TAG"%s %d : "fmt, __func__, __LINE__, ##args)
-#define HWM_LOG(fmt, args...)	printk(HWM_TAG fmt, ##args)
-#define HWM_VER(fmt, args...)   printk(HWM_TAG"%s: "fmt, __func__, ##args) //((void)0)
+#define HWM_FUN(f)				pr_info(HWM_TAG"%s\n", __func__)
+#define HWM_ERR(fmt, args...)	pr_err(HWM_TAG"%s %d : "fmt, __func__, __LINE__, ##args)
+#define HWM_LOG(fmt, args...)	pr_info(HWM_TAG fmt, ##args)
+#define HWM_DBG(fmt, args...)	pr_debug(HWM_TAG fmt, ##args)
+#define HWM_VER(fmt, args...)   pr_info(HWM_TAG"%s: "fmt, __func__, ##args) //((void)0)
 /******************************************************************************
  * STRUCTURE & ENUMERATION
 ******************************************************************************/ 

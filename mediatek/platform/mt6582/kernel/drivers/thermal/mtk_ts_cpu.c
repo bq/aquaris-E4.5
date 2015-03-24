@@ -23,6 +23,13 @@
 #include <mach/mt_clkmgr.h>
 //#include <mach/mt_spm.h>
 
+#ifdef CONFIG_MT_ENG_BUILD
+#define genmsg printk
+#else
+#define genmsg(...) ((void)0)
+#endif
+
+
 // 1: turn on adaptive AP cooler; 0: turn off
 #define CPT_ADAPTIVE_AP_COOLER (0)
 
@@ -196,7 +203,7 @@ static bool talking_flag=false;
 void set_taklking_flag(bool flag)
 {
 	talking_flag = flag;
-	printk("Power/CPU_Thermal: talking_flag=%d", talking_flag);
+	genmsg("Power/CPU_Thermal: talking_flag=%d", talking_flag);
 	return;
 }
 
@@ -344,7 +351,7 @@ void get_thermal_slope_intercept(struct TS_PTPOD *ts_info)
 	//ts_info = &ts_ptpod;
 	ts_info->ts_MTS = ts_ptpod.ts_MTS;
 	ts_info->ts_BTS = ts_ptpod.ts_BTS;
-	printk("ts_MTS=%d, ts_BTS=%d\n",ts_ptpod.ts_MTS, ts_ptpod.ts_BTS);
+	genmsg("ts_MTS=%d, ts_BTS=%d\n",ts_ptpod.ts_MTS, ts_ptpod.ts_BTS);
 
 	return;
 }
@@ -589,7 +596,7 @@ static void set_thermal_ctrl_trigger_SPM(int temperature)
 	int temp = 0;
 	int raw_high, raw_middle, raw_low;
 	//mtktscpu_dprintk("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
-	printk(KERN_CRIT  "[Set_thermal_ctrl_trigger_SPM]: temperature=%d\n", temperature);
+	genmsg(KERN_INFO  "[Set_thermal_ctrl_trigger_SPM]: temperature=%d\n", temperature);
 	//mtktscpu_dprintk("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
 
 	//temperature to trigger SPM state2
@@ -637,7 +644,7 @@ int mtk_cpufreq_register(struct mtk_cpu_power_info *freqs, int num)
         if (tscpu_cpu_dmips[cl_id] < dmips)
             tscpu_cpu_dmips[cl_id] = dmips;
 
-		printk("[Power/CPU_Thermal] freqs[%d].cpufreq_khz=%u, .cpufreq_ncpu=%u, .cpufreq_power=%u\n",
+		genmsg("[Power/CPU_Thermal] freqs[%d].cpufreq_khz=%u, .cpufreq_ncpu=%u, .cpufreq_power=%u\n",
 				i, freqs[i].cpufreq_khz, freqs[i].cpufreq_ncpu, freqs[i].cpufreq_power);
 	}
 
@@ -720,7 +727,7 @@ int mtk_gpufreq_register(struct mtk_gpu_power_info *freqs, int num)
 		mtk_gpu_power[i].gpufreq_khz = freqs[i].gpufreq_khz;
 		mtk_gpu_power[i].gpufreq_power = freqs[i].gpufreq_power;
 
-		printk("[Power/CPU_Thermal] freqs[%d].cpufreq_khz=%u, .cpufreq_power=%u\n",
+		genmsg("[Power/CPU_Thermal] freqs[%d].cpufreq_khz=%u, .cpufreq_power=%u\n",
 				i, freqs[i].gpufreq_khz, freqs[i].gpufreq_power);
 	}
 
@@ -737,7 +744,7 @@ static void thermal_cal_prepare(void)
 	temp1 = get_devinfo_with_index(8);
 	//temp2 = get_devinfo_with_index(9);
 
-	printk(KERN_CRIT  "[Power/CPU_Thermal] [Thermal calibration] temp0=0x%x, temp1=0x%x\n", temp0, temp1);
+	genmsg(KERN_INFO  "[Power/CPU_Thermal] [Thermal calibration] temp0=0x%x, temp1=0x%x\n", temp0, temp1);
 	//mtktscpu_dprintk("thermal_cal_prepare\n");
 
     g_adc_ge_t     = ((temp1 & 0xFFC00000)>>22);//ADC_GE_T [9:0] *(0x10206104)[31:22]
@@ -779,18 +786,17 @@ static void thermal_cal_prepare(void)
 	}
 	//printk("[Power/CPU_Thermal] [Thermal calibration] g_adc_ge_t = 0x%x,g_adc_oe_t = 0x%x, g_degc_cali = 0x%x, g_adc_cali_en_t = 0x%x, g_o_slope = 0x%x, g_o_slope_sign = 0x%x, g_id = 0x%x\n",		g_adc_ge_t, g_adc_oe_t, g_degc_cali, g_adc_cali_en_t, g_o_slope, g_o_slope_sign, g_id);
 	//printk("[Power/CPU_Thermal] [Thermal calibration] g_o_vtsmcu1 = 0x%x,g_o_vtsmcu2 = 0x%x, g_o_vtsabb = 0x%x\n",		g_o_vtsmcu1, g_o_vtsmcu2, g_o_vtsabb);
-	printk(KERN_CRIT  "[Power/CPU_Thermal] [Thermal calibration] g_adc_ge_t      = 0x%x\n",g_adc_ge_t);
-	printk(KERN_CRIT  "[Power/CPU_Thermal] [Thermal calibration] g_adc_oe_t      = 0x%x\n",g_adc_oe_t);
-	printk(KERN_CRIT  "[Power/CPU_Thermal] [Thermal calibration] g_degc_cali     = 0x%x\n",g_degc_cali);
-	printk(KERN_CRIT  "[Power/CPU_Thermal] [Thermal calibration] g_adc_cali_en_t = 0x%x\n",g_adc_cali_en_t);
-	printk(KERN_CRIT  "[Power/CPU_Thermal] [Thermal calibration] g_o_slope       = 0x%x\n",g_o_slope);
-	printk(KERN_CRIT  "[Power/CPU_Thermal] [Thermal calibration] g_o_slope_sign  = 0x%x\n",g_o_slope_sign);
-	printk(KERN_CRIT  "[Power/CPU_Thermal] [Thermal calibration] g_id            = 0x%x\n",g_id);
+	genmsg(KERN_INFO  "[Power/CPU_Thermal] [Thermal calibration] g_adc_ge_t      = 0x%x\n",g_adc_ge_t);
+	genmsg(KERN_INFO  "[Power/CPU_Thermal] [Thermal calibration] g_adc_oe_t      = 0x%x\n",g_adc_oe_t);
+	genmsg(KERN_INFO  "[Power/CPU_Thermal] [Thermal calibration] g_degc_cali     = 0x%x\n",g_degc_cali);
+	genmsg(KERN_INFO  "[Power/CPU_Thermal] [Thermal calibration] g_adc_cali_en_t = 0x%x\n",g_adc_cali_en_t);
+	genmsg(KERN_INFO  "[Power/CPU_Thermal] [Thermal calibration] g_o_slope       = 0x%x\n",g_o_slope);
+	genmsg(KERN_INFO  "[Power/CPU_Thermal] [Thermal calibration] g_o_slope_sign  = 0x%x\n",g_o_slope_sign);
+	genmsg(KERN_INFO  "[Power/CPU_Thermal] [Thermal calibration] g_id            = 0x%x\n",g_id);
 
-
-	printk(KERN_CRIT  "[Power/CPU_Thermal] [Thermal calibration] g_o_vtsmcu1     = 0x%x\n",g_o_vtsmcu1);
-	printk(KERN_CRIT  "[Power/CPU_Thermal] [Thermal calibration] g_o_vtsmcu2     = 0x%x\n",g_o_vtsmcu2);
-	printk(KERN_CRIT  "[Power/CPU_Thermal] [Thermal calibration] g_o_vtsabb      = 0x%x\n",g_o_vtsabb);
+	genmsg(KERN_INFO  "[Power/CPU_Thermal] [Thermal calibration] g_o_vtsmcu1     = 0x%x\n",g_o_vtsmcu1);
+	genmsg(KERN_INFO  "[Power/CPU_Thermal] [Thermal calibration] g_o_vtsmcu2     = 0x%x\n",g_o_vtsmcu2);
+	genmsg(KERN_INFO  "[Power/CPU_Thermal] [Thermal calibration] g_o_vtsabb      = 0x%x\n",g_o_vtsabb);
 }
 
 static void thermal_cal_prepare_2(kal_uint32 ret)
@@ -815,11 +821,11 @@ static void thermal_cal_prepare_2(kal_uint32 ret)
 	//printk("[Power/CPU_Thermal] [Thermal calibration] g_ge = %d, g_oe = %d, g_gain = %d, g_x_roomt1 = %d, g_x_roomt2 = %d, g_x_roomtabb = %d\n",
 	//	g_ge, g_oe, g_gain,g_x_roomt1,g_x_roomt2, g_x_roomtabb);
 
-    printk(KERN_CRIT  "[Power/CPU_Thermal] [Thermal calibration] g_ge       = 0x%x\n",g_ge);
-    printk(KERN_CRIT  "[Power/CPU_Thermal] [Thermal calibration] g_gain     = 0x%x\n",g_gain);
-    printk(KERN_CRIT  "[Power/CPU_Thermal] [Thermal calibration] g_gain     = 0x%x\n",g_gain);
-    printk(KERN_CRIT  "[Power/CPU_Thermal] [Thermal calibration] g_x_roomt1 = 0x%x\n",g_x_roomt1);
-    printk(KERN_CRIT  "[Power/CPU_Thermal] [Thermal calibration] g_x_roomt2 = 0x%x\n",g_x_roomt2);
+    genmsg(KERN_INFO  "[Power/CPU_Thermal] [Thermal calibration] g_ge       = 0x%x\n",g_ge);
+    genmsg(KERN_INFO  "[Power/CPU_Thermal] [Thermal calibration] g_gain     = 0x%x\n",g_gain);
+    genmsg(KERN_INFO  "[Power/CPU_Thermal] [Thermal calibration] g_gain     = 0x%x\n",g_gain);
+    genmsg(KERN_INFO  "[Power/CPU_Thermal] [Thermal calibration] g_x_roomt1 = 0x%x\n",g_x_roomt1);
+    genmsg(KERN_INFO  "[Power/CPU_Thermal] [Thermal calibration] g_x_roomt2 = 0x%x\n",g_x_roomt2);
 }
 
 static kal_int32 temperature_to_raw_abb(kal_uint32 ret)
@@ -1120,7 +1126,7 @@ static int mtktscpu_get_temp(struct thermal_zone_device *thermal,
     {
         if ((curr_temp > 150000) || (curr_temp < -20000)) // invalid range
         {
-            printk("[Power/CPU_Thermal] CPU temp invalid=%d\n", curr_temp);
+            genmsg("[Power/CPU_Thermal] CPU temp invalid=%d\n", curr_temp);
             temp_temp = 50000;
             ret = -1;
         }
@@ -1128,7 +1134,7 @@ static int mtktscpu_get_temp(struct thermal_zone_device *thermal,
         {
             if ((curr_temp - last_cpu_real_temp > 20000) || (last_cpu_real_temp - curr_temp > 20000)) //delta 20C, invalid change
             {
-                printk("[Power/CPU_Thermal] CPU temp float hugely temp=%d, lasttemp=%d\n", curr_temp, last_cpu_real_temp);
+                genmsg("[Power/CPU_Thermal] CPU temp float hugely temp=%d, lasttemp=%d\n", curr_temp, last_cpu_real_temp);
                 temp_temp = 50000;
                 ret = -1;
             }
@@ -1147,7 +1153,7 @@ static int mtktscpu_get_temp(struct thermal_zone_device *thermal,
     mtktscpu_dprintk(" mtktscpu_get_temp CPU T1=%d\n", curr_temp);
 
     if ((curr_temp > (trip_temp[0] - 15000)) || (curr_temp < -30000))
-        printk("[Power/CPU_Thermal] CPU T=%d\n", curr_temp);
+        genmsg("[Power/CPU_Thermal] CPU T=%d\n", curr_temp);
 #endif
 
 	read_curr_temp = curr_temp;
@@ -1241,7 +1247,7 @@ static int mtktscpu_bind(struct thermal_zone_device *thermal,
 		printk("[mtktscpu_bind] error binding cooling dev\n");
 		return -EINVAL;
 	} else {
-		printk("[mtktscpu_bind] binding OK, %d\n", table_val);
+		genmsg("[mtktscpu_bind] binding OK, %d\n", table_val);
 	}
 
 	return 0;
@@ -1310,7 +1316,7 @@ static int mtktscpu_unbind(struct thermal_zone_device *thermal,
 		printk("[mtktscpu_unbind] error unbinding cooling dev\n");
 	return -EINVAL;
 	} else {
-		printk("[mtktscpu_unbind] unbinding OK\n");
+		genmsg("[mtktscpu_unbind] unbinding OK\n");
 	}
 
 	return 0;
@@ -1693,10 +1699,8 @@ static int tscpu_sysrst_set_cur_state(struct thermal_cooling_device *cdev,
 	cl_dev_sysrst_state = state;
 	if(cl_dev_sysrst_state == 1)
 	{
-		printk("Power/CPU_Thermal: reset, reset, reset!!!");
-		printk("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-		printk("*****************************************");
-		printk("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+		printk(KERN_CRIT "Power/CPU_Thermal: reset, reset, reset!!!");
+		printk(KERN_CRIT "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 
 		BUG();
 		//arch_reset(0,NULL);
@@ -1956,7 +1960,7 @@ static ssize_t mtktscpu_write_dtm_setting(struct file *file, const char *buffer,
 
 	if (9 <= sscanf(desc, "%d %d %d %d %d %d %d %d %d", &i_id, &i_first_step, &i_theta_r, &i_theta_f, &i_budget_change, &i_min_cpu_pwr, &i_max_cpu_pwr, &i_min_gpu_pwr, &i_max_gpu_pwr))
 	{
-        printk(KERN_CRIT  "[Power/CPU_Thermal][mtktscpu_write_dtm_setting] input %d %d %d %d %d %d %d %d %d\n", i_id, i_first_step, i_theta_r, i_theta_f, i_budget_change, i_min_cpu_pwr, i_max_cpu_pwr, i_min_gpu_pwr, i_max_gpu_pwr);
+        genmsg(KERN_CRIT  "[Power/CPU_Thermal][mtktscpu_write_dtm_setting] input %d %d %d %d %d %d %d %d %d\n", i_id, i_first_step, i_theta_r, i_theta_f, i_budget_change, i_min_cpu_pwr, i_max_cpu_pwr, i_min_gpu_pwr, i_max_gpu_pwr);
 	    
         if (i_id >= 0 && i_id < MAX_CPT_ADAPTIVE_COOLERS)
         {	
@@ -1969,7 +1973,7 @@ static ssize_t mtktscpu_write_dtm_setting(struct file *file, const char *buffer,
             if (i_min_gpu_pwr>0) MINIMUM_GPU_POWERS[i_id] = i_min_gpu_pwr;
             if (i_min_gpu_pwr>0) MAXIMUM_GPU_POWERS[i_id] = i_min_gpu_pwr;
 
-            printk(KERN_CRIT  "[Power/CPU_Thermal][mtktscpu_write_dtm_setting] applied %d %d %d %d %d %d %d %d\n", i_id, FIRST_STEP_TOTAL_POWER_BUDGETS[i_id], PACKAGE_THETA_JA_RISES[i_id], PACKAGE_THETA_JA_FALLS[i_id], MINIMUM_BUDGET_CHANGES[i_id], MINIMUM_CPU_POWERS[i_id], MAXIMUM_CPU_POWERS[i_id], MINIMUM_GPU_POWERS[i_id], MAXIMUM_GPU_POWERS[i_id]);
+            genmsg(KERN_CRIT  "[Power/CPU_Thermal][mtktscpu_write_dtm_setting] applied %d %d %d %d %d %d %d %d\n", i_id, FIRST_STEP_TOTAL_POWER_BUDGETS[i_id], PACKAGE_THETA_JA_RISES[i_id], PACKAGE_THETA_JA_FALLS[i_id], MINIMUM_BUDGET_CHANGES[i_id], MINIMUM_CPU_POWERS[i_id], MAXIMUM_CPU_POWERS[i_id], MINIMUM_GPU_POWERS[i_id], MAXIMUM_GPU_POWERS[i_id]);
         }
         else
         {
@@ -2310,7 +2314,7 @@ static int __init thermal_late_init(void)
 //	struct TS_PTPOD ts;
 
 	//mtktscpu_dprintk("[mtktscpu_init] \n");
-    printk(KERN_CRIT  "[mtktscpu_init] ");
+    genmsg(KERN_CRIT  "[mtktscpu_init] ");
 
 	thermal_cal_prepare();
 	thermal_calibration();

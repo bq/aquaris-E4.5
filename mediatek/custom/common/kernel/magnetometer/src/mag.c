@@ -565,7 +565,7 @@ static int mag_real_driver_init(void)
 		  	break;
 	    }
 	}
-	if(NULL==msensor_init_list[i])
+	if ((i >= MAX_CHOOSE_G_NUM) || (NULL == msensor_init_list[i]))
 	{
 	   MAG_ERR("MAG driver add err \n");
 	   err =-1;

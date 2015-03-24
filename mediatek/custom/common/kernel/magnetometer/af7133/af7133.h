@@ -21,7 +21,7 @@
 #include <linux/ioctl.h>
 
 #define AF7133_I2C_ADDRESS 	0x1E  //7-bit address 
-#define AF7133_BUFSIZE      6
+#define AF7133_BUFSIZE      8
 
 
 /*AF7133 register address*/

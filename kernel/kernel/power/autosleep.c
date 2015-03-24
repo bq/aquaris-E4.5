@@ -15,6 +15,12 @@
 #define _TAG_PM_M "[Ker_PM]"
 #define pm_log(fmt, ...)	pr_info("[%s][%s]" fmt, _TAG_PM_M, __func__, ##__VA_ARGS__);
 
+#if 0
+#define wake_trace(fmt, ...)	pr_info("[%s][%s]" fmt, "WAKETRACE", __func__, ##__VA_ARGS__);
+#else
+#define wake_trace(fmt, ...)   ((void)0)
+#endif
+
 #define HIB_AUTOSLEEP_DEBUG 0
 extern bool console_suspend_enabled; // from printk.c
 #define _TAG_HIB_M "HIB/AUTOSLEEP"
@@ -46,6 +52,8 @@ static void try_to_suspend(struct work_struct *work)
 {
 	unsigned int initial_count, final_count;
 
+	wake_trace("mark\n");
+
 	pm_log("pm_get_wakeup_count\n");
 
 	if (!pm_get_wakeup_count(&initial_count, true))
@@ -54,7 +62,8 @@ static void try_to_suspend(struct work_struct *work)
 	mutex_lock(&autosleep_lock);
 
 	pm_log("pm_save_wakeup_count\n");
-	if (!pm_save_wakeup_count(initial_count)) {
+	if (!pm_save_wakeup_count(initial_count) ||
+		system_state != SYSTEM_RUNNING) {
 		mutex_unlock(&autosleep_lock);
 		goto out;
 	}
@@ -112,7 +121,7 @@ static DECLARE_WORK(suspend_work, try_to_suspend);
 
 void queue_up_suspend_work(void)
 {
-	if (!work_pending(&suspend_work) && autosleep_state > PM_SUSPEND_ON)
+	if (autosleep_state > PM_SUSPEND_ON)
 	{
 		pm_log("queue_work autosleep_state(%d)\n", autosleep_state);
 		queue_work(autosleep_wq, &suspend_work);
@@ -142,24 +151,43 @@ int pm_autosleep_set_state(suspend_state_t state)
 		return -EINVAL;
 #endif
 
+	wake_trace("mark 1\n");
+
 	__pm_stay_awake(autosleep_ws);
 
+	wake_trace("mark 2\n");
+	if (mutex_is_locked(&pm_mutex)) {
+		wake_trace("pm_mtex locked.");
+	}
 	mutex_lock(&autosleep_lock);
+
+	wake_trace("mark 3\n");
 
 	autosleep_state = state;
 
 	__pm_relax(autosleep_ws);
 
+	wake_trace("mark 4\n");
+
 	if (state > PM_SUSPEND_ON) {
-		pm_log("pm_wakeup_autosleep_enable[true] queue_up_suspend_work");
+		// pm_log("pm_wakeup_autosleep_enable[true] queue_up_suspend_work");
+
+		wake_trace("path 1 mark 1\n");
 		pm_wakep_autosleep_enabled(true);
+		wake_trace("path 1 mark 2\n");
 		queue_up_suspend_work();
+		wake_trace("path 1 mark 3\n");
 	} else {
-		pm_log("pm_wakeup_autosleep_enable[false]");
+		// pm_log("pm_wakeup_autosleep_enable[false]");
+		wake_trace("path 2 mark 1\n");
 		pm_wakep_autosleep_enabled(false);
+		wake_trace("path 2 mark 2\n");
 	}
 
 	mutex_unlock(&autosleep_lock);
+
+	wake_trace("mark 5\n");
+
 	return 0;
 }
 

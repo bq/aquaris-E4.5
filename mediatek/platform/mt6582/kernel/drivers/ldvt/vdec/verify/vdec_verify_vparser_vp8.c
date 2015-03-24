@@ -2978,7 +2978,7 @@ void vVP8WrData2PC(UINT32 u4InstID, UCHAR *ptAddr, UINT32 u4Size, BOOL *fgNextFr
     vConcateStr(_bFileStr1[u4InstID][3], _bPatternPath, _bFileAddStrY, _u4FileCnt[u4InstID]);
 
 #ifdef VDEC_BREAK_EN
-    fgNextFrameExist = TRUE;
+    *fgNextFrameExist = TRUE;
     _u4FileCnt[u4InstID] ++;
     _tFBufFileInfo[u4InstID].fgGetFileInfo = FALSE;  
     _tFBufFileInfo[u4InstID].pucTargetAddr = _pucDumpYBuf[u4InstID];

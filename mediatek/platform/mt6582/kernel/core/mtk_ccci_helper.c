@@ -1237,7 +1237,7 @@ static int ccci_helper_suspend(struct platform_device *dev, pm_message_t state)
 	void	(*func)(int);
 	int		md_id;
 
-	printk( "\nccci_helper_suspend\n" );
+	pr_debug("\nccci_helper_suspend\n" );
 
 	for (i = 0; i < MAX_MD_NUM; i++) {
 		for (j = 0; j < SLP_ID_MAX; j++) {
@@ -1257,7 +1257,7 @@ static int ccci_helper_resume(struct platform_device *dev)
 	void	(*func)(int);
 	int		md_id;
 
-	printk( "\nccci_helper_resume\n" );
+	pr_debug( "\nccci_helper_resume\n" );
 
 	for (i = 0; i < MAX_MD_NUM; i++) {
 		for (j = 0; j < RSM_ID_MAX; j++) {

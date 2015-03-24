@@ -9,12 +9,16 @@
 #define BM_LOG_CRTI 1
 #define BM_LOG_FULL 2
 
+#ifdef CONFIG_MT_ENG_BUILD
 #define bm_print(num, fmt, args...)   \
 do {									\
 	if (Enable_FGADC_LOG >= (int)num) {				\
 		xlog_printk(ANDROID_LOG_INFO, "Power/BatMeter", fmt, ##args); \
 	}								   \
 } while(0)
+#else /* CONFIG_MT_ENG_BUILD */
+  #define bm_print(num, fmt, args...) ((void)0)
+#endif /* CONFIG_MT_ENG_BUILD */
 
 
 // ============================================================

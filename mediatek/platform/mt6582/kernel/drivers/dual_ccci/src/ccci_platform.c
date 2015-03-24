@@ -323,7 +323,9 @@ static int get_txpower(int md_id, char *buf, unsigned int len)
 		ret = notify_md_by_sys_msg(md_id, msg, resv);
 	}
 	
+#ifdef CONFIG_MT_ENG_BUILD
 	CCCI_DBG_MSG(md_id, "ctl", "get_txpower(%d): %d\n", buf[0], ret);
+#endif
 
 	return ret;
 }

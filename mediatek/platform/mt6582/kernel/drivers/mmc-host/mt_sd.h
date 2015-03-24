@@ -1202,6 +1202,7 @@ struct msdc_host
 	u32							sw_timeout;
 	u32							power_cycle; /* power cycle done in tuning flow*/
 	bool						power_cycle_enable;/*Enable power cycle*/
+	bool						error_tune_enable; /* enable error tune flow */
 	u32							sd_30_busy;
 	bool						tune;
 	MSDC_POWER_DOMAIN			power_domain;

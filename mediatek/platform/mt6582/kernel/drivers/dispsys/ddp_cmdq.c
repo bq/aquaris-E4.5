@@ -2296,8 +2296,9 @@ static void cmdq_attach_error_task(const TaskStruct *pTask,
         else
         {
             CMDQ_ERR("hwPC is not in region, dump all\n");            
-            print_hex_dump(KERN_ERR, "", DUMP_PREFIX_ADDRESS, 16, 4,
-                           pTask->pVABase, (pTask->blockSize), true);
+            /*
+             print_hex_dump(KERN_ERR, "", DUMP_PREFIX_ADDRESS, 16, 4,
+                           pTask->pVABase, (pTask->blockSize), true);*/
         }
 
         #if 0        

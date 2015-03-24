@@ -189,7 +189,7 @@ static void mt_usb_enable(struct musb *musb)
 
 static void mt_usb_disable(struct musb *musb)
 {
-    printk("%s, %d, %d\n", __func__, mtk_usb_power, musb->power);
+    DBG(3, "%s, %d, %d\n", __func__, mtk_usb_power, musb->power);
 
     if (musb->power == false)
         return;
@@ -239,7 +239,7 @@ bool mt_usb_is_device(void)
 
 void mt_usb_connect(void)
 {
-	printk("[MUSB] USB is ready for connect\n");
+	DBG(3, "[MUSB] USB is ready for connect\n");
     DBG(3, "is ready %d is_host %d power %d\n",mtk_musb->is_ready,mtk_musb->is_host , mtk_musb->power);
     if (!mtk_musb || !mtk_musb->is_ready || mtk_musb->is_host || mtk_musb->power)
         return;
@@ -258,12 +258,12 @@ void mt_usb_connect(void)
 		wake_lock(&mtk_musb->usb_lock);
 
     musb_start(mtk_musb);
-	printk("[MUSB] USB connect\n");
+	DBG(3, "[MUSB] USB connect\n");
 }
 
 void mt_usb_disconnect(void)
 {
-	printk("[MUSB] USB is ready for disconnect\n");
+	DBG(3, "[MUSB] USB is ready for disconnect\n");
 
 	if (!mtk_musb || !mtk_musb->is_ready || mtk_musb->is_host || !mtk_musb->power)
 		return;
@@ -281,7 +281,7 @@ void mt_usb_disconnect(void)
 		mtk_musb->power = false;
 	}
 
-	printk("[MUSB] USB disconnect\n");
+	DBG(3, "[MUSB] USB disconnect\n");
 }
 
 bool usb_cable_connected(void)

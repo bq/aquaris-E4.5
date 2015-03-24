@@ -317,7 +317,7 @@ static void ccmni_read(unsigned long arg)
 
     if (ccmni == NULL)
     {
-        CCCI_MSG_INF("net", "CCMNI%d_read: invalid private data\n", ccmni->channel);
+        CCCI_MSG_INF("net", "CCMNI_read: invalid private data, ccmni is NULL\n");
         return;
     }
   
@@ -863,7 +863,7 @@ static int __init ccmni_init(void)
 {
     int count, ret;
 
-    memset(ccmni_instance, 0, sizeof(ccmni_instance) * CCMNI_MAX_CHANNELS);
+    memset(ccmni_instance, 0, sizeof(ccmni_instance));
     
     for(count = 0; count < CCMNI_MAX_CHANNELS; count++)
     {

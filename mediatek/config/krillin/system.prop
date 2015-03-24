@@ -4,7 +4,11 @@
 
 rild.libpath=/system/lib/mtk-ril.so
 rild.libargs=-d /dev/ttyC0
+ril.device=mtk
+ril.num_slots=2
 
+# Use hybris to control WiFi in urfkill
+urfkill.hybris.wlan=1
 
 # MTK, Infinity, 20090720 {
 wifi.interface=wlan0

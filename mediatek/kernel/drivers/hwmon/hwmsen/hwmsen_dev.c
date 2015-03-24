@@ -522,7 +522,7 @@ static int hwmsen_enable(struct hwmdev_object *obj, int sensor, int enable)
 	{
 //{@for mt6582 blocking issue work around		
 		if(sensor == 7){
-			HWM_LOG("P-sensor disable LDO low power\n");
+			HWM_DBG("P-sensor disable LDO low power\n");
 			pmic_ldo_suspend_enable(0);
 			}
 //@}
@@ -562,7 +562,7 @@ static int hwmsen_enable(struct hwmdev_object *obj, int sensor, int enable)
 	{
 //{@for mt6582 blocking issue work around
 		if(sensor == 7){
-			HWM_LOG("P-sensor enable LDO low power\n");
+			HWM_DBG("P-sensor enable LDO low power\n");
 			pmic_ldo_suspend_enable(1);
 
 			}
@@ -595,7 +595,7 @@ static int hwmsen_enable(struct hwmdev_object *obj, int sensor, int enable)
 		
 	}	
 	   
-	HWM_LOG("sensor(%d), flag(%d)\n", sensor, enable);
+	HWM_DBG("sensor(%d), flag(%d)\n", sensor, enable);
 
 	exit:
 		
@@ -964,7 +964,7 @@ static void update_workqueue_polling_rate(int newDelay)
   int idx=0;
   struct hwmsen_context *cxt = NULL;
   struct hwmdev_object *obj = hwm_obj;
-  HWM_FUN(f);
+  //HWM_FUN(f);
   atomic_set(&delaytemp, 200);//used to finding fastest sensor polling rate
 
   for(i = 0; i < MAX_ANDROID_SENSOR_NUM; i++)
@@ -981,12 +981,12 @@ static void update_workqueue_polling_rate(int newDelay)
   if(atomic_read(&delaytemp) > newDelay)
   {
 	atomic_set(&hwm_obj->delay, newDelay);// work queue polling delay base time
-	HWM_LOG("set new workqueue base time=%d\n",atomic_read(&hwm_obj->delay));
+	HWM_DBG("set new workqueue base time=%d\n",atomic_read(&hwm_obj->delay));
   }
   else
   {
     atomic_set(&hwm_obj->delay, atomic_read(&delaytemp));
-	HWM_LOG("set old fastest sensor delay as workqueue base time=%d\n",atomic_read(&hwm_obj->delay));
+	HWM_DBG("set old fastest sensor delay as workqueue base time=%d\n",atomic_read(&hwm_obj->delay));
   }
 
   //upadate all sensors delayCountSet
@@ -1002,30 +1002,30 @@ static void update_workqueue_polling_rate(int newDelay)
 		if(0 == atomic_read(&cxt->delay))
 		{
 		   cxt->delayCount = cxt->delayCountSet = 0;
-		   HWM_LOG("%s,set delayCountSet=0 delay =%d handle=%d\r\n",__func__, atomic_read(&cxt->delay), idx);
+		   HWM_DBG("%s,set delayCountSet=0 delay =%d handle=%d\r\n",__func__, atomic_read(&cxt->delay), idx);
 		}
 		if(atomic_read(&cxt->delay) <= atomic_read(&hwm_obj->delay))
 		{
 		   cxt->delayCount = cxt->delayCountSet = 0;
-		   HWM_LOG("%s,set delayCountSet=0 delay =%d handle=%d\r\n",__func__, atomic_read(&cxt->delay), idx);
+		   HWM_DBG("%s,set delayCountSet=0 delay =%d handle=%d\r\n",__func__, atomic_read(&cxt->delay), idx);
 		}
 		else
 		{
 		   i= atomic_read(&cxt->delay)/atomic_read(&hwm_obj->delay);
 		   cxt->delayCount = cxt->delayCountSet = i;
-		   HWM_LOG("%s:set delayCountSet=%d delay =%d handle=%d\r\n",__func__, i, atomic_read(&cxt->delay), idx);
+		   HWM_DBG("%s:set delayCountSet=%d delay =%d handle=%d\r\n",__func__, i, atomic_read(&cxt->delay), idx);
 		#if 0
 		   switch(i)
 		   {
 		     case 3:
 			 	// 200/60 ;60/20
 			 	cxt->delayCount = cxt->delayCountSet = 3;
-				HWM_LOG("%s:set delayCountSet=3 delay =%d handle=%d\r\n",__func__,atomic_read(&cxt->delay), idx);
+				HWM_DBG("%s:set delayCountSet=3 delay =%d handle=%d\r\n",__func__,atomic_read(&cxt->delay), idx);
 			 	break;
 			 case 10:
 			 	// 200/20
 			 	cxt->delayCount = cxt->delayCountSet = 10;
-				HWM_LOG("%s:set delayCountSet=10 delay =%d handle=%d\r\n",__func__, atomic_read(&cxt->delay), idx);
+				HWM_DBG("%s:set delayCountSet=10 delay =%d handle=%d\r\n",__func__, atomic_read(&cxt->delay), idx);
 			 	break;
 		   }
 		#endif
@@ -1062,7 +1062,7 @@ static long hwmsen_unlocked_ioctl(struct file *fp, unsigned int cmd, unsigned lo
 				HWM_ERR("copy_from_user fail!!\n");
 				return -EFAULT;
 			}
-			HWM_LOG("ioctl delay handle=%d,delay =%d\n",delayPara.handle,delayPara.delay);
+			HWM_DBG("ioctl delay handle=%d,delay =%d\n",delayPara.handle,delayPara.delay);
 			hwmsen_set_delay(delayPara.delay,delayPara.handle);//modified for android2.3
 			update_workqueue_polling_rate(delayPara.delay);
         	
@@ -1240,7 +1240,7 @@ static void hwmsen_early_suspend(struct early_suspend *h)
 {
    //HWM_FUN(f);
    atomic_set(&(hwm_obj->early_suspend), 1);
-   HWM_LOG(" hwmsen_early_suspend ok------->hwm_obj->early_suspend=%d \n",atomic_read(&hwm_obj->early_suspend));
+   HWM_DBG(" hwmsen_early_suspend ok------->hwm_obj->early_suspend=%d \n",atomic_read(&hwm_obj->early_suspend));
    return ;
 }
 /*----------------------------------------------------------------------------*/
@@ -1248,7 +1248,7 @@ static void hwmsen_late_resume(struct early_suspend *h)
 {
    //HWM_FUN(f);
    atomic_set(&(hwm_obj->early_suspend), 0);
-   HWM_LOG(" hwmsen_late_resume ok------->hwm_obj->early_suspend=%d \n",atomic_read(&hwm_obj->early_suspend));
+   HWM_DBG(" hwmsen_late_resume ok------->hwm_obj->early_suspend=%d \n",atomic_read(&hwm_obj->early_suspend));
    return ;
 }
 /*----------------------------------------------------------------------------*/
@@ -1291,7 +1291,7 @@ int hwmsen_msensor_remove(struct platform_device *pdev)
 	   {
 	      if(NULL == msensor_init_list[i]->uninit)
 	      {
-	        HWM_LOG(" hwmsen_msensor_remove null pointer \n");
+	        HWM_DBG(" hwmsen_msensor_remove null pointer \n");
 	        return -1;
 	      }
 	      msensor_init_list[i]->uninit();
@@ -1304,7 +1304,7 @@ static int msensor_probe(struct platform_device *pdev)
 {
     int i =0;
 	int err=0;
-	HWM_LOG(" msensor_probe +\n");
+	HWM_DBG(" msensor_probe +\n");
 	for(i = 0; i < MAX_CHOOSE_G_NUM; i++)
 	{
 	  if(NULL != msensor_init_list[i])
@@ -1313,7 +1313,7 @@ static int msensor_probe(struct platform_device *pdev)
 		if(0 == err)
 		{
 		   strcpy(msensor_name,msensor_init_list[i]->name);
-		   HWM_LOG(" msensor %s probe ok\n", msensor_name);
+		   HWM_DBG(" msensor %s probe ok\n", msensor_name);
 		   break;
 		}
 	  }
@@ -1388,7 +1388,7 @@ static int gsensor_probe(struct platform_device *pdev)
 {
     int i =0;
 	int err=0;
-	HWM_LOG(" gsensor_probe +\n");
+	HWM_DBG(" gsensor_probe +\n");
 
 	//
 /*
@@ -1400,15 +1400,15 @@ static int gsensor_probe(struct platform_device *pdev)
 	//
 	for(i = 0; i < MAX_CHOOSE_G_NUM; i++)
 	{
-	  HWM_LOG(" i=%d\n",i);
+	  HWM_DBG(" i=%d\n",i);
 	  if(0 != gsensor_init_list[i])
 	  {
-	    HWM_LOG(" !!!!!!!!\n");
+	    HWM_DBG(" !!!!!!!!\n");
 	    err = gsensor_init_list[i]->init();
 		if(0 == err)
 		{
 		   strcpy(gsensor_name,gsensor_init_list[i]->name);
-		   HWM_LOG(" gsensor %s probe ok\n", gsensor_name);
+		   HWM_DBG(" gsensor %s probe ok\n", gsensor_name);
 		   break;
 		}
 	  }
@@ -1487,7 +1487,7 @@ static int alsps_sensor_probe(struct platform_device *pdev)
 {
     int i =0;
 	int err=0;
-	HWM_LOG(" als_ps sensor_probe +\n");
+	HWM_DBG(" als_ps sensor_probe +\n");
 	for(i = 0; i < MAX_CHOOSE_G_NUM; i++)
 	{
 	  if(NULL != alsps_init_list[i])
@@ -1496,7 +1496,7 @@ static int alsps_sensor_probe(struct platform_device *pdev)
 		if(0 == err)
 		{
 		   strcpy(alsps_name,alsps_init_list[i]->name);
-		   HWM_LOG(" alsps sensor %s probe ok\n", alsps_name);
+		   HWM_DBG(" alsps sensor %s probe ok\n", alsps_name);
 		   break;
 		}
 	  }

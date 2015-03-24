@@ -2964,8 +2964,12 @@ static long AudDrv_ioctl(struct file *fp, unsigned int cmd, unsigned long arg)
         }
         case START_MEMIF_TYPE:
         {
-#if defined(CONFIG_MTK_DEEP_IDLE) && !defined(MTK_AUDIO_DYNAMIC_SRAM_SUPPORT)
             int MEM_Type = arg;
+            if (MEM_Type == MEM_DL1)
+                wake_lock(&Audio_wake_lock);
+            else if (MEM_Type == MEM_VUL)
+                wake_lock(&Audio_record_wake_lock);
+#if defined(CONFIG_MTK_DEEP_IDLE) && !defined(MTK_AUDIO_DYNAMIC_SRAM_SUPPORT)
             if (MEM_AWB == MEM_Type || MEM_VUL == MEM_Type ||
                 MEM_DAI == MEM_Type || MEM_MOD_DAI == MEM_Type)
             {
@@ -2981,8 +2985,12 @@ static long AudDrv_ioctl(struct file *fp, unsigned int cmd, unsigned long arg)
         }
         case STANDBY_MEMIF_TYPE:
         {
-#if defined(CONFIG_MTK_DEEP_IDLE) && !defined(MTK_AUDIO_DYNAMIC_SRAM_SUPPORT)
             int MEM_Type = arg;
+            if (MEM_Type == MEM_DL1)
+                wake_unlock(&Audio_wake_lock);
+            else if (MEM_Type == MEM_VUL)
+                wake_unlock(&Audio_record_wake_lock);
+#if defined(CONFIG_MTK_DEEP_IDLE) && !defined(MTK_AUDIO_DYNAMIC_SRAM_SUPPORT)
             if (MEM_AWB == MEM_Type || MEM_VUL == MEM_Type ||
                 MEM_DAI == MEM_Type || MEM_MOD_DAI == MEM_Type)
             {
@@ -3000,6 +3008,8 @@ static long AudDrv_ioctl(struct file *fp, unsigned int cmd, unsigned long arg)
         case AUD_RESTART:
         {
             PRINTK_AUD_ERROR("AudDrv AUD_RESTART cmd = %x \n", cmd);
+            wake_unlock(&Audio_wake_lock);
+            wake_unlock(&Audio_record_wake_lock);
             // driver firest start , do notthing
             if (Auddrv_First_bootup == true)
             {

@@ -41,7 +41,7 @@
 #define slp_warning(fmt, args...)   printk(KERN_WARNING "[SLP] " fmt, ##args)
 #define slp_notice(fmt, args...)    printk(KERN_NOTICE "[SLP] " fmt, ##args)
 #define slp_info(fmt, args...)      printk(KERN_INFO "[SLP] " fmt, ##args)
-#define slp_debug(fmt, args...)     printk(KERN_DEBUG "[SLP] " fmt, ##args)
+#define slp_debug(fmt, args...)     pr_debug("[SLP] " fmt, ##args)
 
 #define slp_crit2(fmt, args...)     \
 do {                                \
@@ -126,9 +126,9 @@ static int slp_suspend_ops_valid(suspend_state_t state)
 static int slp_suspend_ops_begin(suspend_state_t state)
 {
     /* legacy log */
-    slp_notice("@@@@@@@@@@@@@@@@@@@@\n");
-    slp_notice("Chip_pm_begin(%u)(%u)\n", slp_cpu_pdn, slp_infra_pdn);
-    slp_notice("@@@@@@@@@@@@@@@@@@@@\n");
+    slp_debug("@@@@@@@@@@@@@@@@@@@@\n");
+    slp_debug("Chip_pm_begin(%u)(%u)\n", slp_cpu_pdn, slp_infra_pdn);
+    slp_debug("@@@@@@@@@@@@@@@@@@@@\n");
 
     slp_wake_reason = WR_NONE;
 
@@ -138,9 +138,9 @@ static int slp_suspend_ops_begin(suspend_state_t state)
 static int slp_suspend_ops_prepare(void)
 {
     /* legacy log */
-    slp_notice("@@@@@@@@@@@@@@@@@@@@\n");
-    slp_crit2("Chip_pm_prepare\n");
-    slp_notice("@@@@@@@@@@@@@@@@@@@@\n");
+    slp_debug("@@@@@@@@@@@@@@@@@@@@\n");
+    slp_debug("Chip_pm_prepare\n");
+    slp_debug("@@@@@@@@@@@@@@@@@@@@\n");
 
     if (slp_chk_golden)
         mt_power_gs_dump_suspend();
@@ -151,9 +151,9 @@ static int slp_suspend_ops_prepare(void)
 static int slp_suspend_ops_enter(suspend_state_t state)
 {
     /* legacy log */
-    slp_notice("@@@@@@@@@@@@@@@@@@@@\n");
-    slp_crit2("Chip_pm_enter\n");
-    slp_notice("@@@@@@@@@@@@@@@@@@@@\n");
+    slp_debug("@@@@@@@@@@@@@@@@@@@@\n");
+    slp_debug("Chip_pm_enter\n");
+    slp_debug("@@@@@@@@@@@@@@@@@@@@\n");
 
     if (slp_dump_gpio)
         gpio_dump_regs();
@@ -184,17 +184,17 @@ static int slp_suspend_ops_enter(suspend_state_t state)
 static void slp_suspend_ops_finish(void)
 {
     /* legacy log */
-    slp_notice("@@@@@@@@@@@@@@@@@@@@\n");
-    slp_crit2("Chip_pm_finish\n");
-    slp_notice("@@@@@@@@@@@@@@@@@@@@\n");
+    slp_debug("@@@@@@@@@@@@@@@@@@@@\n");
+    slp_debug("Chip_pm_finish\n");
+    slp_debug("@@@@@@@@@@@@@@@@@@@@\n");
 }
 
 static void slp_suspend_ops_end(void)
 {
     /* legacy log */
-    slp_notice("@@@@@@@@@@@@@@@@@@@@\n");
-    slp_notice("Chip_pm_end\n");
-    slp_notice("@@@@@@@@@@@@@@@@@@@@\n");
+    slp_debug("@@@@@@@@@@@@@@@@@@@@\n");
+    slp_debug("Chip_pm_end\n");
+    slp_debug("@@@@@@@@@@@@@@@@@@@@\n");
 }
 
 static struct platform_suspend_ops slp_suspend_ops = {
@@ -216,7 +216,7 @@ int slp_set_wakesrc(u32 wakesrc, bool enable, bool ck26m_on)
     int r;
     unsigned long flags;
 
-    slp_notice("wakesrc = 0x%x, enable = %u, ck26m_on = %u\n",
+    slp_debug("wakesrc = 0x%x, enable = %u, ck26m_on = %u\n",
                wakesrc, enable, ck26m_on);
 
 #if SLP_REPLACE_DEF_WAKESRC
@@ -254,7 +254,7 @@ void slp_module_init(void)
 {
     spm_output_sleep_option();
 
-    slp_notice("SLEEP_DPIDLE_EN:%d, REPLACE_DEF_WAKESRC:%d, SUSPEND_LOG_EN:%d\n",
+    slp_debug("SLEEP_DPIDLE_EN:%d, REPLACE_DEF_WAKESRC:%d, SUSPEND_LOG_EN:%d\n",
                SLP_SLEEP_DPIDLE_EN, SLP_REPLACE_DEF_WAKESRC, SLP_SUSPEND_LOG_EN);
 
     suspend_set_ops(&slp_suspend_ops);

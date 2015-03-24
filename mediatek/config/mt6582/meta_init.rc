@@ -7,7 +7,7 @@
 on early-init
     # Set init and its forked children's oom_adj.
     write /proc/1/oom_adj -16
-
+    mkdir /dev/socket 0775
     start ueventd
 
 # create mountpoints
@@ -106,17 +106,17 @@ on fs_property:ro.mount.fs=YAFFS
 
 on fs_property:ro.mount.fs=EXT4
     write /proc/bootprof "INIT:eMMC:Mount_START"
-    exec /sbin/e2fsck -p /emmc@android
+    #exec /sbin/e2fsck -p /emmc@android
     # Mount /system rw first to give the filesystem a chance to save a checkpoint
     #mount ext4 emmc@android /system wait commit=1,data=journal,noauto_da_alloc
-    mount ext4 /emmc@android /system wait commit=1,noauto_da_alloc
+    #mount ext4 /emmc@android /system wait commit=1,noauto_da_alloc
     chown root system /system/etc/getsystemtype.sh
     chmod 0700 /system/etc/getsystemtype.sh
-    mount ext4 /emmc@android /system noatime ro remount wait 
-    exec /sbin/e2fsck -pfD /emmc@usrdata
-    exec /sbin/tune2fs -O has_journal /emmc@usrdata
-    exec /system/bin/ext4_resize
-    mount ext4 /emmc@usrdata /data noatime nosuid nodev wait commit=1,nodelalloc,noauto_da_alloc	
+    #mount ext4 /emmc@android /system noatime ro remount wait 
+    #exec /sbin/e2fsck -pfD /emmc@usrdata
+    #exec /sbin/tune2fs -O has_journal /emmc@usrdata
+    #exec /system/bin/ext4_resize
+    #mount ext4 /emmc@usrdata /data noatime nosuid nodev wait commit=1,nodelalloc,noauto_da_alloc	
     # mount cip partitions
     exec /sbin/e2fsck -p /emmc@custom
 	mount ext4 /emmc@custom /custom
@@ -407,10 +407,10 @@ on property:sys.mtk.disable.mobile_log_d=1
 on property:sys.mtk.disable.mobile_log_d=0
     start mobile_log_d
 
-service vold /system/bin/vold
-    class core
-    socket vold stream 0660 root mount
-    ioprio be 2
+#service vold /system/bin/vold
+#    class core
+#    socket vold stream 0660 root mount
+#    ioprio be 2
 
 # adbd is controlled via property triggers in init.<platform>.usb.rc
 service adbd /sbin/adbd
@@ -438,6 +438,9 @@ on property:sys.usb.com_config=1
     write /sys/class/android_usb/android0/functions acm
     write /sys/class/android_usb/android0/bDeviceClass 02
     write /sys/class/android_usb/android0/enable 1
+service inexversion /system/etc/inexversion.sh
+    user root
+    oneshot
 service  getsystemtype  /system/etc/getsystemtype.sh
    oneshot
    user root

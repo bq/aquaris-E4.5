@@ -1469,7 +1469,7 @@ mtk_cfg80211_testmode_set_key_ext(
         prIWEncExt = (struct iw_encode_exts *) &prParams->ext;
     }
 
-    if (prIWEncExt->alg == IW_ENCODE_ALG_SMS4) {
+    if (prIWEncExt && (prIWEncExt->alg == IW_ENCODE_ALG_SMS4)) {
         /* KeyID */
         prWpiKey->ucKeyID = prParams->key_index;
         prWpiKey->ucKeyID --;

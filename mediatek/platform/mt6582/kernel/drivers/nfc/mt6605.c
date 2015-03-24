@@ -217,7 +217,8 @@ static int mt6605_probe(struct i2c_client *client, const struct i2c_device_id *i
 	/* firm_gpio */
 	mt_set_gpio_mode(platform_data->sysrstb_gpio, GPIO_NFC_RST_PIN_M_GPIO);
 	mt_set_gpio_dir(platform_data->sysrstb_gpio, GPIO_DIR_OUT);	
-	mt_set_gpio_out(platform_data->sysrstb_gpio, GPIO_OUT_ZERO);	
+	//mt_set_gpio_out(platform_data->sysrstb_gpio, GPIO_OUT_ZERO);	
+	mt_set_gpio_out(platform_data->sysrstb_gpio, GPIO_OUT_ONE);	
 
 	/* EINT_gpio */
 	mt_set_gpio_mode(platform_data->eint_gpio, GPIO_NFC_EINT_PIN_M_GPIO);

@@ -78,3 +78,6 @@ WITH_DEXPREOPT := false
 # include all config files
 include $(BOARD_CONFIG_DIR)/configs/*.mk
 
+TARGET_RECOVERY_SKIP_GPG_VERIFICATION := false
+
+BOARD_MKBOOTIMG_ARGS := --base 80000000 --ramdisk_offset 4000000

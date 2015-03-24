@@ -184,7 +184,7 @@ bool usb_enable_clock(bool enable)
 
 	spin_unlock_irqrestore(&musb_reg_clock_lock, flags);
 
-	printk(KERN_DEBUG "enable(%d), count(%d) res=%d\n", enable, count, res);
+	pr_debug("enable(%d), count(%d) res=%d\n", enable, count, res);
 	return 1;
 }
 
@@ -266,7 +266,7 @@ void usb_phy_switch_to_uart(void)
 		return;
 	}
 	//ALPS00775710
-	printk("%s, line %d: force to uart mode!!\n", __func__, __LINE__);
+	pr_debug("%s, line %d: force to uart mode!!\n", __func__, __LINE__);
 	//ALPS00775710
 
     usb_enable_clock(true);
@@ -346,7 +346,7 @@ void usb_phy_poweron(void){
     USBPHY_SET8(0x6c, 0x2E);
     USBPHY_SET8(0x6d, 0x3E);
 
-    printk("usb power on success\n");
+    pr_debug("usb power on success\n");
 }
 
 #ifdef MTK_UART_USB_SWITCH
@@ -407,8 +407,8 @@ static void usb_phy_savecurrent_internal(void){
     USBPHY_SET8(0x63, 0x02);
 
 //ALPS00427972, implement the analog register formula
-    printk("%s: USBPHY_READ8(0x05) = 0x%x \n", __func__, USBPHY_READ8(0x05));
-    printk("%s: USBPHY_READ8(0x07) = 0x%x \n", __func__, USBPHY_READ8(0x07));
+    pr_debug("%s: USBPHY_READ8(0x05) = 0x%x \n", __func__, USBPHY_READ8(0x05));
+    pr_debug("%s: USBPHY_READ8(0x07) = 0x%x \n", __func__, USBPHY_READ8(0x07));
 //ALPS00427972, implement the analog register formula
 
     udelay(1);
@@ -428,7 +428,7 @@ void usb_phy_savecurrent(void){
     usb_phy_savecurrent_internal();
     //4 14. turn off internal 48Mhz PLL.
     usb_enable_clock(false);
-    printk("usb save current success\n");
+    pr_debug("usb save current success\n");
 }
 
 void usb_phy_recover(void){
@@ -508,20 +508,20 @@ void usb_phy_recover(void){
 
     hs_slew_rate_cal();
 
-    printk("USB HW reg: index14=0x%x\n", get_devinfo_with_index(14));
+    pr_debug("USB HW reg: index14=0x%x\n", get_devinfo_with_index(14));
     if (get_devinfo_with_index(14) & (0x01<<22)){
 		USBPHY_CLR8(0x00, 0x20);
-		printk("USB HW reg: write RG_USB20_INTR_EN 0x%x\n", USBPHY_READ8(0x00));
+		pr_debug("USB HW reg: write RG_USB20_INTR_EN 0x%x\n", USBPHY_READ8(0x00));
 	}
 
 	if (get_devinfo_with_index(14) & (0x07<<19)) {
 		//RG_USB20_VRT_VREF_SEL[2:0]=5 (ori:4) (0x11110804[14:12])
 		USBPHY_CLR8(0x05, 0x70);
 		USBPHY_SET8(0x05, ((get_devinfo_with_index(14)>>19)<<4)&0x70);
-		printk("USB HW reg: overwrite RG_USB20_VRT_VREF_SEL 0x%x\n", USBPHY_READ8(0x05));
+		pr_debug("USB HW reg: overwrite RG_USB20_VRT_VREF_SEL 0x%x\n", USBPHY_READ8(0x05));
 	}
 
-    printk("usb recovery success\n");
+    pr_debug("usb recovery success\n");
     return;
 }
 
@@ -534,7 +534,7 @@ void Charger_Detect_Init(void)
     udelay(50);
     /* RG_USB20_BC11_SW_EN = 1'b1 */
     USBPHY_SET8(0x1a, 0x80);
-    printk("Charger_Detect_Init\n");
+    pr_debug("Charger_Detect_Init\n");
 }
 
 void Charger_Detect_Release(void)
@@ -544,7 +544,7 @@ void Charger_Detect_Release(void)
     udelay(1);
     //4 14. turn off internal 48Mhz PLL.
     usb_enable_clock(false);
-    printk("Charger_Detect_Release\n");
+    pr_debug("Charger_Detect_Release\n");
 }
 
 void usb_phy_context_save(void)

@@ -16,7 +16,7 @@ on early-init
     # Set the security context for the init process.
     # This should occur before anything else (e.g. ueventd) is started.
     setcon u:r:init:s0
-
+    mkdir /dev/socket 0775
     start ueventd
 
 # create mountpoints
@@ -183,10 +183,10 @@ on fs_property:ro.mount.fs=YAFFS
 
 on fs_property:ro.mount.fs=EXT4
     write /proc/bootprof "INIT:eMMC:Mount_START"
-    exec /sbin/e2fsck -p /emmc@android
+    #exec /sbin/e2fsck -p /emmc@android
     # Mount /system rw first to give the filesystem a chance to save a checkpoint
     #mount ext4 emmc@android /system wait commit=1,data=journal,noauto_da_alloc
-    mount ext4 /emmc@android /system wait commit=1,noauto_da_alloc
+    #mount ext4 /emmc@android /system wait commit=1,noauto_da_alloc
 
     # RIL need to do this before the folder /system changed to read only
     chown radio system /system/etc/ril
@@ -195,14 +195,14 @@ on fs_property:ro.mount.fs=EXT4
     # Wifi thermal need to chmod before system is changed to read only
     chown root system /system/etc/throttle.sh
     chmod 0750 /system/etc/throttle.sh
-    mount ext4 /emmc@android /system noatime ro remount wait
-    exec /sbin/e2fsck -pfD /emmc@usrdata
-    exec /sbin/tune2fs -O has_journal /emmc@usrdata
-    exec /system/bin/ext4_resize
-    mount ext4 /emmc@usrdata /data noatime nosuid nodev wait noauto_da_alloc,discard
-    exec /sbin/e2fsck -p /emmc@cache
-    exec /sbin/tune2fs -O has_journal /emmc@cache
-    mount ext4 /emmc@cache /cache noatime nosuid nodev wait noauto_da_alloc,discard
+    #mount ext4 /emmc@android /system noatime ro remount wait
+    #exec /sbin/e2fsck -pfD /emmc@usrdata
+    #exec /sbin/tune2fs -O has_journal /emmc@usrdata
+    #exec /system/bin/ext4_resize
+    #mount ext4 /emmc@usrdata /data noatime nosuid nodev wait noauto_da_alloc,discard
+    #exec /sbin/e2fsck -p /emmc@cache
+    #exec /sbin/tune2fs -O has_journal /emmc@cache
+    #mount ext4 /emmc@cache /cache noatime nosuid nodev wait noauto_da_alloc,discard
     write /proc/bootprof "INIT:eMMC:Mount_END"
 
 
@@ -428,13 +428,13 @@ on post-fs-data
         #EM eint
     chown root diag /sys/bus/platform/drivers/eint/current_eint
 
-    chmod 0660 /dev/graphics/fb0
+    chmod 0666 /dev/graphics/fb0
     chown system graphics /dev/graphics/fb0
 
-    chmod 0660 /dev/mtkfb_vsync
+    chmod 0666 /dev/mtkfb_vsync
     chown system graphics /dev/mtkfb_vsync
 
-    chmod 0660 /dev/sw_sync
+    chmod 0666 /dev/sw_sync
     chown system graphics /dev/sw_sync
 
     # EM baseband file
@@ -671,9 +671,7 @@ service servicemanager /system/bin/servicemanager
     user system
     group system
     #critical
-    onrestart restart zygote
     onrestart restart media
-    onrestart restart surfaceflinger
     onrestart restart drm
 
 service ipod /system/bin/ipod

@@ -3,6 +3,12 @@
 #include <linux/utsname.h>
 #include <linux/freezer.h>
 
+#if 0
+#define sleep_trace(fmt, ...)	pr_info("[%s][%s]" fmt, "SLEEPTRACE", __func__, ##__VA_ARGS__);
+#else
+#define sleep_trace(fmt, ...)	((void)0)
+#endif
+
 struct swsusp_info {
 	struct new_utsname	uts;
 	u32			version_code;

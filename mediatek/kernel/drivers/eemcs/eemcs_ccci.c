@@ -294,6 +294,13 @@ KAL_INT32 eemcs_ccci_UL_write_skb_to_swq(CCCI_CHANNEL_T chn, struct sk_buff *skb
     }else{
         DBGLOG(CCCI, WAR, "CH%d write NULL skb to kick DF process!", chn);
     }
+
+    if (pccci == NULL)
+    {
+        ret = KAL_FAIL;
+        return ret;
+    }
+
 	if(pccci_h->channel == CCCI_FORCE_RESET_MODEM_CHANNEL){
 	    tx_queue_idx = 0;
 		hif_ul_write_swq(tx_queue_idx, skb);

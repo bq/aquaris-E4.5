@@ -1849,7 +1849,7 @@ static INT32 opfunc_therm_ctrl(P_WMT_OP pWmtOp)
             pWmtOp->au4OpData[1] = MTK_WCN_BOOL_FALSE;/*will return to function driver*/
             mtk_wcn_stp_dbg_dump_package();
         } else {
-            WMT_INFO_FUNC("Send WMT_THERM_CTRL_CMD command OK!\n");
+            WMT_DBG_FUNC("Send WMT_THERM_CTRL_CMD command OK!\n");
             pWmtOp->au4OpData[1] = MTK_WCN_BOOL_TRUE;/*will return to function driver*/
         }
     }
@@ -1864,7 +1864,7 @@ static INT32 opfunc_therm_ctrl(P_WMT_OP pWmtOp)
             pWmtOp->au4OpData[1] = 0xFF;    /*will return to function driver*/
             mtk_wcn_stp_dbg_dump_package();
         } else {
-            WMT_INFO_FUNC("Send WMT_THERM_READ_CMD command OK!\n");
+            WMT_DBG_FUNC("Send WMT_THERM_READ_CMD command OK!\n");
             pWmtOp->au4OpData[1] = evtBuf[5];/*will return to function driver*/
         }
     }

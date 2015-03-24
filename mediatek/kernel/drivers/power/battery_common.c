@@ -165,7 +165,7 @@ extern U32 _g_bat_sleep_total_time;
 // FOR ANDROID BATTERY SERVICE
 ////////////////////////////////////////////////////////////////////////////////
 /* Dual battery */
-int g_status_2nd = POWER_SUPPLY_STATUS_NOT_CHARGING;
+int g_status_2nd = POWER_SUPPLY_STATUS_DISCHARGING;
 int g_capacity_2nd = 50;
 int g_present_2nd = 0;
 
@@ -206,6 +206,10 @@ struct battery_data {
     int status_2nd;
     int capacity_2nd;
     int present_2nd;
+    /* Generic values (used by upower and generic stack) */
+    int voltage_max_design;
+    int voltage_now;
+    int temp;
 };
 
 static enum power_supply_property wireless_props[] = {
@@ -241,6 +245,10 @@ static enum power_supply_property battery_props[] = {
     POWER_SUPPLY_PROP_status_2nd,
     POWER_SUPPLY_PROP_capacity_2nd,
     POWER_SUPPLY_PROP_present_2nd,
+    /* Generic values (used by upower and generic stack) */
+    POWER_SUPPLY_PROP_VOLTAGE_MAX_DESIGN,
+    POWER_SUPPLY_PROP_VOLTAGE_NOW,
+    POWER_SUPPLY_PROP_TEMP,
 };
 
 
@@ -392,11 +400,9 @@ static int wireless_get_property(struct power_supply *psy,
 {
     int ret = 0;
     struct wireless_data *data = container_of(psy, struct wireless_data, psy);    
-    battery_xlog_printk(BAT_LOG_CRTI, "[wireless_get_property] start\n");    
     switch (psp) {
     case POWER_SUPPLY_PROP_ONLINE:                           
         val->intval = data->WIRELESS_ONLINE;
-        battery_xlog_printk(BAT_LOG_CRTI, "[wireless_get_property] data->WIRELESS_ONLINE %d\n", data->WIRELESS_ONLINE);    
         break;
     default:
         ret = -EINVAL;
@@ -507,6 +513,15 @@ static int battery_get_property(struct power_supply *psy,
     case POWER_SUPPLY_PROP_present_2nd :
         val->intval = data->present_2nd;
         break;
+    case POWER_SUPPLY_PROP_VOLTAGE_MAX_DESIGN:
+        val->intval = data->voltage_max_design;
+        break;
+    case POWER_SUPPLY_PROP_VOLTAGE_NOW:
+        val->intval = data->voltage_now;
+        break;
+    case POWER_SUPPLY_PROP_TEMP:
+        val->intval = data->temp;
+        break;
 
     default:
         ret = -EINVAL;
@@ -571,11 +586,11 @@ static struct battery_data battery_main = {
     .BAT_batt_vol = 4200,
     .BAT_batt_temp = 22,
     /* Dual battery */
-    .status_2nd = POWER_SUPPLY_STATUS_NOT_CHARGING,
+    .status_2nd = POWER_SUPPLY_STATUS_DISCHARGING,
     .capacity_2nd = 50,
     .present_2nd = 0,
 #else
-    .BAT_STATUS = POWER_SUPPLY_STATUS_NOT_CHARGING,    
+    .BAT_STATUS = POWER_SUPPLY_STATUS_DISCHARGING,
     .BAT_HEALTH = POWER_SUPPLY_HEALTH_GOOD,
     .BAT_PRESENT = 1,
     .BAT_TECHNOLOGY = POWER_SUPPLY_TECHNOLOGY_LION,
@@ -583,9 +598,13 @@ static struct battery_data battery_main = {
     .BAT_batt_vol = 0,
     .BAT_batt_temp = 0,
     /* Dual battery */
-    .status_2nd = POWER_SUPPLY_STATUS_NOT_CHARGING,
+    .status_2nd = POWER_SUPPLY_STATUS_DISCHARGING,
     .capacity_2nd = 50,
     .present_2nd = 0,
+    /* Generic values (used by upower and generic stack) */
+    .voltage_max_design = 4200000,
+    .voltage_now = 0,
+    .temp = 0,
 #endif
 };
 
@@ -1434,15 +1453,38 @@ static void mt_battery_Sync_UI_Percentage_to_Real(void)
 	}
 }
 
+static int battery_compare_data(struct battery_data *b1, struct battery_data *b2)
+{
+    if ((b1->BAT_STATUS != b2->BAT_STATUS) ||
+        (b1->BAT_HEALTH != b2->BAT_HEALTH) ||
+        (b1->BAT_PRESENT != b2->BAT_PRESENT) ||
+        (b1->BAT_TECHNOLOGY != b2->BAT_TECHNOLOGY) ||
+        (b1->BAT_CAPACITY != b2->BAT_CAPACITY) ||
+        (b1->voltage_now != b2->voltage_now) ||
+        (b1->temp != b2->temp) ||
+        (b1->status_2nd != b2->status_2nd) ||
+        (b1->capacity_2nd != b2->capacity_2nd) ||
+        (b1->present_2nd != b2->present_2nd)) {
+        battery_xlog_printk(BAT_LOG_CRTI, "[Battery] battery_compare_data: different data\n");
+        return 1;
+    } else
+        return 0;
+}
+
 static void battery_update(struct battery_data *bat_data)
 {
     struct power_supply *bat_psy = &bat_data->psy;
 	kal_bool resetBatteryMeter = KAL_FALSE;
+    /* For comparison */
+    struct battery_data orig;
+    memcpy(&orig, bat_data, sizeof(struct battery_data));
 
     bat_data->BAT_TECHNOLOGY = POWER_SUPPLY_TECHNOLOGY_LION;
     bat_data->BAT_HEALTH = POWER_SUPPLY_HEALTH_GOOD;
     bat_data->BAT_batt_vol = BMT_status.bat_vol;
+    bat_data->voltage_now = BMT_status.bat_vol * 1000;
     bat_data->BAT_batt_temp= BMT_status.temperature * 10;
+    bat_data->temp= BMT_status.temperature * 10;
 	bat_data->BAT_PRESENT = BMT_status.bat_exist;
 
     if( (BMT_status.charger_exist == KAL_TRUE) && (BMT_status.bat_charging_state != CHR_ERROR) )
@@ -1466,7 +1508,7 @@ static void battery_update(struct battery_data *bat_data)
     }
     else	/* Only Battery */
     {
-        bat_data->BAT_STATUS = POWER_SUPPLY_STATUS_NOT_CHARGING;
+        bat_data->BAT_STATUS = POWER_SUPPLY_STATUS_DISCHARGING;
         if (BMT_status.bat_vol <= V_0PERCENT_TRACKING)
     		resetBatteryMeter = mt_battery_0Percent_tracking_check();
 		else 
@@ -1503,7 +1545,8 @@ static void battery_update(struct battery_data *bat_data)
 	
 	mt_battery_update_EM(bat_data);
 		
-    power_supply_changed(bat_psy);    
+    if (battery_compare_data(&orig, bat_data))
+        power_supply_changed(bat_psy);
 }
 
 void update_charger_info(int wireless_state)
@@ -1522,6 +1565,7 @@ void update_charger_info(int wireless_state)
 static void wireless_update(struct wireless_data *wireless_data)
 {
     struct power_supply *wireless_psy = &wireless_data->psy;
+    int wireless_online = wireless_data->WIRELESS_ONLINE;
 
     if( BMT_status.charger_exist == KAL_TRUE || g_wireless_state)
     {         
@@ -1536,13 +1580,15 @@ static void wireless_update(struct wireless_data *wireless_data)
     {
         wireless_data->WIRELESS_ONLINE = 0;        
     }
-    
-    power_supply_changed(wireless_psy);    
+
+    if (wireless_online != wireless_data->WIRELESS_ONLINE)
+        power_supply_changed(wireless_psy);
 }
 
 static void ac_update(struct ac_data *ac_data)
 {
     struct power_supply *ac_psy = &ac_data->psy;
+    int ac_online = ac_data->AC_ONLINE;
 
     if( BMT_status.charger_exist == KAL_TRUE )
     {         
@@ -1562,12 +1608,14 @@ static void ac_update(struct ac_data *ac_data)
         ac_data->AC_ONLINE = 0;        
     }
 
-    power_supply_changed(ac_psy);    
+    if (ac_online != ac_data->AC_ONLINE)
+        power_supply_changed(ac_psy);
 }
 
 static void usb_update(struct usb_data *usb_data)
 {
     struct power_supply *usb_psy = &usb_data->psy;
+    int usb_online = usb_data->USB_ONLINE;
 
     if( BMT_status.charger_exist == KAL_TRUE )        
     {
@@ -1583,7 +1631,8 @@ static void usb_update(struct usb_data *usb_data)
         usb_data->USB_ONLINE = 0;
     }   
 
-    power_supply_changed(usb_psy); 
+    if (usb_online != usb_data->USB_ONLINE)
+        power_supply_changed(usb_psy);
 }
 
 #endif
@@ -2494,20 +2543,21 @@ void BAT_thread(void)
 ///////////////////////////////////////////////////////////////////////////////////////////
 int bat_thread_kthread(void *x)
 {
-    ktime_t ktime = ktime_set(3, 0);  // 10s, 10* 1000 ms	
+    /* Initial ktime, that later changes to BAT_TASK_PERIOD */
+    ktime_t ktime = ktime_set(3, 0);  // 3s, 10* 1000 ms
     
     /* Run on a process content */  
     while (1) {               
         mutex_lock(&bat_mutex);
           
 		if((chargin_hw_init_done == KAL_TRUE) && (battery_suspended == KAL_FALSE))
-	        BAT_thread();                      
+	        BAT_thread();
 
         mutex_unlock(&bat_mutex);
     
-        battery_xlog_printk(BAT_LOG_FULL, "wait event \n" );
+        battery_xlog_printk(BAT_LOG_FULL, "bat_thread_kthread: wait event\n");
 
-		wait_event(bat_thread_wq, (bat_thread_timeout == KAL_TRUE));
+		wait_event_interruptible(bat_thread_wq, (bat_thread_timeout == KAL_TRUE));
 	
         bat_thread_timeout = KAL_FALSE;
         hrtimer_start(&battery_kthread_timer, ktime, HRTIMER_MODE_REL);   

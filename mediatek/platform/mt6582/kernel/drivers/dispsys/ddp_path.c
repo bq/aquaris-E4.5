@@ -2032,7 +2032,7 @@ static int disp_reg_backup(void)
 {
 	unsigned int index;
 	reg_offset = 0;
-	DISP_MSG("disp_reg_backup() start, *pRegBackup=0x%x, reg_offset=%d  \n", *pRegBackup, reg_offset);
+	DISP_DBG("disp_reg_backup() start, *pRegBackup=0x%x, reg_offset=%d  \n", *pRegBackup, reg_offset);
 
 	// Config
 	reg_backup(DISP_REG_CONFIG_DISP_OVL_MOUT_EN );
@@ -2216,7 +2216,7 @@ static int disp_reg_backup(void)
 	reg_backup(DISP_REG_WDMA_CLIP_DBG       );
 
 
-	DISP_MSG("disp_reg_backup() end, *pRegBackup=0x%x, reg_offset=%d \n", *pRegBackup, reg_offset);
+	DISP_DBG("disp_reg_backup() end, *pRegBackup=0x%x, reg_offset=%d \n", *pRegBackup, reg_offset);
 
 	return 0;
 }
@@ -2225,7 +2225,7 @@ static int disp_reg_restore(void)
 {
 	unsigned int index;
     reg_offset = 0;
-    DISP_MSG("disp_reg_restore(*) start, *pRegBackup=0x%x, reg_offset=%d  \n", *pRegBackup, reg_offset);
+    DISP_DBG("disp_reg_restore(*) start, *pRegBackup=0x%x, reg_offset=%d  \n", *pRegBackup, reg_offset);
 
     // Config
     reg_restore(DISP_REG_CONFIG_DISP_OVL_MOUT_EN );     
@@ -2410,7 +2410,7 @@ static int disp_reg_restore(void)
 
     //DISP_MSG("disp_reg_restore() release mutex \n");
     //disp_path_release_mutex();
-    DISP_MSG("disp_reg_restore() done \n");
+    DISP_DBG("disp_reg_restore() done \n");
     
     disp_bls_init(fb_width, fb_height);
 
@@ -2477,7 +2477,7 @@ int disp_path_clock_on(char* name)
 {
     if(name != NULL)
     {
-        DISP_MSG("disp_path_power_on, caller:%s \n", name);
+        DISP_DBG("disp_path_power_on, caller:%s \n", name);
     }
 
     enable_clock(MT_CG_DISP0_SMI_COMMON   , "DDP");
@@ -2542,7 +2542,7 @@ int disp_path_clock_on(char* name)
         disp_aal_reset();
     }
     
-    DISP_MSG("DISP CG:%x\n", DISP_REG_GET(DISP_REG_CONFIG_MMSYS_CG_CON0));
+    DISP_DBG("DISP CG:%x\n", DISP_REG_GET(DISP_REG_CONFIG_MMSYS_CG_CON0));
     return 0;
 }
 
@@ -2626,7 +2626,7 @@ int disp_path_clock_off(char* name)
 {
     if(name != NULL)
     {
-        DISP_MSG("disp_path_power_off, caller:%s \n", name);
+        DISP_DBG("disp_path_power_off, caller:%s \n", name);
     }
     
     // disable intr and clear intr status

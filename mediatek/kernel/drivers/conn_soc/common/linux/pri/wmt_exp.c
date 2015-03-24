@@ -97,7 +97,7 @@ mtk_wcn_wmt_func_ctrl (
     pOp->op.au4OpData[0] = type;
     pSignal->timeoutValue= (WMT_OPID_FUNC_ON == pOp->op.opId) ? MAX_FUNC_ON_TIME : MAX_FUNC_OFF_TIME;
 
-    WMT_INFO_FUNC("OPID(%d) type(%d) start\n",
+    WMT_DBG_FUNC("OPID(%d) type(%d) start\n",
             pOp->op.opId,
             pOp->op.au4OpData[0]);
 
@@ -120,7 +120,7 @@ mtk_wcn_wmt_func_ctrl (
             pOp->op.au4OpData[0]);
     }
     else {
-        WMT_INFO_FUNC("OPID(%d) type(%d) ok\n",
+        WMT_DBG_FUNC("OPID(%d) type(%d) ok\n",
             pOp->op.opId,
             pOp->op.au4OpData[0]);
     }
@@ -246,7 +246,7 @@ mtk_wcn_wmt_therm_ctrl (
     pOpData->au4OpData[0] = eType;
     pSignal->timeoutValue = MAX_EACH_WMT_CMD;
 
-    WMT_INFO_FUNC("OPID(%d) type(%d) start\n",
+    WMT_DBG_FUNC("OPID(%d) type(%d) start\n",
             pOp->op.opId,
             pOp->op.au4OpData[0]);
 
@@ -267,7 +267,7 @@ mtk_wcn_wmt_therm_ctrl (
         pOpData->au4OpData[1] = (eType == WMTTHERM_READ) ? 0xFF : MTK_WCN_BOOL_FALSE;/*will return to function driver*/
     }
     else {
-        WMT_INFO_FUNC("OPID(%d) type(%d) return(%d) ok\n\n",
+        WMT_DBG_FUNC("OPID(%d) type(%d) return(%d) ok\n\n",
             pOpData->opId,
             pOpData->au4OpData[0],
             pOpData->au4OpData[1]);
@@ -336,7 +336,7 @@ mtk_wcn_wmt_dsns_ctrl (
         pOpData->au4OpData[1] = eType;
     }
 
-    WMT_INFO_FUNC("OPID(%d) type(%d) start\n",
+    WMT_DBG_FUNC("OPID(%d) type(%d) start\n",
             pOp->op.opId,
             pOp->op.au4OpData[0]);
 
@@ -355,7 +355,7 @@ mtk_wcn_wmt_dsns_ctrl (
             pOpData->au4OpData[0]);
     }
     else {
-        WMT_INFO_FUNC("OPID(%d) type(%d) ok\n\n",
+        WMT_DBG_FUNC("OPID(%d) type(%d) ok\n\n",
             pOpData->opId,
             pOpData->au4OpData[0]);
     }

@@ -1628,7 +1628,7 @@ static void bmg_late_resume(struct early_suspend *h)
 {
 	struct bmg_i2c_data *obj =
 		container_of(h, struct bmg_i2c_data, early_drv);
-	int err;
+	int err = 0;
 	GYRO_FUN();
 
 	if (obj == NULL) {

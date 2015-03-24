@@ -70,10 +70,10 @@ typedef unsigned long long uint64;
 
 
 // below for audio debugging
-#define DEBUG_AUDDRV
-#define DEBUG_AFE_REG
-#define DEBUG_ANA_REG
-#define DEBUG_AUD_CLK
+//#define DEBUG_AUDDRV
+//#define DEBUG_AFE_REG
+//#define DEBUG_ANA_REG
+//#define DEBUG_AUD_CLK
 
 /*
 #ifdef DEBUG_AUDDRV

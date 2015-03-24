@@ -945,8 +945,8 @@ void DBG_Init(void)
     mtkfb_dbgfs = debugfs_create_file("mtkfb",
                                                                S_IFREG|S_IRUGO, NULL, (void *)0, &debug_fops);
 
-    memset(&dbg_opt, sizeof(dbg_opt), 0);
-    memset(&fps, sizeof(fps), 0);
+    memset(&dbg_opt, 0, sizeof(dbg_opt));
+    memset(&fps, 0, sizeof(fps));
     dbg_opt.log_fps_wnd_size = DEFAULT_LOG_FPS_WND_SIZE;
 
 #ifdef MTKFB_DEBUG_FS_CAPTURE_LAYER_CONTENT_SUPPORT

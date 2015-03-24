@@ -293,12 +293,14 @@ static void timer_func(unsigned long data)
 	int						ret=0;
 	ccci_msg_t				msg;
 	ccmni_v2_ctl_block_t	*ctl_b = (ccmni_v2_ctl_block_t*)ccmni->owner;
-	int						md_id = ctl_b->m_md_id;
+	int						md_id;
 
 	spin_lock_bh(&ccmni->spinlock);
 
 	if (ctl_b == 0)  
 		goto out;
+
+	md_id = ctl_b->m_md_id;
 
 	if (test_bit(CCMNI_RECV_ACK_PENDING,&ccmni->flags))
 	{
@@ -389,8 +391,9 @@ static int ccmni_v2_receive(ccmni_v2_instance_t *ccmni, const unsigned char *ccm
 
 	if ((ccmni == NULL) || (ccmni_ptr == NULL) || (ccmni_len <= 0))
 	{
-		CCCI_MSG_INF(md_id, "net", "CCMNI%d_receive: invalid private data\n", ccmni->channel);
+		//CCCI_MSG_INF(md_id, "net", "CCMNI%d_receive: invalid private data\n", ccmni->channel);
 		ret = -1;
+        return ret;
 	}
 
 	skb = dev_alloc_skb(ccmni_len);
@@ -453,7 +456,7 @@ static void ccmni_v2_read(unsigned long arg)
 
 	if (ccmni == NULL)
 	{
-		CCCI_DBG_MSG(md_id, "net", "[Error]CCMNI%d_read: invalid private data\n", ccmni->channel);
+		//CCCI_DBG_MSG(md_id, "net", "[Error]CCMNI%d_read: invalid private data\n", ccmni->channel);
 		return;
 	}
   

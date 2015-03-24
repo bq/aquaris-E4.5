@@ -940,7 +940,7 @@ static int qmc5983_unlocked_ioctl(struct file *file, unsigned int cmd,unsigned l
 	
 	short sbuf[3];
 	char cmode = 0;
-	int err;
+	int err = 0;
 
 	switch (cmd)
 	{

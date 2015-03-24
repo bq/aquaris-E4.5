@@ -38,7 +38,7 @@ if options.all == True:
     options.python = True
     options.eabi = True
     options.gcc = True
-    options.jdk = True
+#    options.jdk = True
     options.toolchain = True
     options.bison = True
     options.flex = True
@@ -49,7 +49,7 @@ if options.all == True:
 if options.toolchain == True:
     options.eabi = True
     options.gcc = True
-    options.jdk = True
+#    options.jdk = True
 
 # use the List to save the items that we want to check
 optionsList.append({"os":options.os})
@@ -126,31 +126,41 @@ class OsCheck(object):
             checkResult = 2
 
     def checkLinuxVersion(self):
-        linuxVersion = commands.getoutput("lsb_release -d")
-        pattern = re.compile("Description\s*:\s*(([\w\s]*?)([\d\.]+))")
-        match = pattern.match(linuxVersion)
+        lsbid = commands.getoutput("lsb_release -i")
+        pattern = re.compile("Distributor ID:\s*(\w+)")
+        match = pattern.match(lsbid)
         if match:
-            self.osVersion = match.group(1)
-            distribution = match.group(2).strip()
-            versionNo = match.group(3)
-            if distribution.lower() == "ubuntu":
-                number = versionNo.split(".")
-                if int(number[0]) < 9 or (int(number[0]) == 9 and int(number[1]) == 4):
-                    self.info = "your ubuntu os version is lower than recommendation"
-                    self.tag = False
-                    global checkResult
-                    checkResult = 1
-                elif int(number[0]) == 9 and int(number[1]) == 10:
-                    self.flag = "OK"
-                elif int(number[0]) == 10 and int(number[1]) == 4:
-                    self.flag = "OK"
-                else:
-                    self.flag = "WARNING"
-                    self.info = "your ubuntu os version is higher than recommendation"
+            distribution = match.group(1)
+        else:
+            distribution = ""
+
+        lsbrelease = commands.getoutput("lsb_release -r")
+        pattern = re.compile("Release:\s*([\d\.]+)")
+        match = pattern.match(lsbrelease)
+        if match:
+            versionNo = match.group(1)
+        else:
+            versionNo = "0.0"
+
+        self.osVersion = distribution+" "+versionNo
+        if distribution.lower() == "ubuntu":
+            number = versionNo.split(".")
+            if int(number[0]) < 9 or (int(number[0]) == 9 and int(number[1]) == 4):
+                self.info = "your ubuntu os version is lower than recommendation"
+                self.tag = False
+                global checkResult
+                checkResult = 1
+            elif int(number[0]) == 9 and int(number[1]) == 10:
+                self.flag = "OK"
+            elif int(number[0]) == 10 and int(number[1]) == 4:
+                self.flag = "OK"
             else:
                 self.flag = "WARNING"
-                self.info = "your Linux distribution is not Ubuntu which we recommendation"
-   
+                self.info = "your ubuntu os version is higher than recommendation"
+        else:
+            self.flag = "WARNING"
+            self.info = "your Linux distribution is not Ubuntu which we recommendation"
+
     def checkOsBit(self):
         arch = commands.getoutput("uname -m")
         pattern = re.compile(".*?_(\d+)")

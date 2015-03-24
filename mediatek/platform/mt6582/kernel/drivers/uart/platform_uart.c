@@ -404,9 +404,28 @@ int mtk_uart_vfifo_get_counts(struct mtk_uart_vfifo *vfifo)
 /*---------------------------------------------------------------------------*/
 void mtk_uart_tx_vfifo_flush(struct mtk_uart* uart, int timeout)
 {
-    struct mtk_uart_dma *dma = &uart->dma_tx;
-    struct mtk_uart_vfifo *vfifo = dma->vfifo;
-    void *base = vfifo->base;
+    struct mtk_uart_dma *dma = NULL;
+    struct mtk_uart_vfifo *vfifo = NULL;
+    void *base = NULL;
+
+    if (uart == NULL)
+    {
+        return;
+    }
+    dma = &uart->dma_tx;
+
+    if (dma == NULL)
+    {
+        return;
+    }
+    vfifo = dma->vfifo;
+
+    if (vfifo == NULL)
+    {
+        return;
+    }
+
+    base = vfifo->base;
 
 #ifdef ENABE_HRTIMER_FLUSH
     if (dma && uart) {
@@ -1362,10 +1381,11 @@ void mtk_uart_power_up(struct mtk_uart *uart)
 {
 #ifndef MACH_FPGA
     struct mtk_uart_setting *setting;
-    setting = uart->setting;
 
     if (!uart || uart->nport >= UART_NR)
         return;
+
+    setting = uart->setting;
 
     if (uart->poweron_count > 0) {
         MSG(FUC, "%s(%d)\n", __func__, uart->poweron_count);
@@ -1388,10 +1408,11 @@ void mtk_uart_power_down(struct mtk_uart *uart)
 {
 #ifndef MACH_FPGA
     struct mtk_uart_setting *setting;
-    setting = uart->setting;
 
     if (!uart || uart->nport >= UART_NR)
         return;
+
+    setting = uart->setting;
 
     if (uart->poweron_count == 0) {
         MSG(FUC, "%s(%d)\n", __func__, uart->poweron_count);

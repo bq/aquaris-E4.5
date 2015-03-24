@@ -134,7 +134,7 @@ static void init_lcm_registers(void)
    
     data_array[0] = 0x00143902;                          
     data_array[1] = 0x040000b1; 
-    data_array[2] = 0x111096e3; 
+    data_array[2] = 0x11109be3; //0x111096e3; 
     data_array[3] = 0x3028ef6f; 
     data_array[4] = 0x00422323; 
     data_array[5] = 0x0020f258;                 	 
@@ -363,7 +363,7 @@ static void lcm_init(void)
 	#ifdef BUILD_LK
 	  printf("[LK]---cmd---hx8389_qhd_dsi_vdo_truly----%s------\n",__func__);
     #else
-	  printk("[KERNEL]---cmd---hx8389_qhd_dsi_vdo_truly----%s------\n",__func__);
+	  printk(KERN_DEBUG "[KERNEL]---cmd---hx8389_qhd_dsi_vdo_truly----%s------\n",__func__);
     #endif	
 }
 
@@ -514,7 +514,7 @@ static unsigned int lcm_compare_id(void)
 #ifdef BUILD_LK
 	printf("[LK]hx8389_qhd_dsi_vdo_truly----%s------[%02x]\n",__func__,buffer[0]);
 #else
-	printk("[KERNEL]hx8389_qhd_dsi_vdo_truly----%s------[%02x]\n",__func__,buffer[0]);
+	printk(KERN_DEBUG "[KERNEL]hx8389_qhd_dsi_vdo_truly----%s------[%02x]\n",__func__,buffer[0]);
 #endif
 
 	if(LCM_ID_HX8389B == id)
@@ -524,7 +524,7 @@ static unsigned int lcm_compare_id(void)
 	#ifdef BUILD_LK
 		printf("[LK]---cmd---hx8389_qhd_dsi_vdo_truly--adc0 vol %d\n",auxadc0_vol);
 	#else
-		printk("[KERNEL]---cmd---hx8389_qhd_dsi_vdo_truly--adc0 vol %d\n",auxadc0_vol);
+		printk(KERN_DEBUG "[KERNEL]---cmd---hx8389_qhd_dsi_vdo_truly--adc0 vol %d\n",auxadc0_vol);
 	#endif	
 		return ((ADC0_LOW_TRULY <= auxadc0_vol)&&(ADC0_HIGH_TRULY >= auxadc0_vol))?1:0;
 	}
@@ -545,7 +545,6 @@ static unsigned int lcm_esd_check(void)
 
 	read_reg_v2(0x0A, buffer, 2);
 	esd=buffer[0];
-    printk("lcm_esd_check=0x%x",esd);
 	if(esd==0x1C)
 	{
 		ret=FALSE;

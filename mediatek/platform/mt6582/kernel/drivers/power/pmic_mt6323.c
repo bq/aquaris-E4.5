@@ -932,7 +932,7 @@ static int pmic_thread_kthread(void *x)
 
         wake_unlock(&pmicThread_lock);
 
-        wait_event(pmic_thread_wq, pmic_thread_timeout);
+        wait_event_interruptible(pmic_thread_wq, pmic_thread_timeout);
 
         pmic_thread_timeout=0;
     }

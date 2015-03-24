@@ -253,7 +253,7 @@ HAVE_SRSAUDIOEFFECT_FEATURE=no
 HAVE_VORBISENC_FEATURE=yes
 
 # It decide whether the system has XLOG mechanism. XLOG is a log filter mechanism which can filter the logs by tag before they are written to log buffer
-HAVE_XLOG_FEATURE=yes
+HAVE_XLOG_FEATURE=no
 HW_HAVE_TP_THREAD=no
 IS_VCORE_USE_6333VCORE=no
 IS_VM_USE_6333VM=no
@@ -1625,4 +1625,4 @@ CUSTOM_HAL_MATV=matv
 CUSTOM_KERNEL_MATV=mt5193
 
 #CREATE_PROJECT_INFO=20140326195231
-MTK_BUILD_VERNO = ALPS.KK1.MP1.V2.13
+MTK_BUILD_VERNO = ALPS.KK1.MP1.V2.10

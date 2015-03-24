@@ -1,4 +1,4 @@
-/* L3GD20 motion sensor driver
+	/* L3GD20 motion sensor driver
  *
  *
  *
@@ -259,9 +259,9 @@ static bool sensor_power = false;
 
 //#define GYRO_LOG(fmt, args...)    printk(KERN_INFO GYRO_TAG fmt, ##args)
 
-#define GYRO_FUN(f)               printk(GYRO_TAG"%s\n", __FUNCTION__)
+#define GYRO_FUN(f)               pr_debug(GYRO_TAG "%s\n", __FUNCTION__)
 #define GYRO_ERR(fmt, args...)    printk(KERN_ERR GYRO_TAG"%s %d : "fmt, __FUNCTION__, __LINE__, ##args)
-#define GYRO_LOG(fmt, args...)    printk(GYRO_TAG fmt, ##args)
+#define GYRO_LOG(fmt, args...)    pr_debug(GYRO_TAG fmt, ##args)
 
 /*----------------------------------------------------------------------------*/
 
@@ -792,9 +792,11 @@ static int L3GD20_SelfTest(struct i2c_client *client)
 	// 2 check ZYXDA bit
 	hwmsen_read_byte(client,L3GD20_STATUS_REG,&data);
 	GYRO_LOG("L3GD20_STATUS_REG=%d\n",data );
-	while(0x04 != (data&0x04))
+	while(0x00 == (data&0x0f)) //0x04 maybe cause the system halt. by shutao
 	{
-	  msleep(10);
+	  printk("L3GD20_SelfTest failed,data: %,try it.\n",data);
+	  msleep(100);
+	  hwmsen_read_byte(client,L3GD20_STATUS_REG,&data);
 	}
 	msleep(1000); //wait for stable
 	// 3 read raw data no self test data
@@ -1067,16 +1069,9 @@ static ssize_t show_reset_cali(struct device_driver *ddri, char *buf)
 
 /*----------------------------------------------------------------------------*/
 
-//Modify by EminHuang 20120613   S_IWUGO | S_IRUGO -> 0664 
-//[CTS Test] android.permission.cts.FileSystemPermissionTest#testAllFilesInSysAreNotWritable FAIL
-//static DRIVER_ATTR(chipinfo,             S_IWUGO | S_IRUGO, show_chipinfo_value,      NULL);
-static DRIVER_ATTR(chipinfo,             0664, show_chipinfo_value,      NULL);	
-	
+static DRIVER_ATTR(chipinfo,             S_IWUGO | S_IRUGO, show_chipinfo_value,      NULL);
 static DRIVER_ATTR(sensordata,           S_IRUGO, show_sensordata_value,    NULL);
-//Modify by EminHuang 20120613   S_IWUGO | S_IRUGO -> 0664
-//static DRIVER_ATTR(trace,      S_IWUGO | S_IRUGO, show_trace_value,         store_trace_value);
-static DRIVER_ATTR(trace,      0664, show_trace_value,         store_trace_value);
-
+static DRIVER_ATTR(trace,      S_IWUGO | S_IRUGO, show_trace_value,         store_trace_value);
 static DRIVER_ATTR(status,               S_IRUGO, show_status_value,        NULL);
 static DRIVER_ATTR(power,                S_IRUGO, show_power_status,          NULL);
 
@@ -1235,7 +1230,7 @@ static int lsm330gy_ReadRotationVectorData(char *buf, int bufsize)
 	}
 
 	read_lock(&lsm330_gy_data.datalock);
-	sprintf(buf, "%d %d %d %d", lsm330_gy_data.RVx, lsm330_gy_data.RVy,
+	sprintf(buf, "%d %d %d", lsm330_gy_data.RVx, lsm330_gy_data.RVy,
 		lsm330_gy_data.RVz);
 	read_unlock(&lsm330_gy_data.datalock);
 	return 0;
@@ -1248,7 +1243,7 @@ static int lsm330gy_ReadGravityData(char *buf, int bufsize)
 	}
 
 	read_lock(&lsm330_gy_data.datalock);
-	sprintf(buf, "%d %d %d %d", lsm330_gy_data.Grx, lsm330_gy_data.Gry,
+	sprintf(buf, "%d %d %d", lsm330_gy_data.Grx, lsm330_gy_data.Gry,
 		lsm330_gy_data.Grz);
 	read_unlock(&lsm330_gy_data.datalock);
 	return 0;
@@ -1261,7 +1256,7 @@ static int lsm330gy_ReadLinearAccData(char *buf, int bufsize)
 	}
 
 	read_lock(&lsm330_gy_data.datalock);
-	sprintf(buf, "%d %d %d %d", lsm330_gy_data.LAx, lsm330_gy_data.LAy,
+	sprintf(buf, "%d %d %d", lsm330_gy_data.LAx, lsm330_gy_data.LAy,
 		lsm330_gy_data.LAz);
 	read_unlock(&lsm330_gy_data.datalock);
 	return 0;
@@ -2486,7 +2481,7 @@ static int l3gd20_probe_comp(void )
 		DEVINFO_CHECK_ADD_DEVICE(dev);
 		return -1;
 	}else{
-		struct devinfo_struct *dev = (struct devinfo_struct*)kmalloc(sizeof(struct devinfo_struct), GFP_KERNEL);;
+		struct devinfo_struct *dev = (struct devinfo_struct*)kmalloc(sizeof(struct devinfo_struct), GFP_KERNEL);
 		dev->device_type = "GYRO";
 		dev->device_vendor = "ST";
 		dev->device_ic = "lsm330";

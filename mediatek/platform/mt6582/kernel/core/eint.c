@@ -12,12 +12,13 @@
 #include <mach/irqs.h>
 #include <mach/sync_write.h>
 
-#define EINT_DEBUG 0
-#if(EINT_DEBUG == 1)
-#define dbgmsg printk
-#else
-#define dbgmsg(...)
-#endif
+#ifdef CONFIG_MT_ENG_BUILD
+  #define dbgmsg printk
+  #define genmsg printk
+#else /* CONFIG_MT_ENG_BUILD */
+  #define dbgmsg(...) ((void)0)
+  #define genmsg(...) ((void)0)
+#endif /* CONFIG_MT_ENG_BUILD */
 
 #define MD_EINT
 #define EINT_TEST
@@ -411,11 +412,11 @@ unsigned int mt_eint_set_sens(unsigned int eint_num, unsigned int sens)
         if (eint_num < EINT_AP_MAXNUMBER) {
             base = (eint_num / 32) * 4 + EINT_SENS_SET_BASE;
         } else {
-            dbgmsg("Error in %s [EINT] num:%d is larger than EINT_AP_MAXNUMBER\n", __func__, eint_num);
+            printk(KERN_ERR "Error in %s [EINT] num:%d is larger than EINT_AP_MAXNUMBER\n", __func__, eint_num);
             return 0;
         }
     } else {
-        printk("%s invalid sensitivity value\n", __func__);
+        genmsg("%s invalid sensitivity value\n", __func__);
         return 0;
     }
     mt65xx_reg_sync_writel(bit, base);
@@ -435,7 +436,7 @@ static unsigned int mt_eint_get_sens(unsigned int eint_num)
     if (eint_num < EINT_AP_MAXNUMBER) {
         base = (eint_num / 32) * 4 + EINT_SENS_BASE;
     } else {
-        dbgmsg("Error in %s [EINT] num:%d is larger than EINT_AP_MAXNUMBER\n", __func__, eint_num);
+        printk(KERN_ERR "Error in %s [EINT] num:%d is larger than EINT_AP_MAXNUMBER\n", __func__, eint_num);
         return 0;
     }
     st = readl(IOMEM(base));
@@ -459,7 +460,7 @@ static unsigned int mt_eint_ack(unsigned int eint_num)
     if (eint_num < EINT_AP_MAXNUMBER) {
         base = (eint_num / 32) * 4 + EINT_INTACK_BASE;
     } else {
-        dbgmsg("Error in %s [EINT] num:%d is larger than EINT_AP_MAXNUMBER\n", __func__, eint_num);
+        printk(KERN_ERR "Error in %s [EINT] num:%d is larger than EINT_AP_MAXNUMBER\n", __func__, eint_num);
         return 0;
     }
     mt65xx_reg_sync_writel(bit, base);
@@ -481,7 +482,7 @@ static unsigned int mt_eint_read_status(unsigned int eint_num)
     if (eint_num < EINT_AP_MAXNUMBER) {
         base = (eint_num / 32) * 4 + EINT_STA_BASE;
     } else {
-        dbgmsg("Error in %s [EINT] num:%d is larger than EINT_AP_MAXNUMBER\n", __func__, eint_num);
+        printk(KERN_ERR "Error in %s [EINT] num:%d is larger than EINT_AP_MAXNUMBER\n", __func__, eint_num);
         return 0;
     }
     st = readl(IOMEM(base));
@@ -501,7 +502,7 @@ static unsigned int mt_eint_get_status(unsigned int eint_num)
     if (eint_num < EINT_AP_MAXNUMBER) {
         base = (eint_num / 32) * 4 + EINT_STA_BASE;
     } else {
-        dbgmsg("Error in %s [EINT] num:%d is larger than EINT_AP_MAXNUMBER\n", __func__, eint_num);
+        printk(KERN_ERR "Error in %s [EINT] num:%d is larger than EINT_AP_MAXNUMBER\n", __func__, eint_num);
         return 0;
     }
 
@@ -598,7 +599,7 @@ void mt_eint_set_hw_debounce(unsigned int eint_num, unsigned int ms)
 
     if (ms == 0) {
         dbnc = 0;
-        dbgmsg("ms should not be 0. eint_num:%d in %s\n", eint_num,
+        printk(KERN_ERR "ms should not be 0. eint_num:%d in %s\n", eint_num,
                __func__);
     } else if (ms <= 1) {
         dbnc = 1;
@@ -735,7 +736,7 @@ static irqreturn_t mt_eint_isr(int irq, void *dev_id)
 
     tasklet_schedule(&eint_tasklet);
     dbgmsg("EINT Module - %s ISR Start\n", __func__);
-    //printk("EINT acitve: %s, acitve status: %d\n", mt_irq_is_active(EINT_IRQ) ? "yes" : "no", mt_irq_is_active(EINT_IRQ));
+    //genmsg("EINT acitve: %s, acitve status: %d\n", mt_irq_is_active(EINT_IRQ) ? "yes" : "no", mt_irq_is_active(EINT_IRQ));
 
     for (reg_base = 0; reg_base < EINT_MAX_CHANNEL; reg_base+=32) {
             /* read status register every 32 interrupts */
@@ -820,7 +821,7 @@ void mt_eint_registration(unsigned int eint_num, unsigned int flag,
               void (EINT_FUNC_PTR) (void), unsigned int is_auto_umask)
 {
     if (eint_num < EINT_MAX_CHANNEL) {
-        printk("eint register for %d\n", eint_num);
+        genmsg("eint register for %d\n", eint_num);
         spin_lock(&eint_lock);
         mt_eint_mask(eint_num);
         
@@ -831,7 +832,7 @@ void mt_eint_registration(unsigned int eint_num, unsigned int flag,
             mt_eint_set_polarity(eint_num, (flag & EINTF_TRIGGER_LOW) ? MT_EINT_POL_NEG : MT_EINT_POL_POS);
             mt_eint_set_sens(eint_num, MT_LEVEL_SENSITIVE);    
         } else {
-            printk("[EINT]: Wrong EINT Pol/Sens Setting 0x%x\n", flag);
+            printk(KERN_ERR "[EINT]: Wrong EINT Pol/Sens Setting 0x%x\n", flag);
             spin_unlock(&eint_lock);
             return ;
         }
@@ -842,7 +843,7 @@ void mt_eint_registration(unsigned int eint_num, unsigned int flag,
         mt_eint_ack(eint_num);
         mt_eint_unmask(eint_num);
     } else {
-        printk("[EINT]: Wrong EINT Number %d\n", eint_num);
+        printk(KERN_ERR "[EINT]: Wrong EINT Number %d\n", eint_num);
     }
 }
 
@@ -852,7 +853,7 @@ void mt_eint_registration(unsigned int eint_num, unsigned int flag,
 static irqreturn_t  mt_deint_isr(int irq, void *dev_id)
 {
     int deint_num = irq - MT_EINT_DIRECT0_IRQ_ID;
-    printk("IRQ = %d\n", irq);
+    genmsg("IRQ = %d\n", irq);
     if (deint_num < 0) {
         printk(KERN_ERR "DEINT IRQ Number %d IS NOT VALID!! \n", deint_num);
     }
@@ -860,10 +861,10 @@ static irqreturn_t  mt_deint_isr(int irq, void *dev_id)
     if (DEINT_FUNC.deint_func[deint_num]) { 
         DEINT_FUNC.deint_func[deint_num]();
     }else
-       printk("NULL EINT POINTER\n");
+       genmsg("NULL EINT POINTER\n");
     
     
-    printk("EXIT DEINT ISR\n");
+    genmsg("EXIT DEINT ISR\n");
     return IRQ_HANDLED;
 }
 */
@@ -893,14 +894,14 @@ static void mt_deint_registration(unsigned int deint_num, unsigned int flag,
             num = deint_num + 2;
         /*
         if(!mt_eint_get_mask(num)) {
-            printk("[Wrong DEint-%d] has been registered as EINT pin.!!! \n", deint_num);
+            genmsg("[Wrong DEint-%d] has been registered as EINT pin.!!! \n", deint_num);
             return ;
         }
         */
 
         spin_lock(&eint_lock);
         if(EINT_FUNC.eint_func[num] != NULL){
-            printk("[Wrong DEint-%d] has been registered as EINT pin.!!! \n", deint_num);
+            printk(KERN_ERR "[Wrong DEint-%d] has been registered as EINT pin.!!! \n", deint_num);
             spin_unlock(&eint_lock);
             return;
         }
@@ -915,7 +916,7 @@ static void mt_deint_registration(unsigned int deint_num, unsigned int flag,
             mt_eint_set_polarity(num, (flag & EINTF_TRIGGER_LOW) ? MT_EINT_POL_NEG : MT_EINT_POL_POS);
             mt_eint_set_sens(num, MT_LEVEL_SENSITIVE);
         } else {
-            printk("[DEINT]: Wrong DEINT Pol/Sens Setting 0x%x\n", flag);
+            printk(KERN_ERR "[DEINT]: Wrong DEINT Pol/Sens Setting 0x%x\n", flag);
             return ;
         }
 
@@ -928,7 +929,7 @@ static void mt_deint_registration(unsigned int deint_num, unsigned int flag,
         }
           
     } else {
-        printk("[DEINT]: Wrong DEINT Number %d\n", deint_num);
+        printk(KERN_ERR "[DEINT]: Wrong DEINT Number %d\n", deint_num);
     }
 }
 #endif
@@ -947,7 +948,7 @@ static unsigned int mt_eint_get_debounce_cnt(unsigned int cur_eint_num)
         switch (dbnc) {
         case 0:
             deb = 0;    /* 0.5 actually, but we don't allow user to set. */
-            dbgmsg(KERN_CRIT"ms should not be 0. eint_num:%d in %s\n",
+            printk(KERN_CRIT"ms should not be 0. eint_num:%d in %s\n",
                    cur_eint_num, __func__);
             break;
         case 1:
@@ -973,7 +974,7 @@ static unsigned int mt_eint_get_debounce_cnt(unsigned int cur_eint_num)
             break;
         default:
             deb = 0;
-            printk("invalid deb time in the EIN_CON register, dbnc:%d, deb:%d\n", dbnc, deb);
+            printk(KERN_ERR "invalid deb time in the EIN_CON register, dbnc:%d, deb:%d\n", dbnc, deb);
             break;
         }
     }
@@ -1056,7 +1057,7 @@ static ssize_t cur_eint_soft_set_store(struct device_driver *driver, const char 
         mt_eint_soft_clr(cur_eint_num);
 #endif
     } else {
-        printk("invalid number:%d it should be 1 to trigger interrupt or 0 to clr.\n", num);
+        printk(KERN_ERR "invalid number:%d it should be 1 to trigger interrupt or 0 to clr.\n", num);
     }
 
     return count;
@@ -1093,7 +1094,7 @@ static ssize_t cur_eint_reg_isr_show(struct device_driver *driver, char *buf)
         switch (dbnc) {
         case 0:
             deb = 0;/* 0.5 actually, but we don't allow user to set. */
-            dbgmsg("ms should not be 0. eint_num:%d in %s\n",
+            printk(KERN_ERR "ms should not be 0. eint_num:%d in %s\n",
                    cur_eint_num, __func__);
             break;
         case 1:
@@ -1119,7 +1120,7 @@ static ssize_t cur_eint_reg_isr_show(struct device_driver *driver, char *buf)
             break;
         default:
             deb = 0;
-            printk("invalid deb time in the EIN_CON register, dbnc:%d, deb:%d\n", dbnc, deb);
+            printk(KERN_ERR "invalid deb time in the EIN_CON register, dbnc:%d, deb:%d\n", dbnc, deb);
             break;
         }
     }
@@ -1135,7 +1136,7 @@ static ssize_t cur_eint_reg_isr_store(struct device_driver *driver,
     num = simple_strtoul(p, &p, 10);
     if (num != 1) {
         //dbgmsg("Unregister soft isr\n");
-        printk("Unregister soft isr\n");
+        genmsg("Unregister soft isr\n");
         mt_eint_mask(cur_eint_num);
     } else {
         /* register its ISR: mt_eint_soft_isr */
@@ -1186,15 +1187,15 @@ int get_eint_attribute(char *name, unsigned int name_len, unsigned int type, cha
     int i;
     int ret = 0;
     int *sim_info = (int *)result;
-    printk("in %s\n",__func__);
-    //printk("[EINT]CUST_EINT_MD1_CNT:%d,CUST_EINT_MD2_CNT:%d\n",CUST_EINT_MD1_CNT,CUST_EINT_MD2_CNT);
-    printk("[EINT]CUST_EINT_MD1_CNT:%d",CUST_EINT_MD1_CNT);
-    printk("query info: name:%s, type:%d, len:%d\n", name,type,name_len);
+    genmsg("in %s\n",__func__);
+    //genmsg("[EINT]CUST_EINT_MD1_CNT:%d,CUST_EINT_MD2_CNT:%d\n",CUST_EINT_MD1_CNT,CUST_EINT_MD2_CNT);
+    genmsg("[EINT]CUST_EINT_MD1_CNT:%d",CUST_EINT_MD1_CNT);
+    genmsg("query info: name:%s, type:%d, len:%d\n", name,type,name_len);
     if (len == NULL || name == NULL || result == NULL)
     	return ERR_SIM_HOT_PLUG_NULL_POINTER;
 
     for (i = 0; i < md_sim_counter; i++){
-        printk("compare string:%s\n", md_sim_info[i].name);
+        genmsg("compare string:%s\n", md_sim_info[i].name);
         if (!strncmp(name, md_sim_info[i].name, name_len))
         {
             switch(type)
@@ -1202,31 +1203,31 @@ int get_eint_attribute(char *name, unsigned int name_len, unsigned int type, cha
                 case SIM_HOT_PLUG_EINT_NUMBER:
                     *len = sizeof(md_sim_info[i].eint_num);
                     memcpy(sim_info, &md_sim_info[i].eint_num, *len);
-                    printk("[EINT]eint_num:%d\n", md_sim_info[i].eint_num);
+                    genmsg("[EINT]eint_num:%d\n", md_sim_info[i].eint_num);
                     break;
 
                 case SIM_HOT_PLUG_EINT_DEBOUNCETIME:
                     *len = sizeof(md_sim_info[i].eint_deb);
                     memcpy(sim_info, &md_sim_info[i].eint_deb, *len);
-                    printk("[EINT]eint_deb:%d\n", md_sim_info[i].eint_deb);
+                    genmsg("[EINT]eint_deb:%d\n", md_sim_info[i].eint_deb);
                     break;
 
                 case SIM_HOT_PLUG_EINT_POLARITY:
                     *len = sizeof(md_sim_info[i].eint_pol);
                     memcpy(sim_info, &md_sim_info[i].eint_pol, *len);
-                    printk("[EINT]eint_pol:%d\n", md_sim_info[i].eint_pol);
+                    genmsg("[EINT]eint_pol:%d\n", md_sim_info[i].eint_pol);
                     break;
 
                 case SIM_HOT_PLUG_EINT_SENSITIVITY:
                     *len = sizeof(md_sim_info[i].eint_sens);
                     memcpy(sim_info, &md_sim_info[i].eint_sens, *len);
-                    printk("[EINT]eint_sens:%d\n", md_sim_info[i].eint_sens);
+                    genmsg("[EINT]eint_sens:%d\n", md_sim_info[i].eint_sens);
                     break;
 
                 case SIM_HOT_PLUG_EINT_SOCKETTYPE:
                     *len = sizeof(md_sim_info[i].socket_type);
                     memcpy(sim_info, &md_sim_info[i].socket_type, *len);
-                    printk("[EINT]socket_type:%d\n", md_sim_info[i].socket_type);
+                    genmsg("[EINT]socket_type:%d\n", md_sim_info[i].socket_type);
                     break;
   
                 default:
@@ -1277,8 +1278,8 @@ int get_type(char *name)
 static void setup_MD_eint(void)
 {
 #ifdef MD_EINT
- //printk("[EINT]CUST_EINT_MD1_CNT:%d,CUST_EINT_MD2_CNT:%d\n",CUST_EINT_MD1_CNT,CUST_EINT_MD2_CNT);
- printk("[EINT]CUST_EINT_MD1_CNT:%d",CUST_EINT_MD1_CNT);
+ //genmsg("[EINT]CUST_EINT_MD1_CNT:%d,CUST_EINT_MD2_CNT:%d\n",CUST_EINT_MD1_CNT,CUST_EINT_MD2_CNT);
+ genmsg("[EINT]CUST_EINT_MD1_CNT:%d",CUST_EINT_MD1_CNT);
 
 #if defined(CUST_EINT_MD1_0_NAME)
         sprintf(md_sim_info[md_sim_counter].name, CUST_EINT_MD1_0_NAME);
@@ -1287,8 +1288,8 @@ static void setup_MD_eint(void)
         md_sim_info[md_sim_counter].eint_sens = CUST_EINT_MD1_0_SENSITIVE;
         md_sim_info[md_sim_counter].socket_type = get_type(md_sim_info[md_sim_counter].name);
         md_sim_info[md_sim_counter].eint_deb = CUST_EINT_MD1_0_DEBOUNCE_CN;
-        printk("[EINT] MD1 name = %s\n", md_sim_info[md_sim_counter].name);
-        printk("[EINT] MD1 type = %d\n", md_sim_info[md_sim_counter].socket_type);
+        genmsg("[EINT] MD1 name = %s\n", md_sim_info[md_sim_counter].name);
+        genmsg("[EINT] MD1 type = %d\n", md_sim_info[md_sim_counter].socket_type);
         md_sim_counter++;
 #endif
 #if defined(CUST_EINT_MD1_1_NAME)
@@ -1298,8 +1299,8 @@ static void setup_MD_eint(void)
         md_sim_info[md_sim_counter].eint_sens = CUST_EINT_MD1_1_SENSITIVE;
         md_sim_info[md_sim_counter].socket_type = get_type(md_sim_info[md_sim_counter].name);
         md_sim_info[md_sim_counter].eint_deb = CUST_EINT_MD1_1_DEBOUNCE_CN;
-        printk("[EINT] MD1 name = %s\n", md_sim_info[md_sim_counter].name);
-        printk("[EINT] MD1 type = %d\n", md_sim_info[md_sim_counter].socket_type);
+        genmsg("[EINT] MD1 name = %s\n", md_sim_info[md_sim_counter].name);
+        genmsg("[EINT] MD1 type = %d\n", md_sim_info[md_sim_counter].socket_type);
         md_sim_counter++;
 #endif
 #if defined(CUST_EINT_MD1_2_NAME)
@@ -1309,8 +1310,8 @@ static void setup_MD_eint(void)
         md_sim_info[md_sim_counter].eint_sens = CUST_EINT_MD1_2_SENSITIVE;
         md_sim_info[md_sim_counter].socket_type = get_type(md_sim_info[md_sim_counter].name);
         md_sim_info[md_sim_counter].eint_deb = CUST_EINT_MD1_2_DEBOUNCE_CN;
-        printk("[EINT] MD1 name = %s\n", md_sim_info[md_sim_counter].name);
-        printk("[EINT] MD1 type = %d\n", md_sim_info[md_sim_counter].socket_type);
+        genmsg("[EINT] MD1 name = %s\n", md_sim_info[md_sim_counter].name);
+        genmsg("[EINT] MD1 type = %d\n", md_sim_info[md_sim_counter].socket_type);
         md_sim_counter++;
 #endif
 #if defined(CUST_EINT_MD1_3_NAME)
@@ -1320,8 +1321,8 @@ static void setup_MD_eint(void)
         md_sim_info[md_sim_counter].eint_sens = CUST_EINT_MD1_3_SENSITIVE;
         md_sim_info[md_sim_counter].socket_type = get_type(md_sim_info[md_sim_counter].name);
         md_sim_info[md_sim_counter].eint_deb = CUST_EINT_MD1_3_DEBOUNCE_CN;
-        printk("[EINT] MD1 name = %s\n", md_sim_info[md_sim_counter].name);
-        printk("[EINT] MD1 type = %d\n", md_sim_info[md_sim_counter].socket_type);
+        genmsg("[EINT] MD1 name = %s\n", md_sim_info[md_sim_counter].name);
+        genmsg("[EINT] MD1 type = %d\n", md_sim_info[md_sim_counter].socket_type);
         md_sim_counter++;
 #endif
 #if defined(CUST_EINT_MD1_4_NAME)
@@ -1331,8 +1332,8 @@ static void setup_MD_eint(void)
         md_sim_info[md_sim_counter].eint_sens = CUST_EINT_MD1_4_SENSITIVE;
         md_sim_info[md_sim_counter].socket_type = get_type(md_sim_info[md_sim_counter].name);
         md_sim_info[md_sim_counter].eint_deb = CUST_EINT_MD1_4_DEBOUNCE_CN;
-        printk("[EINT] MD1 name = %s\n", md_sim_info[md_sim_counter].name);
-        printk("[EINT] MD1 type = %d\n", md_sim_info[md_sim_counter].socket_type);
+        genmsg("[EINT] MD1 name = %s\n", md_sim_info[md_sim_counter].name);
+        genmsg("[EINT] MD1 type = %d\n", md_sim_info[md_sim_counter].socket_type);
         md_sim_counter++;
 #endif
 
@@ -1343,8 +1344,8 @@ static void setup_MD_eint(void)
         md_sim_info[md_sim_counter].eint_sens = CUST_EINT_MD2_0_SENSITIVE;
         md_sim_info[md_sim_counter].socket_type = get_type(md_sim_info[md_sim_counter].name);
         md_sim_info[md_sim_counter].eint_deb = CUST_EINT_MD2_0_DEBOUNCE_CN;
-        printk("[EINT] MD2 name = %s\n", md_sim_info[md_sim_counter].name);
-        printk("[EINT] MD2 type = %d\n", md_sim_info[md_sim_counter].socket_type);
+        genmsg("[EINT] MD2 name = %s\n", md_sim_info[md_sim_counter].name);
+        genmsg("[EINT] MD2 type = %d\n", md_sim_info[md_sim_counter].socket_type);
         md_sim_counter++;
 #endif
 #if defined(CUST_EINT_MD2_1_NAME)
@@ -1354,8 +1355,8 @@ static void setup_MD_eint(void)
         md_sim_info[md_sim_counter].eint_sens = CUST_EINT_MD2_1_SENSITIVE;
         md_sim_info[md_sim_counter].socket_type = get_type(md_sim_info[md_sim_counter].name);
         md_sim_info[md_sim_counter].eint_deb = CUST_EINT_MD2_1_DEBOUNCE_CN;
-        printk("[EINT] MD2 name = %s\n", md_sim_info[md_sim_counter].name);
-        printk("[EINT] MD2 type = %d\n", md_sim_info[md_sim_counter].socket_type);
+        genmsg("[EINT] MD2 name = %s\n", md_sim_info[md_sim_counter].name);
+        genmsg("[EINT] MD2 type = %d\n", md_sim_info[md_sim_counter].socket_type);
         md_sim_counter++;
 #endif
 #if defined(CUST_EINT_MD2_2_NAME)
@@ -1376,8 +1377,8 @@ static void setup_MD_eint(void)
         md_sim_info[md_sim_counter].eint_sens = CUST_EINT_MD2_3_SENSITIVE;
         md_sim_info[md_sim_counter].socket_type = get_type(md_sim_info[md_sim_counter].name);
         md_sim_info[md_sim_counter].eint_deb = CUST_EINT_MD2_3_DEBOUNCE_CN;
-        printk("[EINT] MD2 name = %s\n", md_sim_info[md_sim_counter].name);
-        printk("[EINT] MD2 type = %d\n", md_sim_info[md_sim_counter].socket_type);
+        genmsg("[EINT] MD2 name = %s\n", md_sim_info[md_sim_counter].name);
+        genmsg("[EINT] MD2 type = %d\n", md_sim_info[md_sim_counter].socket_type);
         md_sim_counter++;
 #endif
 #if defined(CUST_EINT_MD2_4_NAME)
@@ -1387,8 +1388,8 @@ static void setup_MD_eint(void)
         md_sim_info[md_sim_counter].eint_sens = CUST_EINT_MD2_4_SENSITIVE;
         md_sim_info[md_sim_counter].socket_type = get_type(md_sim_info[md_sim_counter].name);
         md_sim_info[md_sim_counter].eint_deb = CUST_EINT_MD2_4_DEBOUNCE_CN;
-        printk("[EINT] MD2 name = %s\n", md_sim_info[md_sim_counter].name);
-        printk("[EINT] MD2 type = %d\n", md_sim_info[md_sim_counter].socket_type);
+        genmsg("[EINT] MD2 name = %s\n", md_sim_info[md_sim_counter].name);
+        genmsg("[EINT] MD2 type = %d\n", md_sim_info[md_sim_counter].socket_type);
         md_sim_counter++;
 #endif
 #endif //MD_EINT
@@ -1419,7 +1420,7 @@ void mt_eint_print_status(void)
 {
     unsigned int status,index;
     unsigned int offset,reg_base,status_check;
-    printk(KERN_DEBUG"EINT_STA:");
+    genmsg(KERN_DEBUG"EINT_STA:");
      for (reg_base = 0; reg_base < EINT_MAX_CHANNEL; reg_base+=32) {
             /* read status register every 32 interrupts */
             status = mt_eint_get_status(reg_base);
@@ -1436,22 +1437,22 @@ void mt_eint_print_status(void)
 
                 status_check = status & (1 << offset);
                 if (status_check) 
-                        printk(KERN_DEBUG" %d",index);
+                        genmsg(KERN_DEBUG" %d",index);
             }
 
     }
-    printk(KERN_DEBUG"\n");
+    genmsg(KERN_DEBUG"\n");
 }
 #ifdef DEINT_SUPPORT
 void mt_eint_test(void)
 
 {
-    printk("test for eint re-registration\n");
+    genmsg("test for eint re-registration\n");
 }
 
 static irqreturn_t  mt_deint_test_isr(int irq, void *dev_id)
 {
-    printk("test for deint isr\n");
+    genmsg("test for deint isr\n");
     //mt_irq_is_active(irq);
 }
 #endif
@@ -1514,7 +1515,7 @@ void mt_eint_dump_status(unsigned int eint)
 {
    if (eint >= EINT_MAX_CHANNEL)
        return;
-   printk("[EINT] eint:%d,mask:%x,pol:%x,deb:%x,sens:%x\n",eint,mt_eint_get_mask(eint),mt_eint_get_polarity(eint),mt_eint_get_debounce_cnt(eint),mt_eint_get_sens(eint));
+   genmsg("[EINT] eint:%d,mask:%x,pol:%x,deb:%x,sens:%x\n",eint,mt_eint_get_mask(eint),mt_eint_get_polarity(eint),mt_eint_get_debounce_cnt(eint),mt_eint_get_sens(eint));
 }
 #endif
 

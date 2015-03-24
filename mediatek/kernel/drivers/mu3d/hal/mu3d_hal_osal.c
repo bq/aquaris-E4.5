@@ -56,7 +56,6 @@ void *os_ioremap(void *paddr,DEV_UINT32 t_size){
 
 void os_iounmap(void *vaddr){
 	iounmap(vaddr);
-	vaddr = NULL;
 }
 #endif /* NEVER */
 
@@ -88,7 +87,6 @@ void *os_mem_alloc(size_t z_size){
 void os_mem_free(void *pv_mem){
 
 	kfree(pv_mem);
-	pv_mem = NULL;
 }
 
 void os_disableIrq(DEV_UINT32 irq){

@@ -940,7 +940,7 @@ static int musb_gadget_queue(struct usb_ep *ep, struct usb_request *req,
 
 				zero_request = next_request(musb_ep); //Get the request out from the list
 				if (!zero_request){
-					os_printk(K_DEBUG, "This should not happen that zero request of EP%d is NULL.\n", zero_request->epnum);
+					//os_printk(K_DEBUG, "This should not happen that zero request of EP%d is NULL.\n", zero_request->epnum);
 					WARN_ON(1);
 					status = -ESHUTDOWN;
 					goto cleanup;

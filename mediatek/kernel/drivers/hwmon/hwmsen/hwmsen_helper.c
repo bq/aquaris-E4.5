@@ -354,9 +354,9 @@ void hwmsen_multi_rw(struct i2c_client *client, find_reg_t findreg,
         }
     }
     if (!err)
-        HWM_LOG("%s success : %d cases\n", __func__, inum);
+        HWM_DBG("%s success : %d cases\n", __func__, inum);
     else
-        HWM_LOG("%s: %d cases\n", __func__, inum);
+        HWM_DBG("%s: %d cases\n", __func__, inum);
         
 }
 /*----------------------------------------------------------------------------*/

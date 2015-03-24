@@ -18,16 +18,7 @@ static inline void debug_locks_on(void)
 }
 static inline int __debug_locks_off(void)
 {
-    int ret;
-    ret = xchg(&debug_locks, 0);
-    if(ret)
-    {
-        printk("[KERN Warning] Some Kernel ERROR or WARN occur and Force debug_lock off!\n");
-        printk("[KERN Warning] check below backtrace first:\n");
-        dump_stack();
-    }
-    return ret;
-	//return xchg(&debug_locks, 0);
+	return xchg(&debug_locks, 0);
 }
 
 /*

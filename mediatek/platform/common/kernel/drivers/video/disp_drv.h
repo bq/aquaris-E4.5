@@ -78,6 +78,7 @@ DISP_STATUS DISP_UpdateScreen(UINT32 x, UINT32 y, UINT32 width, UINT32 height);
 DISP_STATUS DISP_WaitForLCDNotBusy(void);
 DISP_STATUS DISP_PrepareSuspend(void);
 DISP_STATUS DISP_GetLayerInfo(DISP_LAYER_INFO *pLayer);
+DISP_STATUS DISP_EnqueueConfig();
 
 //Register extra trigger source 
 typedef int (*DISP_EXTRA_CHECKUPDATE_PTR)(int);

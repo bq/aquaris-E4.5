@@ -79,7 +79,12 @@ static inline int _dbg_level(unsigned level)
 #ifdef DBG
 #undef DBG
 #endif
-#define DBG(level, fmt, args...) xprintk(level, fmt, ## args)
+
+#ifdef CONFIG_MT_ENG_BUILD
+  #define DBG(level, fmt, args...) xprintk(level, fmt, ## args)
+#else
+  #define DBG(level, fmt, args...) ((void)0)
+#endif
 
 //extern const char *otg_state_string(struct musb *);
 

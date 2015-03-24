@@ -59,9 +59,9 @@ struct key {
 #define DEFINE_KEYS_KEYMAP(x)		\
 struct key x[] = {			\
 	KEYS_PWRKEY_MAP,		\
-	{ KEY_MENU,       "Menu" },	\
-	{ KEY_HOMEPAGE,       "Home" },	\
-	{ KEY_BACK,       "Back" },	\
+	//{ KEY_MENU,       "Menu" },	\
+	//{ KEY_HOMEPAGE,       "Home" },	\
+	//{ KEY_BACK,       "Back" },	\
 	{ KEY_VOLUMEUP,   "VLUp" },	\
 	{ KEY_VOLUMEDOWN, "VLDown" },	\
 }
@@ -74,7 +74,7 @@ struct key x[] = {			\
 #define CUST_KEY_CENTER		KEY_HOMEPAGE
 #define CUST_KEY_RIGHT		KEY_BACK
 
-#define CUST_KEY_CONFIRM	KEY_HOMEPAGE //KEY_POWER
-#define CUST_KEY_BACK		KEY_BACK  //KEY_VOLUMEUP
+#define CUST_KEY_CONFIRM	KEY_POWER // KEY_HOMEPAGE
+#define CUST_KEY_BACK		KEY_BACK //KEY_VOLUMEUP  // KEY_BACK
 
 #endif /* FTM_CUST_KEYS_H */

@@ -85,7 +85,7 @@ int OVLReset() {
    
    unsigned int delay_cnt = 0;
    static unsigned int cnt=0;
-   printk("[DDP] OVLReset called %d \n", cnt++);
+   pr_debug("[DDP] OVLReset called %d \n", cnt++);
    
    DISP_REG_SET(DISP_REG_OVL_RST, 0x1);              // soft reset
    DISP_REG_SET(DISP_REG_OVL_RST, 0x0);

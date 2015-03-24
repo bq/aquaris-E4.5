@@ -52,7 +52,7 @@ on init
 
 sysclktz 0
 
-loglevel 6
+loglevel 3
     write /proc/bootprof "INIT: on init start"
 
 # setup the global environment
@@ -204,10 +204,10 @@ on fs_property:ro.mount.fs=YAFFS
 
 on fs_property:ro.mount.fs=EXT4
     write /proc/bootprof "INIT:eMMC:Mount_START"
-    exec /sbin/e2fsck -p /emmc@android
+    #exec /sbin/e2fsck -p /emmc@android
     # Mount /system rw first to give the filesystem a chance to save a checkpoint
     #mount ext4 emmc@android /system wait commit=1,data=journal,noauto_da_alloc
-    mount ext4 /emmc@android /system wait commit=1,noauto_da_alloc
+    #mount ext4 /emmc@android /system wait commit=1,noauto_da_alloc
 
     # RIL need to do this before the folder /system changed to read only
     chown radio system /system/etc/ril
@@ -218,14 +218,15 @@ on fs_property:ro.mount.fs=EXT4
     chmod 0750 /system/etc/throttle.sh
     chown root system /system/etc/getsystemtype.sh
     chmod 0700 /system/etc/getsystemtype.sh
-    mount ext4 /emmc@android /system noatime ro remount wait
-    exec /sbin/e2fsck -pfD /emmc@usrdata
-    exec /sbin/tune2fs -O has_journal /emmc@usrdata
-    exec /system/bin/ext4_resize
-    mount ext4 /emmc@usrdata /data noatime nosuid nodev wait noauto_da_alloc,discard
-    exec /sbin/e2fsck -p /emmc@cache
-    exec /sbin/tune2fs -O has_journal /emmc@cache
-    mount ext4 /emmc@cache /cache noatime nosuid nodev wait noauto_da_alloc,discard
+    #mount ext4 /emmc@android /system noatime ro remount wait
+    #exec /sbin/e2fsck -pfD /emmc@usrdata
+    #exec /sbin/tune2fs -O has_journal /emmc@usrdata
+    exec /sbin/tune2fs -m 5 /dev/block/mmcblk0p7
+    #exec /system/bin/ext4_resize
+    #mount ext4 /emmc@usrdata /data noatime nosuid nodev wait noauto_da_alloc,discard
+    #exec /sbin/e2fsck -p /emmc@cache
+    #exec /sbin/tune2fs -O has_journal /emmc@cache
+    #mount ext4 /emmc@cache /cache noatime nosuid nodev wait noauto_da_alloc,discard
     # mount cip partitions
     exec /sbin/e2fsck -p /emmc@custom
 	mount ext4 /emmc@custom /custom
@@ -262,6 +263,10 @@ on fs_property:ro.persist.partition.support=yes
 # Create location for fs_mgr to store abbreviated output from filesystem
 # checker programs.
     mkdir /dev/fscklogs 0770 root system
+
+# Create directory used by the camera-service to store its trust-store socket
+    mkdir /dev/socket/camera_service 0770 media media
+    chmod 2770 /dev/socket/camera_service
 
 on fs
 
@@ -379,7 +384,6 @@ on post-fs-data
     mkdir /data/ssh 0750 root shell
     mkdir /data/ssh/empty 0700 root root
 
-
     #give system access to rfkill device node
     chmod 0660 /dev/rfkill
 
@@ -408,6 +412,10 @@ on post-fs-data
     # won't work.
     # Set indication (checked by vold) that we have finished this action
     #setprop vold.post_fs_data_done 1
+##Starting upstart-property-watcher on early-boot by ubuntu    
+on early-boot
+    start upstart-watcher
+
 
 # -----------------------
 # Add by MTK
@@ -547,13 +555,13 @@ on post-fs-data
     #EM eint
     chown root diag /sys/bus/platform/drivers/eint/current_eint
 
-    chmod 0660 /dev/graphics/fb0
+    chmod 0666 /dev/graphics/fb0
     chown system graphics /dev/graphics/fb0
 
-    chmod 0660 /dev/mtkfb_vsync
+    chmod 0666 /dev/mtkfb_vsync
     chown system graphics /dev/mtkfb_vsync
 
-    chmod 0660 /dev/sw_sync
+    chmod 0666 /dev/sw_sync
     chown system graphics /dev/sw_sync
 
     # EM baseband file
@@ -754,7 +762,10 @@ on post-fs-data
     #sn
     chmod 0664 /sys/class/android_usb/android0/iSerial
     chown root system /sys/class/android_usb/android0/iSerial
-    
+
+    chown root system /system/etc/inexversion.sh
+    chmod 0750 /system/etc/inexversion.sh
+
 # End of adding by MTK drivers
 # -----------------------
 
@@ -807,7 +818,6 @@ on boot
     chmod 0660 /sys/power/state
     chmod 0660 /sys/power/wake_lock
     chmod 0660 /sys/power/wake_unlock
-    chmod 0664 /sys/class/leds/lcd-backlight/brightness
 
 
     chown system system /sys/devices/system/cpu/cpufreq/interactive/timer_rate
@@ -840,24 +850,26 @@ on boot
     chown system system /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
     chmod 0660 /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
 
-    chmod 0664 /sys/class/leds/lcd-backlight/brightness
-    chown system system /sys/class/timed_output/vibrator/enable
-    chown system system /sys/class/leds/keyboard-backlight/brightness
     chown system radio  /sys/class/leds/lcd-backlight/brightness
-    chown system system /sys/class/leds/button-backlight/brightness
-    chown system system /sys/class/leds/jogball-backlight/brightness
-    chown system system /sys/class/leds/red/brightness
-    chown system system /sys/class/leds/green/brightness
-    chown system system /sys/class/leds/blue/brightness
-    chown system system /sys/class/leds/red/device/grpfreq
-    chown system system /sys/class/leds/red/device/grppwm
-    chown system system /sys/class/leds/red/device/blink
-    chown system system /sys/class/leds/red/brightness
-    chown system system /sys/class/leds/green/brightness
-    chown system system /sys/class/leds/blue/brightness
-    chown system system /sys/class/leds/red/device/grpfreq
-    chown system system /sys/class/leds/red/device/grppwm
-    chown system system /sys/class/leds/red/device/blink
+    chmod 0664 /sys/class/leds/lcd-backlight/brightness
+    chown system input /sys/class/leds/keyboard-backlight/brightness
+    chmod 0664 /sys/class/leds/keyboard-backlight/brightness
+    chown system input /sys/class/leds/button-backlight/brightness
+    chmod 0664 /sys/class/leds/button-backlight/brightness
+    chown system input /sys/class/leds/jogball-backlight/brightness
+    chmod 0664 /sys/class/leds/jogball-backlight/brightness
+    chown system input /sys/class/leds/red/brightness
+    chmod 0664 /sys/class/leds/red/brightness
+    chown system input /sys/class/leds/green/brightness
+    chmod 0664 /sys/class/leds/green/brightness
+    chown system input /sys/class/leds/blue/brightness
+    chmod 0664 /sys/class/leds/blue/brightness
+    chown system input /sys/class/leds/red/device/grpfreq
+    chmod 0664 /sys/class/leds/red/device/grpfreq
+    chown system input /sys/class/leds/red/device/grppwm
+    chmod 0664 /sys/class/leds/red/device/grppwm
+    chown system input /sys/class/leds/red/device/blink
+    chmod 0664 /sys/class/leds/red/device/blink
     chown system system /sys/class/timed_output/vibrator/enable
     chown system system /sys/module/sco/parameters/disable_esco
     chown system system /sys/kernel/ipv4/tcp_wmem_min
@@ -868,6 +880,9 @@ on boot
     chown system system /sys/kernel/ipv4/tcp_rmem_max
     chown root   system /sys/kernel/debug/binder/transaction_log_enable
     chown root   system /sys/kernel/debug/binder/perf_evalue
+    # Temporarily allowing any user to use the vibrator driver
+    ## Until we have a common way to access it via platform-api by ubuntu
+    chmod 0666 /sys/class/timed_output/vibrator/enable    
     chown root radio /proc/cmdline
 
     chown system /sys/module/mlog/parameters/do_mlog
@@ -875,13 +890,20 @@ on boot
     
 	chown root   radio  /sys/class/leds/lcd-backlight/duty
 	chown root   radio  /sys/class/leds/lcd-backlight/div
-	chown system system /sys/class/leds/lcd-backlight/trigger
-	chown system system /sys/class/leds/button-backlight/trigger
-	chown system system /sys/class/leds/keyboard-backlight/trigger
-	chown system system /sys/class/leds/jogball-backlight/trigger
-	chown system system /sys/class/leds/red/trigger
-	chown system system /sys/class/leds/green/trigger
-	chown system system /sys/class/leds/blue/trigger
+	chown system input /sys/class/leds/lcd-backlight/trigger
+	chmod 0664 /sys/class/leds/lcd-backlight/trigger
+	chown system input /sys/class/leds/button-backlight/trigger
+	chmod 0664 /sys/class/leds/button-backlight/trigger
+	chown system input /sys/class/leds/keyboard-backlight/trigger
+	chmod 0664 /sys/class/leds/keyboard-backlight/trigger
+	chown system input /sys/class/leds/jogball-backlight/trigger
+	chmod 0664 /sys/class/leds/jogball-backlight/trigger
+	chown system input /sys/class/leds/red/trigger
+	chmod 0664 /sys/class/leds/red/trigger
+	chown system input /sys/class/leds/green/trigger
+	chmod 0664 /sys/class/leds/green/trigger
+	chown system input /sys/class/leds/blue/trigger
+	chmod 0664 /sys/class/leds/blue/trigger
 
     # Permission for hibernation
     chown radio system /sys/power/tuxonice
@@ -962,11 +984,10 @@ on boot
     setprop net.tcp.buffersize.edge    4094,87380,524288,4096,16384,524288
     setprop net.tcp.buffersize.gprs    4094,87380,524288,4096,16384,524288
 
-
-		
     class_start core
     class_start main
     class_start default
+
 
 on nonencrypted
     class_start late_start
@@ -1018,9 +1039,9 @@ on property:persist.uartconsole.enable=1
 ## Daemon processes to be run by init.
 ##
 
-# Update the second boot logo
-service bootlogoupdater /system/bin/boot_logo_updater
-    oneshot
+# On Ubuntu touch let the rootfs set the logo
+#service bootlogoupdater /system/bin/boot_logo_updater
+#    oneshot
 
 service ueventd /sbin/ueventd
     class core
@@ -1047,6 +1068,10 @@ service healthd-charger /sbin/healthd -n
     class charger
     critical
     seclabel u:r:healthd:s0
+###Starting upstart-property-watcher on early-boot by ubuntu
+service upstart-watcher /sbin/upstart-property-watcher
+    class core
+
 
 on property:selinux.reload_policy=1
     restart ueventd
@@ -1095,22 +1120,21 @@ service servicemanager /system/bin/servicemanager
     group system
     critical
     onrestart restart healthd
-    onrestart restart zygote
     onrestart restart media
-    onrestart restart surfaceflinger
     onrestart restart drm
     onrestart restart aal
 
-service vold /system/bin/vold
-    class core
-    socket vold stream 0660 root mount
-    ioprio be 2
+###remove vold and netd by ubuntu
+#service vold /system/bin/vold
+#    class core
+#    socket vold stream 0660 root mount
+#    ioprio be 2
 
-service netd /system/bin/netd
-    class main
-    socket netd stream 0660 root system
-    socket dnsproxyd stream 0660 root inet
-    socket mdns stream 0660 root system
+#service netd /system/bin/netd
+#    class main
+#    socket netd stream 0660 root system
+#    socket dnsproxyd stream 0660 root inet
+#    socket mdns stream 0660 root system
 
 
 service netdiag /system/bin/netdiag
@@ -1179,21 +1203,20 @@ service surfaceflinger /system/bin/surfaceflinger
     class main
 #    user system
     group graphics
-    onrestart restart zygote
 
 service aal /system/bin/aal
     class main
     user system
     group system graphics radio
-
-service zygote /system/bin/app_process -Xzygote /system/bin --zygote --start-system-server
-    class main
-    socket zygote stream 660 root system
-    onrestart write /sys/android_power/request_state wake
-    onrestart write /sys/power/state on
-    onrestart restart media
-    onrestart restart netd
-    onrestart restart surfaceflinger
+###remove zygote by ubuntu
+#service zygote /system/bin/app_process -Xzygote /system/bin --zygote --start-system-server
+#    class main
+#    socket zygote stream 660 root system
+#    onrestart write /sys/android_power/request_state wake
+#    onrestart write /sys/power/state on
+#    onrestart restart media
+#    onrestart restart netd
+#    onrestart restart surfaceflinger
 
 #
 # MT6620 related services (Begin)
@@ -1271,7 +1294,8 @@ service wlanLoader /system/bin/wlan_loader
 
 
 
-service dhcpcd_bt-pan /system/bin/logwrapper /system/bin/dhcpcd -BK -dd
+#service dhcpcd_bt-pan /system/bin/logwrapper /system/bin/dhcpcd -BK -dd
+service dhcpcd_bt-pan /system/bin/dhcpcd -BK -dd
     class main
     user dhcp
     group net_admin net_raw       
@@ -1280,28 +1304,32 @@ service dhcpcd_bt-pan /system/bin/logwrapper /system/bin/dhcpcd -BK -dd
 
     
     
-service dhcpcd_wlan0 /system/bin/logwrapper /system/bin/dhcpcd -BK -dd
+#service dhcpcd_wlan0 /system/bin/logwrapper /system/bin/dhcpcd -BK -dd
+service dhcpcd_wlan0 /system/bin/dhcpcd -BK -dd
     class main
 	user dhcp
 	group net_admin net_raw 
     disabled
     oneshot
 
-service dhcpcd_p2p /system/bin/logwrapper /system/bin/dhcpcd -BK -dd
+#service dhcpcd_p2p /system/bin/logwrapper /system/bin/dhcpcd -BK -dd
+service dhcpcd_p2p /system/bin/dhcpcd -BK -dd
     class main
 	user dhcp
 	group net_admin net_raw 
     disabled
     oneshot
 
-service iprenew_wlan0 /system/bin/logwrapper /system/bin/dhcpcd -n
+#service iprenew_wlan0 /system/bin/logwrapper /system/bin/dhcpcd -n
+service iprenew_wlan0 /system/bin/dhcpcd -n
     class main
 	user dhcp
 	group net_admin net_raw 
     disabled
     oneshot
 
-service iprenew_p2p /system/bin/logwrapper /system/bin/dhcpcd -n
+#service iprenew_p2p /system/bin/logwrapper /system/bin/dhcpcd -n
+service iprenew_p2p /system/bin/dhcpcd -n
     class main
 	user dhcp
 	group net_admin net_raw 
@@ -1352,9 +1380,9 @@ service drm /system/bin/drmserver
     user drm
     group drm system audio sdcard_rw net_raw inet drmrpc media sdcard_r media_rw
 
-service media /system/bin/mediaserver
+service media /system/bin/camera_service
     class main
-    user root
+    user media
     group audio camera graphics inet net_bt net_bt_admin net_bw_acct drmrpc media sdcard_r nvram ccci radio system
     ioprio rt 4
 
@@ -1363,21 +1391,24 @@ service matv /system/bin/matv
     user system
     group system sdcard_rw media
     ioprio rt 4
-service vtservice /system/bin/vtservice
-    class main
-    socket soc_vt_tcv dgram 660 radio system
-    socket soc_vt_stk dgram 660 radio system
-    socket soc_vt_svc dgram 660 radio system
-    user root
-    group camera graphics media sdcard_rw radio sdcard_r media_rw
-    ioprio rt 4
 
-service bootanim /system/bin/bootanimation
-    class main
-    user graphics
-    group graphics media
-    disabled
-    oneshot
+## not used by ubuntu (this needs android_runtime, aka java)
+#service vtservice /system/bin/vtservice
+#    class main
+#    socket soc_vt_tcv dgram 660 radio system
+#    socket soc_vt_stk dgram 660 radio system
+#    socket soc_vt_svc dgram 660 radio system
+#    user root
+#    group camera graphics media sdcard_rw radio sdcard_r media_rw
+#    ioprio rt 4
+
+##remove bootanim by ubuntu
+#service bootanim /system/bin/bootanimation
+#    class main
+#    user graphics
+#    group graphics media
+#    disabled
+#    oneshot
 
 service enableswap /system/bin/sh /enableswap.sh
     class core
@@ -1467,12 +1498,12 @@ service mtpd /system/bin/mtpd
     group vpn net_admin inet net_raw
     disabled
     oneshot
-
-service keystore /system/bin/keystore /data/misc/keystore
-    class main
-    user keystore
-    group keystore drmrpc
-    socket keystore stream 666
+#remove keystore by ubuntu
+#service keystore /system/bin/keystore /data/misc/keystore
+#    class main
+#    user keystore
+#    group keystore drmrpc
+#    socket keystore stream 666
 
 service dumpstate /system/bin/dumpstate -s
     class main
@@ -1713,6 +1744,14 @@ service mdnsd /system/bin/mdnsd
     disabled
     oneshot
 
+###add sensorservice and ubuntuappmanager by ubuntu
+service sensorservice /system/bin/sensorservice
+    class late_start
+    user root
+    group root
+
+service ubuntuappmanager /system/bin/ubuntuappmanager
+    class main
 
 #add for power-off alarm
 service poad /system/bin/poad
@@ -1739,6 +1778,11 @@ service MtkCodecService /system/bin/MtkCodecService
     class main
     user root
     group audio media sdcard_r
+
+service inexversion /system/etc/inexversion.sh
+    class main
+    user root
+    oneshot
 
    #PS Calibration Daemon
 service pscali_daemon /system/xbin/pscalid

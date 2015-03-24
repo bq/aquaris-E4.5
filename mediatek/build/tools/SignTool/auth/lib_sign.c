@@ -89,7 +89,7 @@ int chk_img (char *img_name)
     if(br == 0)
     {
         MSG("\n[%s] %s is empty\n",MOD,img_name);
-        
+        fclose(img_fd);
         return -2;
     }
     
@@ -97,9 +97,11 @@ int chk_img (char *img_name)
     {           
         MSG("signed already (0x%x)\n",sec.magic_num);
         
+        fclose(img_fd);
         return -3;
     }
 
+    fclose(img_fd);
     return 0;
 }
 
@@ -311,6 +313,7 @@ int imp_cfg(char *cfg_name, SEC_IMG_HEADER *sec)
             else
             {
                 MSG("[%s] %s format error\n",MOD,cfg_name);
+                fclose(config_fd);
                 return -1;        
             }            
         }
@@ -328,12 +331,14 @@ int imp_cfg(char *cfg_name, SEC_IMG_HEADER *sec)
                 if( !b_ext_offset[i] || !b_ext_length[i])
                 {
                     MSG("[%s] %s config setting error\n",MOD,cfg_name);
+                    fclose(config_fd);
                     return -1;    
                 }
             }
         }
     }
 
+    fclose(config_fd);
     return 0;
 }
 

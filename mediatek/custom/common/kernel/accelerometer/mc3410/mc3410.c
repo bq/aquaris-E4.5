@@ -357,7 +357,7 @@ static int MC3410_ReadData(struct i2c_client *client, s16 data[MC3410_AXES_NUM])
 /*----------------------------------------------------------------------------*/
 static int MC3410_ReadOffset(struct i2c_client *client, s8 ofs[MC3410_AXES_NUM])
 {    
-	int err;
+	int err = MC3410_SUCCESS;
 	GSE_FUN(f);
 
 #ifdef SW_CALIBRATION
@@ -378,7 +378,7 @@ static int MC3410_ResetCalibration(struct i2c_client *client)
 {
 	struct mc3410_i2c_data *obj = i2c_get_clientdata(client);
 	s8 ofs[MC3410_AXES_NUM] = {0x00, 0x00, 0x00};
-	int err;
+	int err = MC3410_SUCCESS;
 	
 	#ifdef SW_CALIBRATION
 		

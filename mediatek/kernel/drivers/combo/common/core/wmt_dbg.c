@@ -771,7 +771,7 @@ static INT32 wmt_dev_dbg_write(struct file *file, const CHAR *buffer, ULONG coun
 #endif
 INT32 wmt_dev_dbg_setup(VOID)
 {
-INT32 i_ret;
+INT32 i_ret = 0;
 #if USE_NEW_PROC_FS_FLAG
 	gWmtDbgEntry = proc_create(WMT_DBG_PROCNAME, 0664, NULL, &wmt_dbg_fops);
 	if (gWmtDbgEntry == NULL) {

@@ -313,6 +313,8 @@ static void lcm_update(unsigned int x, unsigned int y,
 }
 #endif
 
+extern int IMM_GetOneChannelValue(int dwChannel, int data[4], int *rawdata);
+
 static unsigned int lcm_compare_id(void)
 {
 #if 0
@@ -362,11 +364,25 @@ static unsigned int lcm_compare_id(void)
 	id = buffer[0]; 
 
 	#ifdef BUILD_LK
-	//printf("[LK]---cmd---hx8394_hd720_dsi_vdo_truly----%s------[%x]\n",__func__,buffer[0]);
+	printf("[LK]---cmd---hx8394_hd720_dsi_vdo_truly----%s------[0x%x]\n",__func__,buffer[0]);
     #else
-	//printk("[KERNEL]---cmd---hx8394_hd720_dsi_vdo_truly----%s------[%x]\n",__func__,buffer[0]);
+	printk("[KERNEL]---cmd---hx8394_hd720_dsi_vdo_truly----%s------[0x%x]\n",__func__,buffer[0]);
     #endif	
-	return (id == HX8394_LCM_ID)?1:0;
+	if(id==HX8394_LCM_ID)
+	{
+		int adcdata[4];
+		int lcmadc=0;
+		IMM_GetOneChannelValue(0,adcdata,&lcmadc);
+		lcmadc = lcmadc * 1500/4096; 
+		#ifdef BUILD_LK
+		printf("[LK]---cmd---hx8394_hd720_dsi_vdo_truly----%s------adc[%d]\n",__func__,lcmadc);
+		#else
+		printk("[KERNEL]---cmd---hx8394_hd720_dsi_vdo_truly----%s------adc[%d]\n",__func__,lcmadc);
+		#endif	
+		if(lcmadc < 200)
+			return 1;
+	}
+	return 0;//(id == HX8394_LCM_ID)?1:0;
 #endif
 }
 

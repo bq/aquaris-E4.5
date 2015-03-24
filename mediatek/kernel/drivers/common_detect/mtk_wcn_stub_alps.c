@@ -17,7 +17,7 @@
 */
 #define CMB_STUB_LOG_INFO(fmt, arg...) printk(KERN_INFO fmt, ##arg)
 #define CMB_STUB_LOG_WARN(fmt, arg...) printk(KERN_WARNING fmt, ##arg)
-#define CMB_STUB_LOG_DBG(fmt, arg...) printk(KERN_DEBUG fmt, ##arg)
+#define CMB_STUB_LOG_DBG(fmt, arg...) pr_debug(fmt, ##arg)
 
 
 /*******************************************************************************

@@ -23,8 +23,8 @@
 #include "cust_kpd.h"
 struct input_dev *kpd_input_dev;
 static bool kpd_suspend = false;
-static int kpd_show_hw_keycode = 1;
-static int kpd_show_register = 1;
+static int kpd_show_hw_keycode = 0;
+static int kpd_show_register = 0;
 static volatile int call_status = 0;
 static int incall = 0;//this is for whether phone in call state judgement when resume
 
@@ -533,7 +533,7 @@ static void hall_switch_eint_handler(void)
 #if KPD_PWRKEY_USE_PMIC
 void kpd_pwrkey_pmic_handler(unsigned long pressed)
 {
-	printk(KPD_SAY "Power Key generate, pressed=%ld\n", pressed);
+	kpd_print("Power Key generate, pressed=%ld\n", pressed);
 	if(!kpd_input_dev) {
 		printk("KPD input device not ready\n");
 		return;
@@ -545,7 +545,7 @@ void kpd_pwrkey_pmic_handler(unsigned long pressed)
 
 void kpd_pmic_rstkey_handler(unsigned long pressed)
 {
-	printk(KPD_SAY "PMIC reset Key generate, pressed=%ld\n", pressed);
+	kpd_print("PMIC reset Key generate, pressed=%ld\n", pressed);
 	if(!kpd_input_dev) {
 		printk("KPD input device not ready\n");
 		return;
@@ -580,7 +580,7 @@ static void kpd_keymap_handler(unsigned long data)
 			/* bit is 1: not pressed, 0: pressed */
 			pressed = !(new_state[i] & mask);
 			if (kpd_show_hw_keycode) {
-				printk(KPD_SAY "(%s) HW keycode = %u\n",
+				kpd_print("(%s) HW keycode = %u\n",
 				       pressed ? "pressed" : "released",
 				       hw_keycode);
 			}

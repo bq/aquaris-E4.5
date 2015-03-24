@@ -263,13 +263,13 @@ static void* MTKPP_SeqStart(struct seq_file *s, loff_t *pos)
 {
 	loff_t *spos;
 	
-	spos = kmalloc(sizeof(loff_t), GFP_KERNEL);
 	
 	if (*pos >= MTKPP_ID_SIZE)	
 	{
 		// MTK: lono@2013/1/7
 		return NULL;
 	}
+	spos = kmalloc(sizeof(loff_t), GFP_KERNEL);
 
 	if (spos == NULL)
 	{	

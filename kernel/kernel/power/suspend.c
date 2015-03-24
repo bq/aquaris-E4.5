@@ -308,7 +308,9 @@ int enter_state(suspend_state_t state)
 	pr_debug("PM: Finishing wakeup.\n");
 	suspend_finish();
  Unlock:
+	sleep_trace("pre unlock pm_mutex");
 	mutex_unlock(&pm_mutex);
+	sleep_trace("unlocked pm_mutex");
 	return error;
 }
 
@@ -342,7 +344,9 @@ int pm_suspend(suspend_state_t state)
 	error = enter_state(state);
 	if (error) {
 		suspend_stats.fail++;
+		sleep_trace("1");
 		dpm_save_failed_errno(error);
+		sleep_trace("2");
 	} else {
 		suspend_stats.success++;
 	}

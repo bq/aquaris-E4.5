@@ -247,7 +247,7 @@ int tcp_v4_connect(struct sock *sk, struct sockaddr *uaddr, int addr_len)
 	sk->sk_gso_type = SKB_GSO_TCPV4;
 	sk_setup_caps(sk, &rt->dst);
 
-        printk(KERN_INFO "[socket_conn]IPV4 socket[%lu] sport:%u \n", SOCK_INODE(sk->sk_socket)->i_ino, ntohs(inet->inet_sport));
+        pr_debug("[socket_conn]IPV4 socket[%lu] sport:%u \n", SOCK_INODE(sk->sk_socket)->i_ino, ntohs(inet->inet_sport));
 	if (!tp->write_seq)
 		tp->write_seq = secure_tcp_sequence_number(inet->inet_saddr,
 							   inet->inet_daddr,
@@ -2017,7 +2017,7 @@ void tcp_v4_handle_retrans_time_by_uid(struct uid_err uid_e)
                 if(SOCK_INODE(sk->sk_socket)->i_uid != skuid)
                     continue;
                 else
-                    printk("[mmspb] tcp_v4_handle_retrans_time_by_uid socket uid(%d) match!",
+                    pr_debug("[mmspb] tcp_v4_handle_retrans_time_by_uid socket uid(%d) match!",
                         SOCK_INODE(sk->sk_socket)->i_uid);
             } else{
                 continue;
@@ -2031,7 +2031,7 @@ void tcp_v4_handle_retrans_time_by_uid(struct uid_err uid_e)
 
                 // update sk time out value
 		icsk = inet_csk(sk);
-		printk("[mmspb] tcp_v4_handle_retrans_time_by_uid update timer\n");
+		pr_debug("[mmspb] tcp_v4_handle_retrans_time_by_uid update timer\n");
 					
 		sk_reset_timer(sk, &icsk->icsk_retransmit_timer, jiffies + 2);
 		icsk->icsk_rto = TCP_RTO_MIN * 30;	
@@ -2075,7 +2075,7 @@ restart:
                 if(SOCK_INODE(sk->sk_socket)->i_uid != skuid)
                     continue;
                 else
-                    printk(KERN_INFO "SIOCKILLSOCK socket uid(%d) match!",
+                    pr_debug("SIOCKILLSOCK socket uid(%d) match!",
                         SOCK_INODE(sk->sk_socket)->i_uid);
             } else{
                 continue;
@@ -2087,7 +2087,7 @@ restart:
                 local_bh_disable();
                 bh_lock_sock(sk);
                 sk->sk_err = uid_e.errNum;
-                printk(KERN_INFO "SIOCKILLSOCK set sk err == %d!! \n", sk->sk_err);
+                pr_debug("SIOCKILLSOCK set sk err == %d!! \n", sk->sk_err);
                 sk->sk_error_report(sk);
     
                 tcp_done(sk);

@@ -879,7 +879,10 @@ static struct mtk_uart_vfifo *mtk_uart_vfifo_alloc(struct mtk_uart *uart, UART_V
 
     if (vfifo && vfifo->addr == NULL)
         vfifo = NULL;
-    MSG(INFO, "alloc vfifo-%d[%d](%p)\n", uart->nport, vfifo->size, vfifo->addr);        
+    if (vfifo != NULL)
+    {
+        MSG(INFO, "alloc vfifo-%d[%d](%p)\n", uart->nport, vfifo->size, vfifo->addr);
+    }
 
     spin_unlock_irqrestore(&mtk_uart_vfifo_port_lock, flags);
     return vfifo;

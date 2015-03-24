@@ -836,38 +836,38 @@ kalFirmwareOpen (
     case WMTHWVER_MT6620_E3:
     case WMTHWVER_MT6620_E4:
     case WMTHWVER_MT6620_E5:
-        filp = filp_open("/etc/firmware/"CFG_FW_FILENAME, O_RDONLY, 0);
+        filp = filp_open("/system/etc/firmware/"CFG_FW_FILENAME, O_RDONLY, 0);
         break;
 
     case WMTHWVER_MT6620_E6:
     default:
-        filp = filp_open("/etc/firmware/"CFG_FW_FILENAME"_E6", O_RDONLY, 0);
+        filp = filp_open("/system/etc/firmware/"CFG_FW_FILENAME"_E6", O_RDONLY, 0);
         break;
     }
 #elif defined(MT5931) && CFG_MULTI_ECOVER_SUPPORT
     switch (wlanGetEcoVersion(prGlueInfo->prAdapter)) {
     case HWVER_MT5931_E1:
     case HWVER_MT5931_E2:
-        filp = filp_open("/etc/firmware/"CFG_FW_FILENAME"_E2", O_RDONLY, 0);
+        filp = filp_open("/system/etc/firmware/"CFG_FW_FILENAME"_E2", O_RDONLY, 0);
         break;
     case HWVER_MT5931_E3:
     default:
-        filp = filp_open("/etc/firmware/"CFG_FW_FILENAME, O_RDONLY, 0);
+        filp = filp_open("/system/etc/firmware/"CFG_FW_FILENAME, O_RDONLY, 0);
         break;
     }
 #elif defined(MT6628)
-//    filp = filp_open("/etc/firmware/"CFG_FW_FILENAME"_MT6628", O_RDONLY, 0);
-//    filp = filp_open("/etc/firmware/"CFG_FW_FILENAME"_MT6582", O_RDONLY, 0);
+//    filp = filp_open("/system/etc/firmware/"CFG_FW_FILENAME"_MT6628", O_RDONLY, 0);
+//    filp = filp_open("/system/etc/firmware/"CFG_FW_FILENAME"_MT6582", O_RDONLY, 0);
 	kalMemZero(aucFilePath, sizeof(aucFilePath));
-	kalMemCopy(aucFilePath, "/etc/firmware/"CFG_FW_FILENAME"_",
-		strlen("/etc/firmware/"CFG_FW_FILENAME"_"));
-	glGetChipInfo(prGlueInfo, &aucFilePath[strlen("/etc/firmware/"CFG_FW_FILENAME"_")]);
+	kalMemCopy(aucFilePath, "/system/etc/firmware/"CFG_FW_FILENAME"_",
+		strlen("/system/etc/firmware/"CFG_FW_FILENAME"_"));
+	glGetChipInfo(prGlueInfo, &aucFilePath[strlen("/system/etc/firmware/"CFG_FW_FILENAME"_")]);
 
 	DBGLOG(INIT, TRACE, ("open file: %s\n", aucFilePath));
 
     filp = filp_open(aucFilePath, O_RDONLY, 0);
 #else
-    filp = filp_open("/etc/firmware/"CFG_FW_FILENAME, O_RDONLY, 0);
+    filp = filp_open("/system/etc/firmware/"CFG_FW_FILENAME, O_RDONLY, 0);
 #endif
     if (IS_ERR(filp)) {
         DBGLOG(INIT, INFO, ("Open FW image: %s failed\n", CFG_FW_FILENAME));
@@ -1433,11 +1433,11 @@ kalPacketAlloc (
         *ppucData = (PUINT_8) (prSkb->data);
     }
 #if DBG
-{
-    PUINT_32 pu4Head = (PUINT_32)&prSkb->cb[0];
-    *pu4Head = (UINT_32)prSkb->head;
-    DBGLOG(RX, TRACE, ("prSkb->head = %#lx, prSkb->cb = %#lx\n", (UINT_32)prSkb->head, *pu4Head));
-}
+    if (prSkb) {
+        PUINT_32 pu4Head = (PUINT_32)&prSkb->cb[0];
+        *pu4Head = (UINT_32)prSkb->head;
+        DBGLOG(RX, TRACE, ("prSkb->head = %#lx, prSkb->cb = %#lx\n", (UINT_32)prSkb->head, *pu4Head));
+    }
 #endif
     return (PVOID) prSkb;
 }

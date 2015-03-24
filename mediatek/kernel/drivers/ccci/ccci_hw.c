@@ -825,7 +825,7 @@ int pc_register(struct physical_channel *pc_ch,int ch_num, char *name,int buf_nu
 	int ret=0;
 	
 	ret=(*pc_ch->lg_layer.add_client)(&pc_ch->lg_layer,ch_num,buf_num,&lg_ch);
-	if (ret)
+	if (ret || lg_ch == NULL )
 	{
 		if(ret != -EEXIST){
 			CCCI_MSG_INF("cci", "register fail for %s: %d\n",name,ret);

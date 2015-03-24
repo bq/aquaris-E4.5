@@ -150,4 +150,4 @@ obj-$(CONFIG_MTK_SCHED_CMP_POWER_AWARE_CONTROLLER) +=  pa/
 obj-y   += selinux_warning/
 # MTK PASR SW flow
 obj-$(CONFIG_MTKPASR)	+= mtkpasr/
-obj-y   +=  debug_util/
+# obj-y   +=  debug_util/

@@ -75,7 +75,7 @@ void Ana_Set_Reg(uint32 offset, uint32 value, uint32 mask)
     Reg_Value = Ana_Get_Reg(offset);
     if ((Reg_Value & mask) != (value & mask))
     {
-        printk("Ana_Set_Reg offset= 0x%x , value = 0x%x mask = 0x%x ret = %d Reg_Value = 0x%x\n", offset, value, mask, ret, Reg_Value);
+        pr_debug("Ana_Set_Reg offset= 0x%x , value = 0x%x mask = 0x%x ret = %d Reg_Value = 0x%x\n", offset, value, mask, ret, Reg_Value);
     }
 #endif
 }

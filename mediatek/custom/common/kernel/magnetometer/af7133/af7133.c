@@ -359,7 +359,7 @@ static ssize_t show_daemon_name(struct device_driver *ddri, char *buf)
 
 static ssize_t show_chipinfo_value(struct device_driver *ddri, char *buf)
 {
-	char strbuf[AF7133_BUFSIZE];
+	char strbuf[AF7133_BUFSIZE] = { 0 };
 	//AF7133_ReadChipInfo(strbuf, AF7133_BUFSIZE);
 	return sprintf(buf, "%s\n", strbuf);        
 }
@@ -373,21 +373,21 @@ static ssize_t show_sensordata_value(struct device_driver *ddri, char *buf)
 /*----------------------------------------------------------------------------*/
 static ssize_t show_posturedata_value(struct device_driver *ddri, char *buf)
 {
-	char strbuf[AF7133_BUFSIZE];
+	char strbuf[AF7133_BUFSIZE] = { 0 };
 	//AF7133_ReadPostureData(strbuf, AF7133_BUFSIZE);
 	return sprintf(buf, "%s\n", strbuf);            
 }
 /*----------------------------------------------------------------------------*/
 static ssize_t show_calidata_value(struct device_driver *ddri, char *buf)
 {
-	char strbuf[AF7133_BUFSIZE];
+	char strbuf[AF7133_BUFSIZE] = { 0 };
 	//AF7133_ReadCaliData(strbuf, AF7133_BUFSIZE);
 	return sprintf(buf, "%s\n", strbuf);            
 }
 /*----------------------------------------------------------------------------*/
 static ssize_t show_midcontrol_value(struct device_driver *ddri, char *buf)
 {
-	char strbuf[AF7133_BUFSIZE];
+	char strbuf[AF7133_BUFSIZE] = { 0 };
 	//AF7133_ReadMiddleControl(strbuf, AF7133_BUFSIZE);
 	return sprintf(buf, "%s\n", strbuf);            
 }

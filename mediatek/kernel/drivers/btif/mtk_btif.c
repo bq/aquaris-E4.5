@@ -171,7 +171,7 @@ mtk_btif_dma g_dma[BTIF_PORT_NR][BTIF_DIR_MAX] = {
 static int g_max_pkg_len = G_MAX_PKG_LEN; /*DMA vFIFO is set to 8 * 1024, we set this to 7/8 * vFIFO size*/
 static int g_max_pding_data_size = BTIF_RX_BUFFER_SIZE * 3 / 4;
 
-static int mtk_btif_dbg_lvl = BTIF_LOG_INFO;
+static int mtk_btif_dbg_lvl = BTIF_LOG_WARN;
 
 /*-----------Platform bus related structures----------------*/
 #define DRV_NAME "mtk_btif"
@@ -255,7 +255,7 @@ int _btif_suspend(p_mtk_btif p_btif)
 					BTIF_INFO_FUNC("failed\n");
 					/*Chaozhong: what if failed*/
 				} else {
-					BTIF_INFO_FUNC("succeed\n");
+					BTIF_DBG_FUNC("succeed\n");
 					i_ret = _btif_state_set(p_btif, B_S_SUSPEND);
 					if (i_ret) {
 						if (_btif_init(p_btif)) {
@@ -295,10 +295,10 @@ static int mtk_btif_suspend(struct platform_device *pdev, pm_message_t state)
 	p_mtk_btif p_btif = NULL;
 
 /*Chaozhong: ToDo: to be implement*/
-	BTIF_INFO_FUNC("++\n");
+	BTIF_DBG_FUNC("++\n");
 	p_btif = platform_get_drvdata(pdev);
 	i_ret = _btif_suspend(p_btif);
-	BTIF_INFO_FUNC("--, i_ret:%d\n", i_ret);
+	BTIF_DBG_FUNC("--, i_ret:%d\n", i_ret);
 	return i_ret;
 }
 

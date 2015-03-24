@@ -420,7 +420,7 @@ int disp_lock_cmdq_thread(void)
 {
     int i=0;
 
-    printk("disp_lock_cmdq_thread()called \n");
+    pr_debug("disp_lock_cmdq_thread()called \n");
     
     spin_lock(&gCmdqLock);
     for (i = 0; i < CMDQ_THREAD_NUM; i++)
@@ -433,7 +433,7 @@ int disp_lock_cmdq_thread(void)
     } 
     spin_unlock(&gCmdqLock);
 
-    printk("disp_lock_cmdq_thread(), i=%d \n", i);
+    pr_debug("disp_lock_cmdq_thread(), i=%d \n", i);
 
     return (i>=CMDQ_THREAD_NUM)? -1 : i;
     
@@ -1333,7 +1333,7 @@ static long disp_unlocked_ioctl(struct file *file, unsigned int cmd, unsigned lo
             break;  
 
         case DISP_IOCTL_LOCK_THREAD:
-            printk("DISP_IOCTL_LOCK_THREAD! \n");
+            pr_debug("DISP_IOCTL_LOCK_THREAD! \n");
             value = disp_lock_cmdq_thread();  
             if (copy_to_user((void*)arg, &value , sizeof(unsigned int)))
             {
@@ -1454,12 +1454,12 @@ static long disp_unlocked_ioctl(struct file *file, unsigned int cmd, unsigned lo
             if( (value&0xffff0000) !=0)
             {
                 disable_irq(value&0xff);
-                printk("disable_irq %d \n", value&0xff);
+                pr_debug("disable_irq %d \n", value&0xff);
             }
             else
             {
                 DISP_REGISTER_IRQ(value&0xff);
-                printk("enable irq: %d \n", value&0xff);
+                pr_debug("enable irq: %d \n", value&0xff);
             }            
             break; 
 
@@ -2082,7 +2082,7 @@ static void disp_shutdown(struct platform_device *pdev)
 /* PM suspend */
 static int disp_suspend(struct platform_device *pdev, pm_message_t mesg)
 {
-    printk("\n\n==== DISP suspend is called ====\n");
+    pr_debug("\n\n==== DISP suspend is called ====\n");
 
     return cmdqSuspendTask();
 }

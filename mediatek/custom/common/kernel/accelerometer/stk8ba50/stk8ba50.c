@@ -320,7 +320,7 @@ static int STK8BA50_ReadData(struct i2c_client *client, s16 data[STK8BA50_AXES_N
 		u8  dat;
 		int i;
 
-		hwmsen_read_block(client,STK8BA50_XOUT1,acc_reg,sizeof(acc_reg));
+		result = hwmsen_read_block(client,STK8BA50_XOUT1,acc_reg,sizeof(acc_reg));
 		if (result < 0) 
 		{
 			printk(KERN_ERR "%s: failed to read 6 bytes acc data, error=0x%x\n", __func__, result);

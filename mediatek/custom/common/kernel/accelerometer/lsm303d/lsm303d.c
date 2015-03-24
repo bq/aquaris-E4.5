@@ -559,7 +559,7 @@ static int lsm303d_ResetCalibration(struct i2c_client *client)
 {
 	struct lsm303d_i2c_data *obj = i2c_get_clientdata(client);
 	s8 ofs[LSM303D_AXES_NUM] = {0x00, 0x00, 0x00};
-	int err;
+	int err = LSM303D_SUCCESS;
 	
 	#ifdef SW_CALIBRATION
 		

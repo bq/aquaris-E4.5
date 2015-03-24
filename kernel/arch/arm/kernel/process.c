@@ -365,11 +365,8 @@ __setup("reboot=", reboot_setup);
 void machine_shutdown(void)
 {
 #ifdef CONFIG_SMP
-  printk("machine_shutdown: start, Proess(%s:%d)\n", current->comm, current->pid);
-  dump_stack();
-  preempt_disable();
+	preempt_disable();
 	smp_send_stop();
-  printk("machine_shutdown: done\n");
 #endif
 }
 
@@ -485,24 +482,24 @@ void __show_regs(struct pt_regs *regs)
 	unsigned long flags;
 	char buf[64];
 
-	printk("CPU: %d    %s  (%s %.*s)\n",
+	printk(KERN_EMERG "CPU: %d    %s  (%s %.*s)\n",
 		raw_smp_processor_id(), print_tainted(),
 		init_utsname()->release,
 		(int)strcspn(init_utsname()->version, " "),
 		init_utsname()->version);
-	print_symbol("PC is at %s\n", instruction_pointer(regs));
-	print_symbol("LR is at %s\n", regs->ARM_lr);
-	printk("pc : [<%08lx>]    lr : [<%08lx>]    psr: %08lx\n"
+	print_symbol(KERN_EMERG "PC is at %s\n", instruction_pointer(regs));
+	print_symbol(KERN_EMERG "LR is at %s\n", regs->ARM_lr);
+	printk(KERN_EMERG "pc : [<%08lx>]    lr : [<%08lx>]    psr: %08lx\n"
 	       "sp : %08lx  ip : %08lx  fp : %08lx\n",
 		regs->ARM_pc, regs->ARM_lr, regs->ARM_cpsr,
 		regs->ARM_sp, regs->ARM_ip, regs->ARM_fp);
-	printk("r10: %08lx  r9 : %08lx  r8 : %08lx\n",
+	printk(KERN_EMERG "r10: %08lx  r9 : %08lx  r8 : %08lx\n",
 		regs->ARM_r10, regs->ARM_r9,
 		regs->ARM_r8);
-	printk("r7 : %08lx  r6 : %08lx  r5 : %08lx  r4 : %08lx\n",
+	printk(KERN_EMERG "r7 : %08lx  r6 : %08lx  r5 : %08lx  r4 : %08lx\n",
 		regs->ARM_r7, regs->ARM_r6,
 		regs->ARM_r5, regs->ARM_r4);
-	printk("r3 : %08lx  r2 : %08lx  r1 : %08lx  r0 : %08lx\n",
+	printk(KERN_EMERG "r3 : %08lx  r2 : %08lx  r1 : %08lx  r0 : %08lx\n",
 		regs->ARM_r3, regs->ARM_r2,
 		regs->ARM_r1, regs->ARM_r0);
 
@@ -513,7 +510,7 @@ void __show_regs(struct pt_regs *regs)
 	buf[3] = flags & PSR_V_BIT ? 'V' : 'v';
 	buf[4] = '\0';
 
-	printk("Flags: %s  IRQs o%s  FIQs o%s  Mode %s  ISA %s  Segment %s\n",
+	printk(KERN_EMERG "Flags: %s  IRQs o%s  FIQs o%s  Mode %s  ISA %s  Segment %s\n",
 		buf, interrupts_enabled(regs) ? "n" : "ff",
 		fast_interrupts_enabled(regs) ? "n" : "ff",
 		processor_modes[processor_mode(regs)],
@@ -536,7 +533,7 @@ void __show_regs(struct pt_regs *regs)
 #endif
 		asm("mrc p15, 0, %0, c1, c0\n" : "=r" (ctrl));
 
-		printk("Control: %08x%s\n", ctrl, buf);
+		printk(KERN_EMERG "Control: %08x%s\n", ctrl, buf);
 	}
 #endif
 

@@ -3,5 +3,6 @@
 
 extern int do_bluetooth_drv_init(int chip_id);
 extern int mtk_wcn_stpbt_drv_init(void);
+extern int ckt_hci_init(void);
 #endif
 

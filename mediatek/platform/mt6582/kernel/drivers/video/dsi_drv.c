@@ -1864,7 +1864,7 @@ void DSI_PHY_clk_setting(LCM_PARAMS *lcm_params)
 			OUTREGBIT(MIPITX_DSI_PLL_CON3_REG,DSI_PHY_REG->MIPITX_DSI_PLL_CON3,RG_DSI0_MPPLL_SDM_SSC_DELTA,pdelta1);
 			OUTREGBIT(MIPITX_DSI_PLL_CON3_REG,DSI_PHY_REG->MIPITX_DSI_PLL_CON3,RG_DSI0_MPPLL_SDM_SSC_DELTA1,pdelta1);
 			//OUTREGBIT(MIPITX_DSI_PLL_CON1_REG,DSI_PHY_REG->MIPITX_DSI_PLL_CON1,RG_DSI0_MPPLL_SDM_FRA_EN,1);
-			printk("[dsi_drv.c] PLL config:data_rate=%d,txdiv=%d,pcw=%d,delta1=%d,pdelta1=0x%x\n",
+			pr_debug("[dsi_drv.c] PLL config:data_rate=%d,txdiv=%d,pcw=%d,delta1=%d,pdelta1=0x%x\n",
 				data_Rate,txdiv,INREG32(&DSI_PHY_REG->MIPITX_DSI_PLL_CON2),delta1,pdelta1);
 		}
 	}
@@ -3020,6 +3020,11 @@ DSI_STATUS DSI_Write_T2_INS(DSI_T2_INS *t2)
 {
 	unsigned int i;
 
+    if (t2 == NULL)
+    {
+        return DSI_STATUS_ERROR;
+    }
+
 	OUTREG32(&DSI_CMDQ_REG->data[0], AS_UINT32(t2));
 
 	for(i=0;i<((t2->WC16-1)>>2)+1;i++)
@@ -3108,7 +3113,7 @@ DSI_STATUS DSI_PS_Control(unsigned int ps_type, unsigned int vact_line, unsigned
 void DSI_Config_VDO_Timing(LCM_PARAMS *lcm_params)
 {
 	unsigned int line_byte;
-	unsigned int horizontal_sync_active_byte;
+	unsigned int horizontal_sync_active_byte = 0;
 	unsigned int horizontal_backporch_byte;
 	unsigned int horizontal_frontporch_byte;
 	unsigned int horizontal_bllp_byte;
@@ -3212,7 +3217,7 @@ void DSI_write_lcm_regs(unsigned int addr, unsigned int *para, unsigned int nums
 UINT32 DSI_dcs_read_lcm_reg(UINT8 cmd)
 {
     UINT32 max_try_count = 5;
-    UINT32 recv_data;
+    UINT32 recv_data = 0;
     UINT32 recv_data_cnt;
     unsigned int read_timeout_ms;
     unsigned char packet_type;

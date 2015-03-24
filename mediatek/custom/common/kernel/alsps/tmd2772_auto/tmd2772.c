@@ -50,10 +50,10 @@
 #define TMD2772_DEV_NAME     "TMD2772"
 /*----------------------------------------------------------------------------*/
 #define APS_TAG                  "[ALS/PS] "
-#define APS_FUN(f)               printk(KERN_INFO APS_TAG"%s\n", __FUNCTION__)
+#define APS_FUN(f)               pr_debug(APS_TAG"%s\n", __FUNCTION__)
 #define APS_ERR(fmt, args...)    printk(KERN_ERR  APS_TAG"%s %d : "fmt, __FUNCTION__, __LINE__, ##args)
-#define APS_LOG(fmt, args...)    printk(KERN_ERR APS_TAG fmt, ##args)
-#define APS_DBG(fmt, args...)    printk(KERN_INFO APS_TAG fmt, ##args) 
+#define APS_LOG(fmt, args...)    pr_debug(APS_TAG fmt, ##args)
+#define APS_DBG(fmt, args...)    pr_debug(APS_TAG fmt, ##args)
 
 #define I2C_FLAG_WRITE	0
 #define I2C_FLAG_READ	1
@@ -1740,7 +1740,7 @@ EXIT_ERR:
 }
 static int store_status(unsigned int *flag)
 	 	{
-	u8 databuf[1];
+	u8 databuf[2] = {0};
 	int res;
 	if((*flag == 0)&&(0 != store_enable_register))
 	{

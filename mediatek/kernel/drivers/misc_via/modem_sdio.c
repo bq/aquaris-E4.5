@@ -579,6 +579,11 @@ static void sdio_buffer_in_print(struct sdio_modem_port *port, struct sdio_buf_i
 	unsigned int count;
 	int i;
 	
+    if (port == NULL || packet == NULL)
+    {
+        return;
+    }
+
 	printk("[MODEM SDIO] sdio channel%d buffer in %d bytes data<<", (port->index+1), packet->size);
 	count = packet->size;
 	if( count > 20){

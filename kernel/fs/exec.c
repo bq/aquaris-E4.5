@@ -56,6 +56,8 @@
 #include <linux/oom.h>
 #include <linux/compat.h>
 
+#include <trace/events/fs.h>
+
 #include <asm/uaccess.h>
 #include <asm/mmu_context.h>
 #include <asm/tlb.h>
@@ -784,6 +786,8 @@ struct file *open_exec(const char *name)
 		goto exit;
 
 	fsnotify_open(file);
+
+	trace_open_exec(name);
 
 	err = deny_write_access(file);
 	if (err)
@@ -1645,7 +1649,9 @@ int do_execve(const char *filename,
     int retry = 3;
     do{
         ret = do_execve_common(filename, argv, envp, regs);
+#ifdef CONFIG_MT_ENG_BUILD
         printk(KERN_DEBUG"[exec] %s(%d)\n", filename, retry);
+#endif /* CONFIG_MT_ENG_BUILD */
     }while( -999 == ret && retry-- > 0);
 	return ret;
 }

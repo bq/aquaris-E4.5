@@ -181,7 +181,7 @@ static void adb_debug_read_copy_to_user(char __user *buf, struct usb_request *re
     if(ret!=0){
         printk(KERN_INFO "copy_to_user fail \n"); 
     }    
-    printk(KERN_INFO "adb_read A_DBUG (0x%x) (0x%x) (0x%x) \n", dbg->command, dbg->msg_check, dbg->data_check); 
+    pr_debug("adb_read A_DBUG (0x%x) (0x%x) (0x%x) \n", dbg->command, dbg->msg_check, dbg->data_check); 
   }
 }
 
@@ -685,7 +685,7 @@ static int adb_open(struct inode *ip, struct file *fp)
 	
 	spin_lock_irqsave(&open_lock, flags);
 	
-	printk(KERN_INFO "[adb]adb_open start, adb_open: %p check adb_release %p, open_release_pair: %d \n", 
+	pr_debug("[adb]adb_open start, adb_open: %p check adb_release %p, open_release_pair: %d \n", 
 		adb_fops.open, adb_fops.release, open_release_pair);
 
 	if (!_adb_dev){
@@ -712,7 +712,7 @@ static int adb_open(struct inode *ip, struct file *fp)
 	adb_ready_callback();
 
 OPEN_END: 	
-	printk(KERN_INFO "[adb]adb_open end, open_release_pair: %d", open_release_pair) ;
+	pr_debug("[adb]adb_open end, open_release_pair: %d", open_release_pair) ;
 	
 	spin_unlock_irqrestore(&open_lock, flags);
 
@@ -726,7 +726,7 @@ static int adb_release(struct inode *ip, struct file *fp)
 
 	spin_lock_irqsave(&open_lock, flags);
 
-	printk(KERN_INFO "[adb]adb_release start, adb_open: %p check adb_release %p, open_release_pair: %d \n", 
+	pr_debug("[adb]adb_release start, adb_open: %p check adb_release %p, open_release_pair: %d \n", 
 		adb_fops.open, adb_fops.release, open_release_pair);
 
 	if (open_release_pair < 1)
@@ -742,7 +742,7 @@ static int adb_release(struct inode *ip, struct file *fp)
 	
 RELEASE_END:
 
-	printk(KERN_INFO "[adb]adb_release end, open_release_pair: %d", open_release_pair) ;
+	pr_debug("[adb]adb_release end, open_release_pair: %d", open_release_pair) ;
 	
 	spin_unlock_irqrestore(&open_lock, flags);
 
@@ -861,7 +861,7 @@ static int adb_bind_config(struct usb_configuration *c)
 {
 	struct adb_dev *dev = _adb_dev;
 
-	printk(KERN_INFO "%s %s %d \n", __FILE__, __func__, __LINE__);
+	pr_debug("%s %s %d \n", __FILE__, __func__, __LINE__);
 
 	dev->cdev = c->cdev;
 	dev->function.name = "adb";

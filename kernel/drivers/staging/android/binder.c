@@ -40,6 +40,7 @@
 #include <linux/kthread.h>
 #include <linux/rtc.h>
 #include <linux/aee.h>
+#include <linux/ratelimit.h>
 
 #ifdef CONFIG_MT_PRIO_TRACER
  #include <linux/prio_tracer.h>
@@ -66,7 +67,7 @@ static pid_t system_server_pid;
 
 #define RT_PRIO_INHERIT			"v1.7"
 
-#define MTK_BINDER_DEBUG 		"v0.1" /* defined for mtk internal added debug code */
+//#define MTK_BINDER_DEBUG 		"v0.1" /* defined for mtk internal added debug code */
 
 /************************************************************************************************************************/
 /*	MTK Death Notify	|		  									*/
@@ -186,6 +187,8 @@ BINDER_DEBUG_ENTRY(proc);
 
 #define BINDER_SMALL_BUF_SIZE (PAGE_SIZE * 64)
 
+static DEFINE_RATELIMIT_STATE(ratelimit_binder, 60*HZ, 1);
+
 enum {
 	BINDER_DEBUG_USER_ERROR             = 1U << 0,
 	BINDER_DEBUG_FAILED_TRANSACTION     = 1U << 1,
@@ -236,7 +239,8 @@ module_param_call(stop_on_user_error, binder_set_stop_on_user_error,
 #define binder_user_error(x...) \
 	do { \
 		if (binder_debug_mask & BINDER_DEBUG_USER_ERROR) \
-			printk(KERN_ERR x); \
+			if (__ratelimit(&ratelimit_binder)) \
+				printk(KERN_ERR x); \
 		if (binder_stop_on_user_error) \
 			binder_stop_on_user_error = 2; \
 	} while (0)
@@ -244,7 +248,8 @@ module_param_call(stop_on_user_error, binder_set_stop_on_user_error,
 #define binder_user_error(x...) \
 	do { \
 		if (binder_debug_mask & BINDER_DEBUG_USER_ERROR) \
-			printk(KERN_INFO x); \
+			if (__ratelimit(&ratelimit_binder)) \
+				printk(KERN_INFO x); \
 		if (binder_stop_on_user_error) \
 			binder_stop_on_user_error = 2; \
 	} while (0)
@@ -4072,6 +4077,8 @@ retry:
 			struct task_struct *sender = t->from->proc->tsk;
 			tr.sender_pid = task_tgid_nr_ns(sender,
 							current->nsproxy->pid_ns);
+			if (tr.sender_pid == 0)
+				tr.sender_pid = task_tgid_nr(sender);
 		} else {
 			tr.sender_pid = 0;
 		}

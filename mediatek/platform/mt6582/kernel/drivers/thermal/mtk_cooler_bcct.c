@@ -307,8 +307,9 @@ static int __init mtk_cooler_bcct_init(void)
       entry->write_proc = _mtk_cl_bcct_proc_write;
       entry->data = cl_bcct_state;
       entry->gid = 1000; // allow system process to write this proc
+
+      mtk_cooler_bcct_dprintk("[mtk_cooler_bcct_init] proc file created: %x \n", entry->data);
     }
-    mtk_cooler_bcct_dprintk("[mtk_cooler_bcct_init] proc file created: %x \n", entry->data);
   }
 
   return 0;

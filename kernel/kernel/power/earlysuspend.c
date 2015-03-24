@@ -96,9 +96,7 @@ EXPORT_SYMBOL(unregister_early_suspend);
 static void early_sys_sync(struct work_struct *work)
 {
     wake_lock(&sys_sync_wake_lock);
-    pm_warn("++\n");
     sys_sync();
-    pm_warn("--\n");
     wake_unlock(&sys_sync_wake_lock);
 }
 
@@ -108,7 +106,7 @@ static void early_suspend(struct work_struct *work)
     unsigned long irqflags;
     int abort = 0, count = 0;
 
-    pr_warn("@@@@@@@@@@@@@@@@@@@@@@@\n@@@__early_suspend__@@@\n@@@@@@@@@@@@@@@@@@@@@@@\n");
+    pr_debug("early_suspend\n");
 
     mutex_lock(&early_suspend_lock);
     spin_lock_irqsave(&state_lock, irqflags);
@@ -125,14 +123,14 @@ static void early_suspend(struct work_struct *work)
         goto abort;
     }
 
-    pr_warn("early_suspend_count = %d, forbid_id = 0x%x\n", early_suspend_count, forbid_id);
+    pr_debug("early_suspend_count = %d, forbid_id = 0x%x\n", early_suspend_count, forbid_id);
     if (earlysuspend_debug_mask & DEBUG_SUSPEND)
         pm_warn("call handlers\n");
     list_for_each_entry(pos, &early_suspend_handlers, link) {
         if (pos->suspend != NULL) {
             if (!(forbid_id & (0x1 << count))) {
-                //if (earlysuspend_debug_mask & DEBUG_VERBOSE)
-                    pr_warn("ES handlers %d: [%pf], level: %d\n", count, pos->suspend, pos->level);
+                if (earlysuspend_debug_mask & DEBUG_VERBOSE)
+                    pr_info("ES handlers %d: [%pf], level: %d\n", count, pos->suspend, pos->level);
                 pos->suspend(pos);
             }
             count++; 
@@ -161,8 +159,8 @@ static void late_resume(struct work_struct *work)
     unsigned long irqflags;
     int abort = 0;
     int completed = 0, count=0;
-    
-    pr_warn("@@@@@@@@@@@@@@@@@@@@@@@\n@@@__late_resume__@@@\n@@@@@@@@@@@@@@@@@@@@@@@\n");
+
+    pr_debug("late_resume\n");
 
 	pm_autosleep_set_state(PM_SUSPEND_ON);
 
@@ -179,7 +177,7 @@ static void late_resume(struct work_struct *work)
             pm_warn("abort, state %d\n", state);
         goto abort;
     }
-    pr_warn("early_suspend_count = %d, forbid_id = 0x%x\n", early_suspend_count, forbid_id);
+    pr_debug("early_suspend_count = %d, forbid_id = 0x%x\n", early_suspend_count, forbid_id);
     if (earlysuspend_debug_mask & DEBUG_SUSPEND)
         pm_warn("call handlers\n");
     list_for_each_entry_reverse(pos, &early_suspend_handlers, link) {
@@ -189,8 +187,8 @@ static void late_resume(struct work_struct *work)
         }
         if (pos->resume != NULL) {
             if (!(forbid_id & (0x1 << (early_suspend_count-count-1)))) {
-                //if (earlysuspend_debug_mask & DEBUG_VERBOSE)
-                    pr_warn("LR handlers %d: [%pf], level: %d\n", count, pos->resume, pos->level);
+                if (earlysuspend_debug_mask & DEBUG_VERBOSE)
+                    pr_info("LR handlers %d: [%pf], level: %d\n", count, pos->resume, pos->level);
                 pos->resume(pos);
             }
             count++; 
@@ -248,7 +246,7 @@ void request_suspend_state(suspend_state_t new_state)
     spin_unlock_irqrestore(&state_lock, irqflags);
     if (wait_flag == 1) {
         wait_for_completion(&fb_drv_ready);
-        pr_warn("wait done\n");
+        pr_debug("wait done\n");
     }
 }
 

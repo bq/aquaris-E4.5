@@ -26,6 +26,13 @@ int wakelock_debug_mask = 0;
 			printk("[%s]"fmt, _TAG, ##__VA_ARGS__); \
 		} \
 	} while (0)
+
+#if 0
+#define wake_trace(fmt, ...)   pr_info("[%s][%s]" fmt, "WAKETRACE", __func__, ##__VA_ARGS__);
+#else
+#define wake_trace(fmt, ...)   ((void)0)
+#endif
+
 /*
  * If set, the suspend/hibernate code will abort transitions to a sleep state
  * if wakeup events are registered during or immediately before the transition.
@@ -723,7 +730,7 @@ bool pm_wakeup_pending(void)
 	spin_unlock_irqrestore(&events_lock, flags);
 	
 	if (ret) {
-			pr_warn("[%s][%s]:cnt=%d,saved_count=%d,inpr=%d\n",_TAG, __func__,cnt,saved_count,inpr);
+			pr_debug("[%s][%s]:cnt=%d,saved_count=%d,inpr=%d\n",_TAG, __func__,cnt,saved_count,inpr);
 			print_active_wakeup_sources();
 	}
 
@@ -803,8 +810,11 @@ void pm_wakep_autosleep_enabled(bool set)
 	struct wakeup_source *ws;
 	ktime_t now = ktime_get();
 
+	wake_trace("mark 1\n");
+
 	rcu_read_lock();
 	list_for_each_entry_rcu(ws, &wakeup_sources, entry) {
+		wake_trace("ws->name: %s\n", ws->name);
 		spin_lock_irq(&ws->lock);
 		if (ws->autosleep_enabled != set) {
 			ws->autosleep_enabled = set;

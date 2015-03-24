@@ -57,7 +57,7 @@ int GPIO_MEM_RW() {
   } 
   else
     {
-      printf("pinconf = 0x%x\n",&pinconf[0]);
+      printf("pinconf = %p\n",&pinconf[0]);
     }
 pinconf = pinconf + (0x2030 + 0x128)/2;
 for(i = 0 ;i<10;i++)

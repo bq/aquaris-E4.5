@@ -27,9 +27,12 @@ EXPORT_SYMBOL_GPL(pm_prepare_console);
 
 void pm_restore_console(void)
 {
+	sleep_trace("1");
 	if (orig_fgconsole >= 0) {
 		vt_move_to_console(orig_fgconsole, 0);
+		sleep_trace("2");
 		vt_kmsg_redirect(orig_kmsg);
+		sleep_trace("3");
 	}
 }
 EXPORT_SYMBOL_GPL(pm_restore_console);

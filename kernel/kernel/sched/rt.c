@@ -58,17 +58,20 @@ static void start_rt_bandwidth(struct rt_bandwidth *rt_b)
 	raw_spin_unlock(&rt_b->rt_runtime_lock);
 }
 
-#ifdef CONFIG_PROVE_LOCKING 
+
+#if 0 // #ifdef CONFIG_PROVE_LOCKING
 DEFINE_RAW_SPINLOCK(rt_rq_runtime_spinlock);
 #define MAX_SPIN_KEY 10
 DEFINE_PER_CPU(struct lock_class_key, spin_key[MAX_SPIN_KEY]);
 DEFINE_PER_CPU(int, spin_key_idx);
 #endif
+
 void init_rt_rq(struct rt_rq *rt_rq, struct rq *rq)
 {
 	struct rt_prio_array *array;
 	int i;
-#ifdef CONFIG_PROVE_LOCKING 
+    
+#if 0 // #ifdef CONFIG_PROVE_LOCKING
 	int cpu, idx;
 #endif
 
@@ -93,13 +96,13 @@ void init_rt_rq(struct rt_rq *rt_rq, struct rq *rq)
 	rt_rq->rt_runtime = 0;
 	/* MTK patch: prevent to continue borrow RT runtime after restore the default value*/
 	rt_rq->rt_disable_borrow = 0;
-#ifdef CONFIG_PROVE_LOCKING 
+#if 0 // #ifdef CONFIG_PROVE_LOCKING
 	raw_spin_lock(&rt_rq_runtime_spinlock);
 	cpu = rq->cpu;
 	idx = per_cpu(spin_key_idx, cpu);
 #endif
 	raw_spin_lock_init(&rt_rq->rt_runtime_lock);
-#ifdef CONFIG_PROVE_LOCKING 
+#if 0 // #ifdef CONFIG_PROVE_LOCKING
 	lockdep_set_class(&rt_rq->rt_runtime_lock, &per_cpu(spin_key[idx], cpu));
 	per_cpu(spin_key_idx, cpu)++;
 	BUG_ON(per_cpu(spin_key_idx, cpu) >= MAX_SPIN_KEY);
@@ -1036,30 +1039,20 @@ static int sched_rt_runtime_exceeded(struct rt_rq *rt_rq)
 
 	if (rt_rq->rt_time > runtime) {
 		struct rt_bandwidth *rt_b = sched_rt_bandwidth(rt_rq);
-		int cpu = rq_cpu(rt_rq->rq);
 
-		printk_sched("sched: cpu=%d rt_time %llu <-> runtime"
-			     " [%llu -> %llu], exec_delta_time[%llu]"
-			     ", clock_task[%llu], exec_start[%llu]\n",
-			     cpu, rt_rq->rt_time, runtime_pre, runtime, 
-			     per_cpu(exec_delta_time, cpu),
-			     per_cpu(clock_task, cpu),
-			     per_cpu(exec_start, cpu));
 		/*
 		 * Don't actually throttle groups that have no runtime assigned
 		 * but accrue some time due to boosting.
 		 */
-		/* MTK patch: print rt throttle everytime*/
 		if (likely(rt_b->rt_runtime)) {
-		//	static bool once = false;
+			static bool once = false;
 
 			rt_rq->rt_throttled = 1;
 
-		//	if (!once) {
-		//		once = true;
-				printk_sched("sched: RT throttling activated cpu=%d\n",
-					cpu);
-		//	}
+			if (!once) {
+				once = true;
+				printk_sched("sched: RT throttling activated\n");
+			}
 #ifdef CONFIG_MT_RT_SCHED_CRIT
 			trace_sched_rt_crit(cpu, rt_rq->rt_throttled);
 #endif

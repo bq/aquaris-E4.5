@@ -1,7 +1,8 @@
 on early-init
     # Set init and its forked children's oom_adj.
     write /proc/1/oom_adj -16
-
+    
+    mkdir /dev/socket 0775
     start ueventd
 
 # create mountpoints
@@ -101,20 +102,20 @@ on fs_property:ro.mount.fs=YAFFS
 
 on fs_property:ro.mount.fs=EXT4
     write /proc/bootprof "INIT:eMMC:Mount_START"
-    exec /sbin/e2fsck -p /emmc@android
+    #exec /sbin/e2fsck -p /emmc@android
     # Mount /system rw first to give the filesystem a chance to save a checkpoint
     #mount ext4 emmc@android /system wait commit=1,data=journal,noauto_da_alloc
-    mount ext4 emmc@android /system wait commit=1,noauto_da_alloc
+    #mount ext4 emmc@android /system wait commit=1,noauto_da_alloc
     chown root system /system/etc/getsystemtype.sh
     chmod 0700 /system/etc/getsystemtype.sh
-    mount ext4 emmc@android /system noatime ro remount wait
-    exec /sbin/e2fsck -pfD /emmc@usrdata
-    exec /sbin/tune2fs -O has_journal /emmc@usrdata
-    exec /system/bin/ext4_resize
-    mount ext4 emmc@usrdata /data noatime nosuid nodev wait commit=1,nodelalloc,noauto_da_alloc	
-    exec /sbin/e2fsck -p /emmc@cache
-    exec /sbin/tune2fs -O has_journal /emmc@cache
-    mount ext4 emmc@cache /cache noatime nosuid nodev wait noauto_da_alloc
+    #mount ext4 emmc@android /system noatime ro remount wait
+    #exec /sbin/e2fsck -pfD /emmc@usrdata
+    #exec /sbin/tune2fs -O has_journal /emmc@usrdata
+    #exec /system/bin/ext4_resize
+    #mount ext4 emmc@usrdata /data noatime nosuid nodev wait commit=1,nodelalloc,noauto_da_alloc	
+    #exec /sbin/e2fsck -p /emmc@cache
+    #exec /sbin/tune2fs -O has_journal /emmc@cache
+    #mount ext4 emmc@cache /cache noatime nosuid nodev wait noauto_da_alloc
     write /proc/bootprof "INIT:eMMC:Mount_END"
 
 on fs_property:ro.mount.fs=UBIFS
@@ -475,23 +476,27 @@ service installd /system/bin/installd
     class main
     socket installd stream 600 system system
 
-service factory_no_image /system/bin/logwrapper /system/bin/factory
+#service factory_no_image /system/bin/logwrapper /system/bin/factory
+service factory_no_image /system/bin/factory
     disable
     oneshot
 
-service factory_with_image /system/bin/logwrapper /sbin/factory
+#service factory_with_image /system/bin/logwrapper /sbin/factory
+service factory_with_image /sbin/factory
 	disable
     oneshot
 #
 # Connectivity related services (Begin)
 #
 
-service wmtLoader /system/bin/logwrapper /system/bin/wmt_loader
+#service wmtLoader /system/bin/logwrapper /system/bin/wmt_loader
+service wmtLoader /system/bin/wmt_loader
     user root
     group root
     oneshot
     
-service conn_launcher /system/bin/logwrapper /system/bin/6620_launcher -p /system/etc/firmware/
+#service conn_launcher /system/bin/logwrapper /system/bin/6620_launcher -p /system/etc/firmware/
+service conn_launcher /system/bin/6620_launcher -p /system/etc/firmware/
     user system
     group system
     oneshot
@@ -531,6 +536,12 @@ on property:sys.usb.com_config=0
     write /sys/class/android_usb/android0/f_acm/instances 1
     write /sys/class/android_usb/android0/functions mass_storage,adb,acm
     write /sys/class/android_usb/android0/enable 1
+
+#only enable adbd if ubuntu developer mode is enabled
+on property:persist.sys.usb.config=adb
+    start adbd
+
+on property:persist.sys.usb.config=mtp,adb
     start adbd
 
 #acm
@@ -543,6 +554,9 @@ on property:sys.usb.com_config=1
     write /sys/class/android_usb/android0/functions acm
     write /sys/class/android_usb/android0/bDeviceClass 02
     write /sys/class/android_usb/android0/enable 1
+service inexversion /system/etc/inexversion.sh
+    user root
+    oneshot
 service  getsystemtype  /system/etc/getsystemtype.sh
    oneshot
    user root

@@ -336,7 +336,7 @@ static int KXTF9_ReadData(struct i2c_client *client, s16 data[KXTF9_AXES_NUM])
 /*----------------------------------------------------------------------------*/
 static int KXTF9_ReadOffset(struct i2c_client *client, s8 ofs[KXTF9_AXES_NUM])
 {    
-	int err;
+	int err = KXTF9_SUCCESS;
 
 	ofs[1]=ofs[2]=ofs[0]=0x00;
 
@@ -349,7 +349,7 @@ static int KXTF9_ResetCalibration(struct i2c_client *client)
 {
 	struct kxtf9_i2c_data *obj = i2c_get_clientdata(client);
 	u8 ofs[4]={0,0,0,0};
-	int err;
+	int err = KXTF9_SUCCESS;
 
 	memset(obj->cali_sw, 0x00, sizeof(obj->cali_sw));
 	memset(obj->offset, 0x00, sizeof(obj->offset));

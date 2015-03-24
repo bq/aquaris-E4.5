@@ -94,8 +94,16 @@ typedef enum {
     CPU_HOTPLUG_WORK_TYPE_RUSH,
 } cpu_hotplug_work_type_t;
 
+
 //#define DEBUG_LOG
-#define DBS_CHECK_CPU_LOG
+//#define DBS_CHECK_CPU_LOG
+
+#ifdef CONFIG_MT_ENG_BUILD
+  #define genmsg printk
+#else /* CONFIG_MT_ENG_BUILD */
+  #define genmsg(...) ((void)0)
+#endif /* CONFIG_MT_ENG_BUILD */
+
 
 /*
  * The polling frequency of this governor depends on the capability of
@@ -982,7 +990,7 @@ static void dbs_freq_increase(struct cpufreq_policy *p, unsigned int freq)
 			if((dbs_thermal_limited == 1) && (freq > dbs_thermal_limited_freq))
 			{
 				freq = dbs_thermal_limited_freq;
-				printk("[dbs_freq_increase] thermal limit freq = %d\n", freq);
+				genmsg("[dbs_freq_increase] thermal limit freq = %d\n", freq);
 			}
 			dbs_ignore = 1;
 		}
@@ -1126,7 +1134,7 @@ static void hp_work_handler(struct work_struct *work)
 			unsigned int online_cpus_count = num_online_cpus();
 			unsigned int i;
 
-			printk("[power/hotplug] hp_work_handler(%d)(%d)(%d)(%d)(%ld)(%ld)(%d)(%d) begin\n", g_trigger_hp_work, g_tlp_avg_average, g_tlp_avg_current,
+			genmsg("[power/hotplug] hp_work_handler(%d)(%d)(%d)(%d)(%ld)(%ld)(%d)(%d) begin\n", g_trigger_hp_work, g_tlp_avg_average, g_tlp_avg_current,
 				g_cpus_sum_load_current, g_cpu_up_sum_load, g_cpu_down_sum_load,
 				dbs_tuners_ins.cpu_num_base, dbs_tuners_ins.cpu_num_limit);
 
@@ -1178,7 +1186,7 @@ static void hp_work_handler(struct work_struct *work)
 			hp_reset_strategy();
 			dbs_ignore = 0; // force trigger frequency scaling
 
-			printk("[power/hotplug] hp_work_handler end\n");
+			genmsg("[power/hotplug] hp_work_handler end\n");
 
 			/*
 			if (g_next_hp_action) // turn on CPU
@@ -1327,7 +1335,7 @@ static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
 		load_freq = load * freq_avg;
 		if (load_freq > max_load_freq)
 			max_load_freq = load_freq;
-			
+
 		#ifdef DEBUG_LOG
 		printk("dbs_check_cpu: cpu = %d\n", j);
 		printk("dbs_check_cpu: wall_time = %d, idle_time = %d, load = %d\n", wall_time, idle_time, load);
@@ -1396,7 +1404,7 @@ hp_check:
 #ifdef CONFIG_HOTPLUG_CPU
 	if (g_trigger_hp_work != CPU_HOTPLUG_WORK_TYPE_NONE)
 	{
-		printk("[power/hotplug] no hp_check due to g_trigger_hp_work: %d\n", g_trigger_hp_work);
+		genmsg("[power/hotplug] no hp_check due to g_trigger_hp_work: %d\n", g_trigger_hp_work);
 		return;
 	}
 
@@ -1439,7 +1447,7 @@ hp_check:
 			(online_cpus_count < num_possible_cpus()))
 		{
 			dbs_freq_increase(policy, policy->max);
-			printk("dbs_check_cpu: turn on CPU\n");
+			genmsg("dbs_check_cpu: turn on CPU\n");
 			g_next_hp_action = g_tlp_avg_average / 100 + (g_tlp_avg_average % 100 ? 1 : 0);
 			if (g_next_hp_action > num_possible_cpus())
 				g_next_hp_action = num_possible_cpus();
@@ -1454,7 +1462,7 @@ hp_check:
 	if (online_cpus_count < dbs_tuners_ins.cpu_num_base && online_cpus_count < dbs_tuners_ins.cpu_num_limit)
 	{
 		dbs_freq_increase(policy, policy->max);
-		printk("dbs_check_cpu: turn on CPU\n");
+		genmsg("dbs_check_cpu: turn on CPU\n");
 		g_trigger_hp_work = CPU_HOTPLUG_WORK_TYPE_BASE;
 		to_init(11, "hotplug kworker", 100, NULL);
 		schedule_delayed_work_on(0, &hp_work, 0);
@@ -1465,7 +1473,7 @@ hp_check:
 	if (online_cpus_count > dbs_tuners_ins.cpu_num_limit)
 	{
 		dbs_freq_increase(policy, policy->max);
-		printk("dbs_check_cpu: turn off CPU\n");
+		genmsg("dbs_check_cpu: turn off CPU\n");
 		g_trigger_hp_work = CPU_HOTPLUG_WORK_TYPE_LIMIT;
 		to_init(11, "hotplug kworker", 100, NULL);
 		schedule_delayed_work_on(0, &hp_work, 0);
@@ -1500,7 +1508,7 @@ hp_check:
 					printk("dbs_check_cpu: g_cpu_up_sum_load = %d\n", g_cpu_up_sum_load);
 					#endif
 					dbs_freq_increase(policy, policy->max);
-					printk("dbs_check_cpu: turn on CPU\n");
+					genmsg("dbs_check_cpu: turn on CPU\n");
 					g_next_hp_action = online_cpus_count + 1;
 					g_trigger_hp_work = CPU_HOTPLUG_WORK_TYPE_UP;
 					to_init(11, "hotplug kworker", 100, NULL);
@@ -1551,7 +1559,7 @@ hp_check:
 				printk("dbs_check_cpu: g_cpu_down_sum_load = %d\n", g_cpu_down_sum_load);
 				#endif
 				dbs_freq_increase(policy, policy->max);
-				printk("dbs_check_cpu: turn off CPU\n");
+				genmsg("dbs_check_cpu: turn off CPU\n");
 				g_trigger_hp_work = CPU_HOTPLUG_WORK_TYPE_DOWN;
 				to_init(11, "hotplug kworker", 100, NULL);
 				schedule_delayed_work_on(0, &hp_work, 0);
@@ -1935,7 +1943,7 @@ static int __init cpufreq_gov_dbs_init(void)
 	printk("cpufreq_gov_dbs_init: dbs_tuners_ins.cpu_rush_threshold = %d\n", dbs_tuners_ins.cpu_rush_threshold);
 	printk("cpufreq_gov_dbs_init: dbs_tuners_ins.cpu_rush_tlp_times = %d\n", dbs_tuners_ins.cpu_rush_tlp_times);
 	printk("cpufreq_gov_dbs_init: dbs_tuners_ins.cpu_rush_avg_times = %d\n", dbs_tuners_ins.cpu_rush_avg_times);
-	#endif 
+	#endif
 
 	#ifdef DBS_CHECK_CPU_LOG
 	dbs_check_cpu_timeout = jiffies + msecs_to_jiffies(2500);
@@ -1973,7 +1981,7 @@ module_exit(cpufreq_gov_dbs_exit);
 #ifdef CONFIG_HOTPLUG_CPU
 static void hp_to_callback(void)
 {
-	printk("[power/hotplug] hp_to_callback(%d)(%d)(%d)(%d)(%d)(%ld)(%d)(%ld)(%d)(%d)(%d)\n", 
+	genmsg("[power/hotplug] hp_to_callback(%d)(%d)(%d)(%d)(%d)(%ld)(%d)(%ld)(%d)(%d)(%d)\n", 
 	    g_trigger_hp_work, g_tlp_avg_average, g_tlp_avg_current, g_cpu_rush_count, 
 		g_cpus_sum_load_current, g_cpu_up_sum_load, g_cpu_up_count, g_cpu_down_sum_load, g_cpu_down_count,
 		dbs_tuners_ins.cpu_num_base, dbs_tuners_ins.cpu_num_limit);

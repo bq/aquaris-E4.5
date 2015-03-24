@@ -405,7 +405,7 @@ unsigned int emmc_otp_write(unsigned int blk_offset, void *BufferPtr)
 static int emmc_otp_proc_read(char *page, char **start, off_t off,
     int count, int *eof, void *data)
 {
-    int len;
+    int len = 0;
     if (off > 0) 
     {
         return 0;

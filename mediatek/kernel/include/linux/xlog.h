@@ -15,6 +15,15 @@ enum android_log_priority {
 	ANDROID_LOG_SILENT,     /* only for SetMinPriority(); must be last */
 };
 
+
+// GE => greater and equal to
+#ifdef CONFIG_MT_ENG_BUILD
+  #define ANDROID_LOG_DOLOG_GE ANDROID_LOG_UNKNOWN
+#else /* CONFIG_MT_ENG_BUILD */
+  #define ANDROID_LOG_DOLOG_GE ANDROID_LOG_ERROR
+#endif /* CONFIG_MT_ENG_BUILD */
+
+
 #define LOGGER_ALE_ARGS_MAX 16
 
 struct ale_convert {
@@ -41,7 +50,8 @@ int __xlog_ale_printk(int prio, const struct ale_convert *convert, ...);
   ({									\
 	  static const struct ale_convert ____xlogk_ale_rec____ =	\
               { tag, fmt, __FILE__, prio, 0, "" };                      \
-	  __xlog_ale_printk(prio, &____xlogk_ale_rec____,		\
+	  if (prio >= ANDROID_LOG_DOLOG_GE)				\
+	      __xlog_ale_printk(prio, &____xlogk_ale_rec____,		\
 			    ##__VA_ARGS__);				\
   })
 
@@ -55,13 +65,15 @@ int __xlog_ksystem_printk(const struct xlog_record *rec, ...);
 	({								\
 		static const struct xlog_record _xlog_rec =		\
 			{tag, fmt, prio};				\
-		__xlog_printk(&_xlog_rec, ##__VA_ARGS__);		\
+		if (prio >= ANDROID_LOG_DOLOG_GE)			\
+			__xlog_printk(&_xlog_rec, ##__VA_ARGS__);	\
 	})
 #define xlog_ksystem_printk(prio, tag, fmt, ...)			\
 	({								\
 		static const struct xlog_record _xlog_rec =		\
 			{tag, fmt, prio};				\
-		__xlog_ksystem_printk(&_xlog_rec, ##__VA_ARGS__);	\
+		if (prio >= ANDROID_LOG_DOLOG_GE)			\
+			__xlog_ksystem_printk(&_xlog_rec, ##__VA_ARGS__);\
 	})
 #else   //HAVE_XLOG_FEATURE
 #define xlog_printk(prio, tag, fmt, ...) ((void)0)

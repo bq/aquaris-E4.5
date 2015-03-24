@@ -2198,8 +2198,8 @@ aisFsmSteps (
                 if(prAdapter->prGlueInfo->u2WSCIELen > 0) {
 	    		    kalMemCopy(prScanReqMsg->aucIE, &prAdapter->prGlueInfo->aucWSCIE, prAdapter->prGlueInfo->u2WSCIELen);
                 }
-            }
 #endif
+            }
 
             prScanReqMsg->u2IELen = u2ScanIELen;
 

@@ -358,12 +358,12 @@ static ssize_t con_sce_store(struct device_driver *driver, const char *buf, size
     if (!strncmp(buf, con_sce_str[i], strlen(con_sce_str[i]))) {
       if (!strncmp(buf + strlen(con_sce_str[i]) + 1, EN_CON_SCE_STR, strlen(EN_CON_SCE_STR))) {
         mtk_mem_bw_ctrl(i, ENABLE_CON_SCE);
-        printk("concurrency scenario %s ON\n", con_sce_str[i]);
+        xlog_printk(ANDROID_LOG_DEBUG, "EMI/BWL", "concurrency scenario %s ON\n", con_sce_str[i]);
         break;
       } 
       else if (!strncmp(buf + strlen(con_sce_str[i]) + 1, DIS_CON_SCE_STR, strlen(DIS_CON_SCE_STR))) {
         mtk_mem_bw_ctrl(i, DISABLE_CON_SCE);
-        printk("concurrency scenario %s OFF\n", con_sce_str[i]);
+        xlog_printk(ANDROID_LOG_DEBUG, "EMI/BWL", "concurrency scenario %s OFF\n", con_sce_str[i]);
         break;
       }
     }

@@ -34,9 +34,14 @@ extern "C" {
 /*=============================================================*/
 // Global function definition
 /*=============================================================*/
+/*
 extern int to_init(int index, char * name, unsigned long interval, void (*callback)(void));
 extern int to_init_all(char * name, unsigned long interval);
 extern int to_update_jiffies(int index);
+*/
+#define to_init(index, name, interval, callback)
+#define to_init_all(name, interval)
+#define to_update_jiffies(index)
 
 #ifdef __cplusplus
 }

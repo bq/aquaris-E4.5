@@ -1364,7 +1364,7 @@ static int __init etm_init(void)
 	int i = 0;
    //unsigned int faxi_clk;
 
-	memset(&tracer, sizeof(struct etm_trace_context_t), 0);
+	memset(&tracer, 0, sizeof(struct etm_trace_context_t));
 	mutex_init(&tracer.mutex);
 	mutex_lock(&tracer.mutex);
 	tracer.set = 0;

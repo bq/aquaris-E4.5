@@ -34,7 +34,7 @@
 #include "../base.h"
 #include "power.h"
 
-#define LOG
+//#define LOG
 
 #define HIB_DPM_DEBUG 0
 extern bool console_suspend_enabled; // from printk.c

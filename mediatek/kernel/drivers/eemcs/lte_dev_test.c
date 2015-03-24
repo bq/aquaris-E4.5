@@ -1044,7 +1044,7 @@ int brom_write_pkt(unsigned int ulq_no, unsigned int data_len, char *data_pt)
 {
     int ret;
     struct sk_buff *skb = NULL; 
-    int timeout;
+    int timeout = 0;
     
     // check UL buffer space
     while(mtlte_df_UL_swq_space(ulq_no)==0){
@@ -1923,7 +1923,7 @@ static int t_dev_auto_debug(int argc, char** argv)
 	int ret = RET_SUCCESS;
     char *test_param[MAX_ARG_SIZE];
     char test_param_buff[MAX_ARG_SIZE][40];
-    int  test_param_no;
+    int  test_param_no = 0;
     int  ii, jj, kk =0;
 
     
@@ -3202,6 +3202,7 @@ static int t_dev_normal_op_dl(int argc, char** argv)
     set_WHIER = backup_WHIER & 0xFFFFFFE1;
     sdio_func1_wr(SDIO_IP_WHIER, &set_WHIER, 4);
 
+    memset(&attest_param, 0, sizeof(attest_param));
     // set SW flag to change the behavior in test ISR
     attest_param.testing_dlq_pkt_fifo = 1;
     at_mtlte_hif_set_test_param(attest_param, set_testing_dlq_pkt_fifo);

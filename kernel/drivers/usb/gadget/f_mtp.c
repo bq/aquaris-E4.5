@@ -723,12 +723,12 @@ static ssize_t mtp_read(struct file *fp, char __user *buf,
 //Added Modification for ALPS00354386
 	if(dev->epOut_halt)
 	{
-		printk("%s, line %d: ret %d!! <dev->epOut_halt = %d> reset the out ep \n", __func__, __LINE__, ret, dev->epOut_halt);
+		pr_debug("%s, line %d: ret %d!! <dev->epOut_halt = %d> reset the out ep \n", __func__, __LINE__, ret, dev->epOut_halt);
 		mdelay(2000);
 		usb_ep_fifo_flush(dev->ep_out);
 		dev->epOut_halt=0;
 		usb_ep_clear_halt(dev->ep_out);
-		printk("%s, line %d: ret %d!! <dev->epOut_halt = %d> finish the reset \n", __func__, __LINE__, ret, dev->epOut_halt);
+		pr_debug("%s, line %d: ret %d!! <dev->epOut_halt = %d> finish the reset \n", __func__, __LINE__, ret, dev->epOut_halt);
 	}
 //Added Modification for ALPS00354386
 
@@ -808,7 +808,7 @@ requeue_req:
 	//Added Modification for ALPS00331676 and RxMode1
 	if (!dev->rx_done) {
 		DBG(cdev, "%s, line %d: ret %d!! <!dev->rx_done> dev->state = %d, dev->rx_done = %d \n", __func__, __LINE__, ret, dev->state, dev->rx_done);
-		printk("%s, line %d: ret %d!! <!dev->rx_done> dev->state = %d, dev->rx_done = %d \n", __func__, __LINE__, ret, dev->state, dev->rx_done);
+		pr_debug("%s, line %d: ret %d!! <!dev->rx_done> dev->state = %d, dev->rx_done = %d \n", __func__, __LINE__, ret, dev->state, dev->rx_done);
 		r = -ECANCELED;
 		dev->state = STATE_ERROR;
 		usb_ep_dequeue(dev->ep_out, req);
@@ -1122,7 +1122,7 @@ static void receive_file_work(struct work_struct *data)
 //Added Modification for ALPS00354386
 	if(dev->epOut_halt)
 	{
-		printk("%s, line %d: <dev->epOut_halt = %d> reset the out ep \n", __func__, __LINE__, dev->epOut_halt);
+		pr_debug("%s, line %d: <dev->epOut_halt = %d> reset the out ep \n", __func__, __LINE__, dev->epOut_halt);
 		mdelay(2000);
 		usb_ep_fifo_flush(dev->ep_out);
 		dev->epOut_halt=0;
@@ -1509,7 +1509,7 @@ out:
 
 static int mtp_open(struct inode *ip, struct file *fp)
 {
-	printk(KERN_INFO "mtp_open\n");
+	pr_debug("mtp_open\n");
 	if (mtp_lock(&_mtp_dev->open_excl))
 		return -EBUSY;
 
@@ -1526,11 +1526,11 @@ static int mtp_release(struct inode *ip, struct file *fp)
     //ALPS00606302
 	unsigned long flags;
     //ALPS00606302
-	printk(KERN_INFO "mtp_release\n");
+	pr_debug("mtp_release\n");
 
     //ALPS00606302
     spin_lock_irqsave(&_mtp_dev->lock, flags);
-	printk(KERN_INFO "%s, line %d: _mtp_dev->dev_disconnected = %d\n", __func__, __LINE__, _mtp_dev->dev_disconnected);
+	pr_debug("%s, line %d: _mtp_dev->dev_disconnected = %d\n", __func__, __LINE__, _mtp_dev->dev_disconnected);
 
     if(!_mtp_dev->dev_disconnected)
     {
@@ -1889,7 +1889,7 @@ mtp_function_bind(struct usb_configuration *c, struct usb_function *f)
 	dev->cdev = cdev;
 	DBG(cdev, "mtp_function_bind dev: %p\n", dev);
     //ALPS00428998
-	printk("mtp_function_bind dev: %p\n", dev);
+	pr_debug("mtp_function_bind dev: %p\n", dev);
     //ALPS00428998
 
 	/* allocate interface ID(s) */
@@ -1938,7 +1938,7 @@ mtp_function_unbind(struct usb_configuration *c, struct usb_function *f)
 	struct usb_request *req;
 	int i;
 	//ALPS00428998
-	printk("%s, line %d: \n", __func__, __LINE__);
+	pr_debug("%s, line %d: \n", __func__, __LINE__);
 	//ALPS00428998
 
 	while ((req = mtp_req_get(dev, &dev->tx_idle)))
@@ -1962,7 +1962,7 @@ static int mtp_function_set_alt(struct usb_function *f,
 
 	DBG(cdev, "mtp_function_set_alt intf: %d alt: %d\n", intf, alt);
     //ALPS00428998
-	printk("mtp_function_set_alt intf: %d alt: %d\n", intf, alt);
+	pr_debug("mtp_function_set_alt intf: %d alt: %d\n", intf, alt);
     //ALPS00428998
 
 	ret = config_ep_by_speed(cdev->gadget, f, dev->ep_in);
@@ -2010,7 +2010,7 @@ static void mtp_function_disable(struct usb_function *f)
 
 	DBG(cdev, "mtp_function_disable\n");
     //ALPS00428998
-	printk("mtp_function_disable\n");
+	pr_debug("mtp_function_disable\n");
     //ALPS00428998
 	dev->state = STATE_OFFLINE;
 	usb_ep_disable(dev->ep_in);
@@ -2031,7 +2031,7 @@ static int mtp_bind_config(struct usb_configuration *c, bool ptp_config)
 	struct mtp_dev *dev = _mtp_dev;
 	int ret = 0;
 
-	printk(KERN_INFO "mtp_bind_config\n");
+	pr_debug("mtp_bind_config\n");
 
 	/* allocate a string ID for our interface */
 	if (mtp_string_defs[INTERFACE_STRING_INDEX].id == 0) {

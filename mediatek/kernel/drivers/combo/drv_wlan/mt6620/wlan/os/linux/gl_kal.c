@@ -1398,11 +1398,11 @@ kalPacketAlloc (
         *ppucData = (PUINT_8) (prSkb->data);
     }
 #if DBG
-{
-    PUINT_32 pu4Head = (PUINT_32)&prSkb->cb[0];
-    *pu4Head = (UINT_32)prSkb->head;
-    DBGLOG(RX, TRACE, ("prSkb->head = %#lx, prSkb->cb = %#lx\n", (UINT_32)prSkb->head, *pu4Head));
-}
+    if (prSkb) {
+        PUINT_32 pu4Head = (PUINT_32)&prSkb->cb[0];
+        *pu4Head = (UINT_32)prSkb->head;
+        DBGLOG(RX, TRACE, ("prSkb->head = %#lx, prSkb->cb = %#lx\n", (UINT_32)prSkb->head, *pu4Head));
+    }
 #endif
     return (PVOID) prSkb;
 }

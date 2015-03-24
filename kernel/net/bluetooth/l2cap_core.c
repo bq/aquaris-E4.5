@@ -289,13 +289,16 @@ struct l2cap_chan *l2cap_chan_create(struct sock *sk)
 	return chan;
 }
 
-void l2cap_chan_destroy(struct l2cap_chan *chan)
+static void l2cap_chan_destroy(struct l2cap_chan *chan)
 {
+	BT_DBG("chan %p", chan);
+
 	write_lock(&chan_list_lock);
-	list_del(&chan->global_l);
+	if (!list_empty(&chan->global_l))//CKT kevin.sun add for advoid the LIST_POSION1 cause panic issue
+				list_del(&chan->global_l);
 	write_unlock(&chan_list_lock);
 
-	l2cap_chan_put(chan);
+	kfree(chan);
 }
 
 void __l2cap_chan_add(struct l2cap_conn *conn, struct l2cap_chan *chan)
@@ -1018,6 +1021,8 @@ static void l2cap_conn_del(struct hci_conn *hcon, int err)
 
 	/* Kill channels */
 	list_for_each_entry_safe(chan, l, &conn->chan_l, list) {
+		l2cap_chan_hold(chan);
+
 		l2cap_chan_lock(chan);
 
 		l2cap_chan_del(chan, err);
@@ -1025,6 +1030,7 @@ static void l2cap_conn_del(struct hci_conn *hcon, int err)
 		l2cap_chan_unlock(chan);
 
 		chan->ops->close(chan->data);
+	  l2cap_chan_put(chan);
 	}
 
 	mutex_unlock(&conn->chan_lock);
@@ -3098,13 +3104,13 @@ static inline int l2cap_disconnect_req(struct l2cap_conn *conn, struct l2cap_cmd
 	lock_sock(sk);
 	sk->sk_shutdown = SHUTDOWN_MASK;
 	release_sock(sk);
-
+	l2cap_chan_hold(chan);
 	l2cap_chan_del(chan, ECONNRESET);
 
 	l2cap_chan_unlock(chan);
 
 	chan->ops->close(chan->data);
-
+	l2cap_chan_put(chan);
 	mutex_unlock(&conn->chan_lock);
 
 	return 0;
@@ -3130,13 +3136,13 @@ static inline int l2cap_disconnect_rsp(struct l2cap_conn *conn, struct l2cap_cmd
 	}
 
 	l2cap_chan_lock(chan);
-
+  l2cap_chan_hold(chan);
 	l2cap_chan_del(chan, 0);
 
 	l2cap_chan_unlock(chan);
 
 	chan->ops->close(chan->data);
-
+  l2cap_chan_put(chan);
 	mutex_unlock(&conn->chan_lock);
 
 	return 0;
@@ -4827,6 +4833,14 @@ void l2cap_exit(void)
 {
 	debugfs_remove(l2cap_debugfs);
 	l2cap_cleanup_sockets();
+}
+
+void l2cap_chan_put(struct l2cap_chan *c)
+{
+	BT_DBG("chan %p orig refcnt %d", c, atomic_read(&c->refcnt));
+
+	if (atomic_dec_and_test(&c->refcnt))
+		l2cap_chan_destroy(c);
 }
 
 module_param(disable_ertm, bool, 0644);

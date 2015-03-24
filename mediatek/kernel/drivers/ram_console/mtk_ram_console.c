@@ -397,7 +397,6 @@ static inline void bin_to_asc(char *buff, uint8_t num)
 	{
 		*buff = num + '0';
 	}
-	printk(KERN_ERR"buff %c, num %d.\n", *buff, num);
 }
 
 static void __init

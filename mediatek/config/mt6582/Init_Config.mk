@@ -100,3 +100,16 @@ ifneq ($(wildcard $(_throttle_sh)),)
 PRODUCT_COPY_FILES += $(_throttle_sh):system/etc/throttle.sh
 endif
 
+#inexversion.sh
+PRODUCT_COPY_FILES += \
+    $(MTK_ROOT_CONFIG_OUT)/inexversion.sh:system/etc/inexversion.sh
+
+# Ubuntu Overlay Files
+PRODUCT_COPY_FILES += \
+    $(MTK_ROOT_CONFIG_OUT)/ubuntu/udev.rules:system/ubuntu/lib/udev/rules.d/70-android.rules \
+    $(MTK_ROOT_CONFIG_OUT)/ubuntu/powerd-config.xml:system/ubuntu/usr/share/powerd/device_configs/config-default.xml \
+    $(MTK_ROOT_CONFIG_OUT)/ubuntu/device-hacks.conf:system/ubuntu/etc/init/device-hacks.conf \
+    $(MTK_ROOT_CONFIG_OUT)/ubuntu/limits.conf:system/ubuntu/etc/security/limits.conf \
+    $(MTK_ROOT_CONFIG_OUT)/ubuntu/ubuntu-location-service.conf:system/ubuntu/etc/init/ubuntu-location-service.conf \
+    $(MTK_ROOT_CONFIG_OUT)/ubuntu/display.conf:system/ubuntu/etc/ubuntu-touch-session.d/android.conf \
+    $(MTK_ROOT_CONFIG_OUT)/ubuntu/gps.conf:system/etc/gps.conf

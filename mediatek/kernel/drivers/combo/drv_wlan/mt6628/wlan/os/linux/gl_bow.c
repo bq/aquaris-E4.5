@@ -1194,7 +1194,7 @@ bowHardStartXmit(
         }
     }
 
-    DBGLOG(BOW, TRACE, ("\n");
+    DBGLOG(BOW, TRACE, ("\n"));
 #endif
 
 #if CFG_BOW_TEST

@@ -289,7 +289,7 @@ static int __cpuinit generic_timer_setup(struct clock_event_device *clk)
 {
     struct clock_event_device **this_cpu_clk;
 
-    pr_info("[ca7_timer]%s entry\n", __func__);
+    pr_debug("[ca7_timer]%s entry\n", __func__);
     generic_timer_calibrate_rate();
 
     write_cntp_ctl(0x0);

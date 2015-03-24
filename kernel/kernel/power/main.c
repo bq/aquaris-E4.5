@@ -64,7 +64,7 @@ int pm_notifier_call_chain(unsigned long val)
 	int ret;
 	pr_info("[%s]: there are %u notify callbacks, event = %lu\n", __func__, notify_count, val);
 	ret = blocking_notifier_call_chain(&pm_chain_head, val, NULL);
-
+	sleep_trace("1"); 
 	return notifier_to_errno(ret);
 }
 EXPORT_SYMBOL_GPL(pm_notifier_call_chain);
@@ -626,7 +626,7 @@ static struct attribute * g[] = {
 	&pm_async_attr.attr,
 	&wakeup_count_attr.attr,
 #ifdef CONFIG_PM_AUTOSLEEP
-	&autosleep_attr.attr,
+//	&autosleep_attr.attr,
 #endif
 #ifdef CONFIG_PM_WAKELOCKS
 	&wake_lock_attr.attr,

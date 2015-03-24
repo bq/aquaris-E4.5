@@ -16,7 +16,8 @@ static void acc_work_func(struct work_struct *work)
 	int x,y,z,status,div;
 	int64_t  nt;
 	struct timespec time; 
-	int err, idx;	
+	int idx;
+    int err = 0;
 
 	cxt  = acc_context_obj;
 	

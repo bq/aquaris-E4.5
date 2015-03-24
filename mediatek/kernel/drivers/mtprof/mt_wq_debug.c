@@ -161,7 +161,6 @@ int mt_dump_wq_debugger(void)
 
 #if WQ_VERBOSE_DEBUG
 		printk("wq debugger: From:%d, Remain:%d\n", dumpFrom, dumpRemain);
-#endif
 		for (i = dumpFrom; i < WK_REC_NUM; i++) {
 #ifdef CONFIG_KALLSYMS
 			address = kallsyms_lookup_name(per_cpu(wq_debugger,cpu).wklog[i].cbname);
@@ -192,6 +191,7 @@ int mt_dump_wq_debugger(void)
 			ret != 0?"null" : symName,
 			per_cpu(wq_debugger,cpu).wklog[i].activated == WQ_WORK_ACTIVED?"activated":"queued");
 		}
+#endif
     }
     return 0;
 }

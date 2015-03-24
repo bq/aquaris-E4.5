@@ -211,6 +211,11 @@ config MTK_COMBO_WIFI
         depends on !mt592x
         select WIRELESS_EXT
         select WEXT_PRIV
+config MTK_COMBO_BT_HCI
+				tristate "MediaTek combo chip BlueZ driver"
+				depends on BT && MTK_COMBO
+				help
+				   MTK BT driver for BlueZ(hci_stp)
 
 config MTK_FM
         tristate "MediaTek FM Chip Support"

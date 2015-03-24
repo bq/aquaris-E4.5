@@ -1011,7 +1011,7 @@ static long aed_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 	{
 		struct aee_process_bt *bt;
 
-		printk("%s: get process backtrace ioctl\n", __func__);
+		xlog_printk(ANDROID_LOG_DEBUG, AEK_LOG_TAG, "%s: get process backtrace ioctl\n", __func__);
 
 		bt = kzalloc(sizeof(struct aee_process_bt), GFP_KERNEL);
 		if (bt == NULL) {
@@ -1126,7 +1126,7 @@ static long aed_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 	{
 		struct aee_thread_reg *tmp;
 
-		printk("%s: get thread registers ioctl\n", __func__);
+		xlog_printk(ANDROID_LOG_DEBUG, AEK_LOG_TAG, "%s: get thread registers ioctl\n", __func__);
 
 		tmp = kzalloc(sizeof(struct aee_thread_reg), GFP_KERNEL);
 		if (tmp == NULL) {
@@ -1164,7 +1164,7 @@ static long aed_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		
 		}
 		else {
-			printk("%s: get thread registers ioctl tid invalid\n", __func__);
+			xlog_printk(ANDROID_LOG_DEBUG, AEK_LOG_TAG, "%s: get thread registers ioctl tid invalid\n", __func__);
 			kfree(tmp);
 			ret = -EINVAL;
 			goto EXIT;
@@ -1179,7 +1179,7 @@ static long aed_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 	{
 		int pid;
 
-		printk("%s: check suid dumpable ioctl\n", __func__);
+		xlog_printk(ANDROID_LOG_DEBUG, AEK_LOG_TAG, "%s: check suid dumpable ioctl\n", __func__);
 
 		if (copy_from_user(&pid, (void __user *)arg, sizeof(int))) {
 			ret = -EFAULT;
@@ -1191,26 +1191,26 @@ static long aed_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 			int dumpable = -1;
 			task = find_task_by_vpid(pid);
 			if (task == NULL) {
-				printk("%s: process:%d task null\n", __func__, pid);
+				xlog_printk(ANDROID_LOG_DEBUG, AEK_LOG_TAG, "%s: process:%d task null\n", __func__, pid);
 				ret = -EINVAL;
 				goto EXIT;
 			}
 			if (task->mm == NULL) {
-				printk("%s: process:%d task mm null\n", __func__, pid);
+				xlog_printk(ANDROID_LOG_DEBUG, AEK_LOG_TAG, "%s: process:%d task mm null\n", __func__, pid);
 				ret = -EINVAL;
 				goto EXIT;
 			}
 			dumpable = get_dumpable(task->mm);
 			if (dumpable == 0) {
-				printk("%s: set process:%d dumpable\n", __func__, pid);
+				xlog_printk(ANDROID_LOG_DEBUG, AEK_LOG_TAG, "%s: set process:%d dumpable\n", __func__, pid);
 				set_dumpable(task->mm, 1);
 			}
 			else
-				printk("%s: get process:%d dumpable:%d\n", __func__, pid, dumpable);
+				xlog_printk(ANDROID_LOG_DEBUG, AEK_LOG_TAG, "%s: get process:%d dumpable:%d\n", __func__, pid, dumpable);
 		
 		}
 		else {
-			printk("%s: check suid dumpable ioctl pid invalid\n", __func__);
+			xlog_printk(ANDROID_LOG_DEBUG, AEK_LOG_TAG, "%s: check suid dumpable ioctl pid invalid\n", __func__);
 			ret = -EINVAL;
 		}
 
@@ -1223,7 +1223,7 @@ static long aed_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 			ret = -EFAULT;
 			goto EXIT;
 		}
-		printk("force aee red screen = %d\n", force_red_screen);
+		xlog_printk(ANDROID_LOG_DEBUG, AEK_LOG_TAG, "force aee red screen = %d\n", force_red_screen);
 		break;
 	}
 
@@ -1279,9 +1279,15 @@ void aee_kernel_dal_api(const char *file, const int line, const char *msg)
 			dal_show->msg[sizeof(dal_show->msg) - 1] = 0;
 			DAL_Printf("%s", dal_show->msg);
 			kfree(dal_show);
+            dal_show = NULL;
 		} else {
 			xlog_printk(ANDROID_LOG_DEBUG, AEK_LOG_TAG, "DAL not allowed (mode %d)\n", aee_mode);
 		}
+        if (dal_show != NULL)
+        {
+            kfree(dal_show);
+            dal_show = NULL;
+        }
 	}	
 	up(&aed_dal_sem);
 #endif
@@ -1610,11 +1616,11 @@ static int FindTaskByName (char *name) {
 	struct task_struct * task ;
 	for_each_process(task) {
 		if (task && (strcmp(task->comm, name)==0)) {
-			printk("[Hang_Detect] %s found:%d.\n", name, task->pid);
+			xlog_printk(ANDROID_LOG_DEBUG, AEK_LOG_TAG, "[Hang_Detect] %s found:%d.\n", name, task->pid);
 			return task->pid;
 		}
 	}
-	printk("[Hang_Detect] system_server not found!\n");
+	xlog_printk(ANDROID_LOG_DEBUG, AEK_LOG_TAG, "[Hang_Detect] system_server not found!\n");
 	return -1 ;
 }
 
@@ -1623,24 +1629,24 @@ static int hang_detect_thread(void *arg) {
 	//unsigned long flags;
 	struct sched_param param = { .sched_priority = RTPM_PRIO_WDT};
 
-	printk("[Hang_Detect] hang_detect thread starts.\n");
+	xlog_printk(ANDROID_LOG_DEBUG, AEK_LOG_TAG, "[Hang_Detect] hang_detect thread starts.\n");
 
 	sched_setscheduler(current, SCHED_FIFO, &param);
 
 	while (1)
 	{
 		if ((1==hd_detect_enabled) && (FindTaskByName("system_server")!=-1)) {
-			printk("[Hang_Detect] hang_detect thread counts down %d:%d.\n", hang_detect_counter, hd_timeout);
+			xlog_printk(ANDROID_LOG_DEBUG, AEK_LOG_TAG, "[Hang_Detect] hang_detect thread counts down %d:%d.\n", hang_detect_counter, hd_timeout);
 
 			if (hang_detect_counter==0)	{
 				printk ("[Hang_Detect] we should triger	HWT	...	\n") ;
 
 #ifdef CONFIG_MT_ENG_BUILD
 				aee_kernel_warning("[Hang_detect]",	"SS	hang, we triger	HWT");
-				msleep (10*1000) ;
+				msleep_interruptible(10*1000) ;
 #else
 				aee_kernel_reminding("[Hang_detect]",	"SS	hang, we triger	HWT") ;
-				msleep (10*1000) ;
+				msleep_interruptible(10*1000) ;
 				local_irq_disable () ;
 			
 				while (1) 
@@ -1658,10 +1664,10 @@ static int hang_detect_thread(void *arg) {
 				hang_detect_counter = hd_timeout + 4 ;
 				hd_detect_enabled = 0 ;
 			}
-			printk("[Hang_Detect] hang_detect disabled.\n") ;
+			xlog_printk(ANDROID_LOG_DEBUG, AEK_LOG_TAG, "[Hang_Detect] hang_detect disabled.\n") ;
 		}
 		
-		msleep((HD_INTER) * 1000);
+		msleep_interruptible((HD_INTER) * 1000);
 	}
 	return 0 ;
 }
@@ -1677,12 +1683,12 @@ void aee_kernel_RT_Monitor_api(int lParam)
 	if (0 == lParam) {
 		hd_detect_enabled =	0 ;
 		hang_detect_counter = hd_timeout ;    
-		printk("[Hang_Detect] hang_detect disabled\n") ;
+		xlog_printk(ANDROID_LOG_DEBUG, AEK_LOG_TAG, "[Hang_Detect] hang_detect disabled\n") ;
 	}
 	else if (lParam >0) {
 		hd_detect_enabled =	1 ;
 		hang_detect_counter	= hd_timeout = ((long)lParam + HD_INTER	-1)	/ (HD_INTER) ;
-		printk("[Hang_Detect] hang_detect enabled %d\n", hd_timeout) ;
+		xlog_printk(ANDROID_LOG_DEBUG, AEK_LOG_TAG, "[Hang_Detect] hang_detect enabled %d\n", hd_timeout) ;
 	}
 }
 

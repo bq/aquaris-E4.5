@@ -259,7 +259,8 @@ int count_tt_isoc_bw(int is_in, int maxp, int interval, int offset, int td_size)
 	int ss_cs_count;
 	int cs_mframe;
 	int max_frame;
-	int i,j;
+	int i =0;
+    int j = 0;
 	struct sch_ep *cur_sch_ep;
 	int ep_offset;
 	int ep_interval;

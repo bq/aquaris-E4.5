@@ -785,7 +785,8 @@ static unsigned char CTPM_FW[]=
 #elif defined(KRILLIN)
 static unsigned char CTPM_FW[]=
 {
-#include "FT5336_HiKe_Krilin_OGS_540X960_Truly0x5a_Ver0x15_20140618_app.i"
+//#include "FT5336_HiKe_Krilin_OGS_540X960_Truly0x5a_Ver0x15_20140618_app.i"
+#include "FT5336_HiKe_Krilin_OGS_540X960_Truly0x5a_Ver0x40_20140814_app.i"
 };
 #endif
 
@@ -1565,12 +1566,6 @@ static  void tpd_down(int x, int y, int p) {
  
 static  void tpd_up(int x, int y,int *count) {
 	 //if(*count>0) {
-	 	#ifdef FTS_PRESSURE
-		input_report_abs(tpd->dev, ABS_MT_PRESSURE, 0);
-		input_report_abs(tpd->dev, ABS_MT_TOUCH_MAJOR, 0);
-		#else
-		input_report_abs(tpd->dev, ABS_MT_PRESSURE, 0);
-		#endif
 		 input_report_key(tpd->dev, BTN_TOUCH, 0);
 		 //input_report_abs(tpd->dev, ABS_MT_TOUCH_MAJOR, 0);
 		 //input_report_abs(tpd->dev, ABS_MT_POSITION_X, x);
@@ -1895,15 +1890,17 @@ static int ft5x0x_read_Touchdata(void)
 
 		 
 
-		  if (tpd_touchinfo(&cinfo, &pinfo)) 
-		  {
+          if (tpd_touchinfo(&cinfo, &pinfo))
+          {
 		    //TPD_DEBUG("point_num = %d\n",point_num);
-			TPD_DEBUG_SET_TIME;
+            if(cinfo.y[i] < 1000)
+            {
+              TPD_DEBUG_SET_TIME;
 
 
             if(point_num >0) 
-		{
-			int i=0;
+		    {
+			    int i=0;
 		     	for (i=0;i<point_num;i++)
 		     	{
 					//tpd_down(cinfo.x[i], cinfo.y[i], i+1);
@@ -1932,7 +1929,8 @@ static int ft5x0x_read_Touchdata(void)
                 input_sync(tpd->dev);
             }
         }
-        	  mt_eint_unmask(CUST_EINT_TOUCH_PANEL_NUM); 
+		}
+      mt_eint_unmask(CUST_EINT_TOUCH_PANEL_NUM);
 
  }while(!kthread_should_stop());
  			  mt_eint_unmask(CUST_EINT_TOUCH_PANEL_NUM); 
@@ -2361,7 +2359,7 @@ static ssize_t show_chipinfo(struct device *dev,struct device_attribute *attr, c
 
 }
 
-static DEVICE_ATTR(chipinfo, 0664, show_chipinfo, NULL);	//Modify by EminHuang 20120613   0444 -> 0664 [CTS Test]				android.permission.cts.FileSystemPermissionTest#testAllFilesInSysAreNotWritable FAIL
+static DEVICE_ATTR(chipinfo, 0444, show_chipinfo, NULL);
 
 
 #ifdef FTS_GESTRUE

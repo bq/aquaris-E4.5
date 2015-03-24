@@ -1476,7 +1476,7 @@ mtk_cfg80211_testmode_set_key_ext(
         prIWEncExt = (struct iw_encode_exts *) &prParams->ext;
     }
 
-    if (prIWEncExt->alg == IW_ENCODE_ALG_SMS4) {
+    if (prIWEncExt && (prIWEncExt->alg == IW_ENCODE_ALG_SMS4)) {
         /* KeyID */
         prWpiKey->ucKeyID = prParams->key_index;
         prWpiKey->ucKeyID --;
@@ -1638,15 +1638,18 @@ mtk_cfg80211_testmode_get_sta_statistics(
 
     u4LinkScore += 10;
 
-    if(u4LinkScore == 10) {
-
-        if(u4TotalError<=u4TxTotalCount) {
-            u4LinkScore = (10 - ((u4TotalError * 10) / u4TxTotalCount)) ;
+    if(u4TxTotalCount) {
+        if(u4LinkScore == 10) {
+            if(u4TotalError<=u4TxTotalCount) {
+                u4LinkScore = (10 - ((u4TotalError * 10) / u4TxTotalCount)) ;
+            }
+            else {
+                u4LinkScore = 0;
+            }
         }
-        else {
-            u4LinkScore = 0;
-        }
-    
+    }
+    else {
+        u4LinkScore = 10;
     }
 
     if(u4LinkScore>100) {

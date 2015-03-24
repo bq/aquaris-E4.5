@@ -82,7 +82,7 @@ int i2c_trans_data(int bus_id, int address, char *buf, int count, unsigned int e
 int mt_i2c_test(int id, int addr)
 {
   int ret = 0;
-  unsigned long flag;
+  unsigned long flag = 0;
   unsigned char buffer[]={0x55};
   if(id >3)
     flag = I2C_DIRECTION_FLAG;

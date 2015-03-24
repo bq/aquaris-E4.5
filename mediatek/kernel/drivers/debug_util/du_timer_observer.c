@@ -273,12 +273,13 @@ int to_init_all(char * name, unsigned long interval)
 
 int to_update_jiffies(int index)
 {
-    unsigned long last_jiffies = timer_observer_ctxts[index].last_jiffies;
+    unsigned long last_jiffies;
     unsigned long diff_ms;
 
     if ((index >= TIMER_OBSERVER_CTXTS_NUM) || (index < 0))
         return -EINVAL;
 
+    last_jiffies = timer_observer_ctxts[index].last_jiffies;
     timer_observer_ctxts[index].last_jiffies = jiffies;
     //TODO: use time_after series api to prevent from jiffies overflow in 300s when 1st system bring up?
     diff_ms = jiffies_to_msecs(timer_observer_ctxts[index].last_jiffies - last_jiffies);

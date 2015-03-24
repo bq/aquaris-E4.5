@@ -263,7 +263,7 @@ int32_t cmdq_sec_fill_iwc_buffer(
 {
     int32_t status = 0;
     //uint32_t metadataSize = pTask->totalSecureFd * sizeof(uint32_t); 
-    const uint32_t secFdCount  = pTask->totalSecureFd;
+    const uint32_t secFdCount;
     const uint32_t secFdListLength         = sizeof(uint32_t) * CMDQ_IWC_MAX_FD_COUNT;
     const uint32_t secPortListLength       = sizeof(uint32_t) * CMDQ_IWC_PORTLIST_LENGTH;
     const uint32_t secSizeListLength       = sizeof(uint32_t) * CMDQ_IWC_SIZELIST_LENGTH;
@@ -275,6 +275,11 @@ int32_t cmdq_sec_fill_iwc_buffer(
         printk("[CMDQ][SEC] pIwc = 0x%08x\n", pIwc);
         pIwc->cmd = iwcCommand;
         return 0;
+    }
+
+    if (NULL != pTask)
+    {
+        secFdCount  = pTask->totalSecureFd;
     }
     
     // fill IWC message

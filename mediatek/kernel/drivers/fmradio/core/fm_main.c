@@ -1703,7 +1703,7 @@ fm_s32 fm_i2s_set(struct fm *fm, fm_s32 onoff, fm_s32 mode, fm_s32 sample)
     fm_s32 ret = 0;
 
     FMR_ASSERT(fm_low_ops.bi.i2s_set);
-    if ((onoff != 0)||(onoff != 1))
+    if ((onoff != 0) && (onoff != 1))
     {
         onoff = 0;//default on.
     }
@@ -2447,7 +2447,7 @@ static fm_s32 fm_para_init(struct fm *fmp)
 
 fm_s32 fm_cust_config_setup(fm_s8 * filename)
 {
-	fm_s32 ret;
+	fm_s32 ret = 0;
 #if (defined(MT6620_FM)||defined(MT6628_FM)||defined(MT6627_FM)||defined(MT6630_FM))
 #ifdef MT6628_FM	
 	ret = MT6628fm_cust_config_setup(filename);
@@ -2478,7 +2478,7 @@ fm_s32 fm_cust_config_setup(fm_s8 * filename)
 	}
 #endif
 #else
-	fm_cust_config(filename);
+	ret = fm_cust_config(filename);
 	if(ret < 0)
 	{
         WCN_DBG(FM_ERR | MAIN, "fm_cust_config failed\n");
@@ -2693,6 +2693,11 @@ fm_s32 fm_dev_destroy(struct fm *fm)
 
     WCN_DBG(FM_DBG | MAIN, "%s\n", __func__);
 
+    if (!fm) {
+        g_fm_struct = NULL;
+        return ret;
+    }
+
     fm_timer_sys->stop(fm_timer_sys);
 
     if (fm->eint_wkthd) {
@@ -2743,11 +2748,8 @@ fm_s32 fm_dev_destroy(struct fm *fm)
     fm_flag_event_put(fm->rds_event);
 
     // free all memory
-    if (fm) {
-        fm_free(fm);
-        fm = NULL;
-        g_fm_struct = NULL;
-    }
+    fm_free(fm);
+    g_fm_struct = NULL;
 
     return ret;
 }

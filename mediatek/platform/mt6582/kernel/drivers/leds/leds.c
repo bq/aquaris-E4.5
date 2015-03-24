@@ -58,7 +58,7 @@ struct wake_lock leds_suspend_lock;
 /****************************************************************************
  * DEBUG MACROS
  ***************************************************************************/
-static int debug_enable_led_hal = 1;
+static int debug_enable_led_hal = 0;
 #define LEDS_DEBUG(format, args...) do{ \
 	if(debug_enable_led_hal) \
 	{\
@@ -275,7 +275,7 @@ static unsigned char leds_current[]={0,1,2,3,4,5,6,7};
 #endif
 
 
-#define PMIC_PERIOD_NUM 9
+#define PMIC_PERIOD_NUM 8
 // 100 * period, ex: 0.01 Hz -> 0.01 * 100 = 1
 int pmic_period_array[] = {250,500,1000,1250,1666,2000,2500,10000};
 //int pmic_freqsel_array[] = {99999, 9999, 4999, 1999, 999, 499, 199, 4, 0};
@@ -315,7 +315,7 @@ int mt_led_blink_pmic(enum mt65xx_led_pmic pmic_type, struct nled_setting* led) 
 	#endif
 	#ifdef RESPIRATION_LAMP
 	//printk("[LHJLED][%s]level=%d,duty=%d\n",__func__,led->level,duty);
-	printk("[LHJLED][%s]level=%d,freq=%d\n",__func__,led->level,pmic_freqsel_array[time_index]);
+	LEDS_DEBUG("[LHJLED][%s]level=%d,freq=%d\n",__func__,led->level,pmic_freqsel_array[time_index]);
 	#endif
 	//upmu_set_rg_drv_2m_ck_pdn(0x0); // Disable power down (Indicator no need)
 	mutex_lock(&leds_pmic_mutex); // xiangfei.peng add 20140516
@@ -966,7 +966,7 @@ int mt_mt65xx_led_set_cust(struct cust_mt65xx_led *cust, int level)
 		cust->name, cust->mode, level);
 #ifdef MTK_HDMI_SUPPORT
     if(hdmi_is_active) {
-        printk("mt_mt65xx_led_set_cust hdmi active, return!\n");
+        LEDS_DEBUG("mt_mt65xx_led_set_cust hdmi active, return!\n");
         return 0;
     }
 #endif		
@@ -1308,7 +1308,7 @@ int mt_led_blink_pmic_cust(struct nled_setting* led) {
 	for(i = 0; i < 3 ;  i++ )
 	{
 		// from red to blue
-		printk("[phil] curr %s LED,level %d\n",p_cust_led_list[i].name,rgb[i]);
+		LEDS_DEBUG("[phil] curr %s LED,level %d\n",p_cust_led_list[i].name,rgb[i]);
 		if(rgb[i] != 0)
 		{
 			switch(p_cust_led_list[i].data)
@@ -1320,7 +1320,7 @@ int mt_led_blink_pmic_cust(struct nled_setting* led) {
 					upmu_set_isink_ch0_step(2);//(leds_current[led->level/leds_lev_STEP]);//12mA
 					upmu_set_isink_dim0_duty(duty); //(led->level*9/leds_DUTY_STEP/10);
 					upmu_set_isink_dim0_fsel(pmic_freqsel_array[time_index]);
-					//upmu_set_isink_ch0_en(1);
+					upmu_set_isink_ch0_en(1);
 					break;
 				case MT65XX_LED_PMIC_NLED_ISINK1:
 					upmu_set_rg_isink1_ck_pdn(0);
@@ -1329,7 +1329,7 @@ int mt_led_blink_pmic_cust(struct nled_setting* led) {
 					upmu_set_isink_ch1_step(2);//(leds_current[led->level/leds_lev_STEP]);//12mA
 					upmu_set_isink_dim1_duty(duty); //(led->level*9/leds_DUTY_STEP/10);
 					upmu_set_isink_dim1_fsel(pmic_freqsel_array[time_index]);
-					//upmu_set_isink_ch1_en(1);
+					upmu_set_isink_ch1_en(1);
 					break;
 				case MT65XX_LED_PMIC_NLED_ISINK2:
 					upmu_set_rg_isink2_ck_pdn(0);
@@ -1338,7 +1338,7 @@ int mt_led_blink_pmic_cust(struct nled_setting* led) {
 					upmu_set_isink_ch2_step(2);//(leds_current[led->level/leds_lev_STEP]);//12mA
 					upmu_set_isink_dim2_duty(duty); //(led->level*9/leds_DUTY_STEP/10);
 					upmu_set_isink_dim2_fsel(pmic_freqsel_array[time_index]);
-					//upmu_set_isink_ch2_en(1);
+					upmu_set_isink_ch2_en(1);
 					break;
 				case MT65XX_LED_PMIC_NLED_ISINK3:
 					upmu_set_rg_isink3_ck_pdn(0);
@@ -1347,31 +1347,6 @@ int mt_led_blink_pmic_cust(struct nled_setting* led) {
 					upmu_set_isink_ch3_step(2);//(leds_current[led->level/leds_lev_STEP]);//12mA
 					upmu_set_isink_dim3_duty(duty); //(led->level*9/leds_DUTY_STEP/10);
 					upmu_set_isink_dim3_fsel(pmic_freqsel_array[time_index]);
-					//upmu_set_isink_ch3_en(1);
-					break;
-				default:
-					break;
-			}
-		}
-	}
-	// turn on the request RGB led
-	for(i = 0; i < 3 ;  i++ )
-	{
-		// from red to blue
-		if(rgb[i] != 0)
-		{
-			switch(p_cust_led_list[i].data)
-			{
-				case MT65XX_LED_PMIC_NLED_ISINK0:
-					upmu_set_isink_ch0_en(1);
-					break;
-				case MT65XX_LED_PMIC_NLED_ISINK1:
-					upmu_set_isink_ch1_en(1);
-					break;
-				case MT65XX_LED_PMIC_NLED_ISINK2:
-					upmu_set_isink_ch2_en(1);
-					break;
-				case MT65XX_LED_PMIC_NLED_ISINK3:
 					upmu_set_isink_ch3_en(1);
 					break;
 				default:

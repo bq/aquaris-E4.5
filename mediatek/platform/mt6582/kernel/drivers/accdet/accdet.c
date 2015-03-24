@@ -19,7 +19,7 @@ static variable defination
 
 static int button_press_debounce = 0x400;
 
-static int debug_enable = 1;
+static int debug_enable = 0;
 
 struct headset_mode_settings *cust_headset_settings = NULL;
 

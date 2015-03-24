@@ -28,31 +28,17 @@
 
 #define FHTAG "[FH]"
 
-#define VERBOSE_DEBUG 0
 
-#if VERBOSE_DEBUG
+#if CONFIG_MT_ENG_BUILD
 #define FH_MSG(fmt, args...) \
 do {    \
 		printk( FHTAG""fmt" <- %s(): L<%d>  PID<%s><%d>\n", \
             	##args ,__FUNCTION__,__LINE__,current->comm,current->pid); \
 } while(0);
-#else
+#else /* CONFIG_MT_ENG_BUILD */
+   #define FH_MSG(fmt, args...) ((void)0)
+#endif /* CONFIG_MT_ENG_BUILD */
 
-#if 1 //log level is 6 xlog
-#define FH_MSG(fmt, args...) \
-do {    \
-		xlog_printk(ANDROID_LOG_DEBUG, FHTAG, fmt, \
-            	##args ); \
-} while(0);
-#else //log level is 4 (printk)
-#define FH_MSG(fmt, args...) \
-do {    \
-		printk( FHTAG""fmt" \n", \
-            	##args ); \
-} while(0);
-#endif
-
-#endif
 
 enum FH_FH_STATUS{
  FH_FH_DISABLE = 0,

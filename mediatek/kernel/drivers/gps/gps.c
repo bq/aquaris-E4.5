@@ -957,18 +957,26 @@ error:
 /*****************************************************************************/
 static int mt3326_gps_remove(struct platform_device *dev)
 {
-    struct gps_dev_obj *devobj = (struct gps_dev_obj*)platform_get_drvdata(dev);
-    struct gps_drv_obj *drvobj = (struct gps_drv_obj*)dev_get_drvdata(devobj->dev);
+    struct gps_dev_obj *devobj = NULL;
+    struct gps_drv_obj *drvobj = NULL;
     int err;
     
-    if (!devobj || !drvobj) {
-        GPS_ERR("null pointer: %p, %p\n", devobj, drvobj);
+    devobj = (struct gps_dev_obj*)platform_get_drvdata(dev);
+    if (!devobj) {
+        //GPS_ERR("null pointer: %p, %p\n", devobj, drvobj);
+        return -1;
+    }
+
+
+    drvobj = (struct gps_drv_obj*)dev_get_drvdata(devobj->dev);
+    if (!drvobj) {
+        //GPS_ERR("null pointer: %p, %p\n", devobj, drvobj);
         return -1;
     }
 
     GPS_DBG("Unregistering chardev\n");
     kfree(devobj);
-    
+
     cdev_del(&devobj->chdev);
     unregister_chrdev_region(devobj->devno, 1);
 
@@ -993,11 +1001,18 @@ static void mt3326_gps_shutdown(struct platform_device *dev)
 static int mt3326_gps_suspend(struct platform_device *dev, pm_message_t state)
 {
     int err = 0;    
-    struct gps_dev_obj *devobj = (struct gps_dev_obj*)platform_get_drvdata(dev);
-    struct gps_drv_obj *drvobj = (struct gps_drv_obj*)dev_get_drvdata(devobj->dev);
+    struct gps_dev_obj *devobj = NULL;
+    struct gps_drv_obj *drvobj = NULL;
     
-    if (!devobj || !drvobj) {
-        GPS_ERR("null pointer: %p, %p\n", devobj, drvobj);
+    devobj = (struct gps_dev_obj*)platform_get_drvdata(dev);
+    if (!devobj) {
+        //GPS_ERR("null pointer: %p, %p\n", devobj, drvobj);
+        return -1;
+    }
+
+    drvobj = (struct gps_drv_obj*)dev_get_drvdata(devobj->dev);
+    if (!drvobj) {
+        //GPS_ERR("null pointer: %p, %p\n", devobj, drvobj);
         return -1;
     }
     

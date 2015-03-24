@@ -406,7 +406,7 @@ static long fbconfig_ioctl(struct file * file, unsigned int cmd, unsigned long a
             return copy_to_user(argp, &lcm_id,  sizeof(lcm_id)) ? -EFAULT : 0;
         }
 	case LCM_GET_DSI_CONTINU:
-	{	int ret ;
+	{	int ret  = 0;
 		if(fbconfig_if_drv->set_spread_frequency)
 			ret=fbconfig_if_drv->set_spread_frequency(10);//100 for dsi_continuous;
 		printk("fbconfig=>LCM_GET_DSI_CONTINU:%d\n",ret);
@@ -420,14 +420,14 @@ static long fbconfig_ioctl(struct file * file, unsigned int cmd, unsigned long a
 		return copy_to_user(argp, &lcm_fb,  sizeof(lcm_fb)) ? -EFAULT : 0;
 	}
 	case LCM_GET_DSI_CLK:
-	{	int ret ;
+	{	int ret = 0;
 		if(fbconfig_if_drv->set_spread_frequency)
 			ret=fbconfig_if_drv->set_spread_frequency(11);//11 for dsi_CLK;
 		printk("fbconfig=>LCM_GET_DSI_CLK:%d\n",ret);
 		return copy_to_user(argp, &ret,  sizeof(ret)) ? -EFAULT : 0;
 	}
 	case LCM_GET_DSI_CLK_V2:
-	{	int ret ;
+	{	int ret = 0;
 		MIPI_CLK_V2 clock_v2;
 		if(fbconfig_if_drv->set_spread_frequency)
 			ret=fbconfig_if_drv->set_spread_frequency(11);//11 for dsi_CLK;
@@ -437,28 +437,28 @@ static long fbconfig_ioctl(struct file * file, unsigned int cmd, unsigned long a
 		return copy_to_user(argp, &clock_v2,  sizeof(clock_v2)) ? -EFAULT : 0;
 	}
 	case LCM_GET_DSI_SSC:
-	{	int ret ;
+	{	int ret = 0;
 		if(fbconfig_if_drv->set_spread_frequency)
 			ret=fbconfig_if_drv->set_spread_frequency(9);//9 for ssc get;
 		printk("fbconfig=>LCM_GET_DSI_SSC:%d\n",ret);
 		return copy_to_user(argp, &ret,  sizeof(ret)) ? -EFAULT : 0;
 	}
 	case LCM_GET_DSI_LANE_NUM:
-	{	int ret ;
+	{	int ret = 0;
 		if(fbconfig_if_drv->set_spread_frequency)
 			ret=fbconfig_if_drv->set_spread_frequency(12);//102 for dsi_LANE_NUM;
 		printk("fbconfig=>LCM_GET_DSI_LANE_NUM:%d\n",ret);
 		return copy_to_user(argp, &ret,  sizeof(ret)) ? -EFAULT : 0;
 	}
 	case LCM_GET_DSI_TE:
-	{	int ret ;
+	{	int ret = 0;
 		if(fbconfig_if_drv->set_spread_frequency)
 			ret=fbconfig_if_drv->set_spread_frequency(13);//103 for dsi_TE;
 		printk("fbconfig=>LCM_GET_DSI_TE:%d\n",ret);
 		return copy_to_user(argp, &ret,  sizeof(ret)) ? -EFAULT : 0;
 	}
 	case LCM_GET_DSI_TIMING:
-	{	int ret ;
+	{	int ret = 0;
 		MIPI_TIMING timing;	
 		if(copy_from_user(&timing,(void __user*)argp,sizeof(timing)))
         {

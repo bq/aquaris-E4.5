@@ -239,7 +239,7 @@ extern unsigned int mt_get_emi_freq(void);
 
 enum print_line_t mt65xx_mon_print_entry(struct mt65xx_mon_entry *entry, struct trace_iterator *iter){
     struct trace_seq *s = &iter->seq;
-    int cpu = entry->cpu;
+    int cpu;
     struct mt_mon_log *log_entry;
     unsigned int log = 0;    
     MonitorMode mon_mode_evt = get_mt65xx_mon_mode();
@@ -251,6 +251,8 @@ enum print_line_t mt65xx_mon_print_entry(struct mt65xx_mon_entry *entry, struct 
         log_entry = &entry->field;
         log = entry->log;
     }
+
+    cpu = entry->cpu;
 
     if (log == 0) {
         trace_seq_printf(s, "MON_LOG_BUFF_LEN = %d, ", MON_LOG_BUFF_LEN);    

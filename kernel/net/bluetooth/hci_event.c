@@ -2994,11 +2994,29 @@ static inline void hci_sniff_subrate_evt(struct hci_dev *hdev, struct sk_buff *s
 	BT_DBG("%s status %d", hdev->name, ev->status);
 }
 
+static inline size_t eir_get_length(u8 *eir, size_t eir_len)
+{
+	size_t parsed = 0;
+
+	while (parsed < eir_len) {
+		u8 field_len = eir[0];
+
+		if (field_len == 0)
+			return parsed;
+
+		parsed += field_len + 1;
+		eir += field_len + 1;
+	}
+
+	return eir_len;
+}
+
 static inline void hci_extended_inquiry_result_evt(struct hci_dev *hdev, struct sk_buff *skb)
 {
 	struct inquiry_data data;
 	struct extended_inquiry_info *info = (void *) (skb->data + 1);
 	int num_rsp = *((__u8 *) skb->data);
+	size_t eir_len;
 
 	BT_DBG("%s num_rsp %d", hdev->name, num_rsp);
 
@@ -3028,9 +3046,10 @@ static inline void hci_extended_inquiry_result_evt(struct hci_dev *hdev, struct 
 
 		name_known = hci_inquiry_cache_update(hdev, &data, name_known,
 						      &ssp);
+		eir_len = eir_get_length(info->data, sizeof(info->data));
 		mgmt_device_found(hdev, &info->bdaddr, ACL_LINK, 0x00,
 				  info->dev_class, info->rssi, !name_known,
-				  ssp, info->data, sizeof(info->data));
+				  ssp, info->data, eir_len);
 	}
 
 	hci_dev_unlock(hdev);

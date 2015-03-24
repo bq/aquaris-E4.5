@@ -152,11 +152,23 @@ int security_binder_transfer_file(struct task_struct *from, struct task_struct *
 
 int security_ptrace_access_check(struct task_struct *child, unsigned int mode)
 {
+#ifdef CONFIG_SECURITY_YAMA_STACKED
+	int rc;
+	rc = yama_ptrace_access_check(child, mode);
+	if (rc)
+		return rc;
+#endif
 	return security_ops->ptrace_access_check(child, mode);
 }
 
 int security_ptrace_traceme(struct task_struct *parent)
 {
+#ifdef CONFIG_SECURITY_YAMA_STACKED
+	int rc;
+	rc = yama_ptrace_traceme(parent);
+	if (rc)
+		return rc;
+#endif
 	return security_ops->ptrace_traceme(parent);
 }
 
@@ -420,8 +432,16 @@ int security_path_symlink(struct path *dir, struct dentry *dentry,
 int security_path_link(struct dentry *old_dentry, struct path *new_dir,
 		       struct dentry *new_dentry)
 {
+#ifdef CONFIG_SECURITY_YAMA_STACKED
+	int rc;
+#endif
 	if (unlikely(IS_PRIVATE(old_dentry->d_inode)))
 		return 0;
+#ifdef CONFIG_SECURITY_YAMA_STACKED
+	rc = yama_path_link(old_dentry, new_dir, new_dentry);
+	if (rc)
+		return rc;
+#endif
 	return security_ops->path_link(old_dentry, new_dir, new_dentry);
 }
 
@@ -535,8 +555,16 @@ int security_inode_readlink(struct dentry *dentry)
 
 int security_inode_follow_link(struct dentry *dentry, struct nameidata *nd)
 {
+#ifdef CONFIG_SECURITY_YAMA_STACKED
+	int rc;
+#endif
 	if (unlikely(IS_PRIVATE(dentry->d_inode)))
 		return 0;
+#ifdef CONFIG_SECURITY_YAMA_STACKED
+	rc = yama_inode_follow_link(dentry, nd);
+	if (rc)
+		return rc;
+#endif
 	return security_ops->inode_follow_link(dentry, nd);
 }
 
@@ -739,6 +767,9 @@ int security_task_create(unsigned long clone_flags)
 
 void security_task_free(struct task_struct *task)
 {
+#ifdef CONFIG_SECURITY_YAMA_STACKED
+	yama_task_free(task);
+#endif
 	security_ops->task_free(task);
 }
 
@@ -854,6 +885,12 @@ int security_task_wait(struct task_struct *p)
 int security_task_prctl(int option, unsigned long arg2, unsigned long arg3,
 			 unsigned long arg4, unsigned long arg5)
 {
+#ifdef CONFIG_SECURITY_YAMA_STACKED
+	int rc;
+	rc = yama_task_prctl(option, arg2, arg3, arg4, arg5);
+	if (rc != -ENOSYS)
+		return rc;
+#endif
 	return security_ops->task_prctl(option, arg2, arg3, arg4, arg5);
 }
 

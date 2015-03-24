@@ -5,6 +5,14 @@
 #include <mach/wd_api.h>
 #include <linux/smp.h>
 
+
+#ifdef CONFIG_MT_ENG_BUILD
+  #define genmsg printk
+#else /* CONFIG_MT_ENG_BUILD */
+  #define genmsg(...)   ((void)0)
+#endif /* CONFIG_MT_ENG_BUILD */
+
+
 extern void wk_cpu_update_bit_flag(int cpu,int plug_status);
 extern unsigned int get_check_bit(void);
 extern unsigned int get_kick_bit(void);
@@ -86,7 +94,7 @@ static int wd_cpu_hot_plug_on_notify(int cpu)
     int res=0;
     wk_cpu_update_bit_flag(cpu,1);
 	mtk_wdt_restart(WD_TYPE_NOLOCK);// for KICK external wdt
-	printk("WD wd_cpu_hot_plug_on_notify kick ext wd\n");
+	genmsg("WD wd_cpu_hot_plug_on_notify kick ext wd\n");
 	
 	return res;
 }
@@ -132,13 +140,13 @@ static int disable_local(void)
   local_wdt_enable(WK_WDT_DIS);
 #endif
 #endif
-  printk(" wd_api disable_local not support now \n");
+  genmsg(" wd_api disable_local not support now \n");
   return 0;
 }
 
 static int set_mode(enum ext_wdt_mode mode)
 {
-   printk("not support now");
+   genmsg("not support now");
    switch(mode)
    {
      case WDT_DUAL_MODE:
@@ -268,18 +276,18 @@ static int wd_dram_reserved_mode(bool enabled)
 
 static unsigned int wd_get_check_bit(void)
 {
-   printk("dummy wd_get_check_bit");
+   genmsg("dummy wd_get_check_bit");
 	return 0;
 }
 static unsigned int wd_get_kick_bit(void)
 {
-   printk("dummy wd_get_kick_bit");
+   genmsg("dummy wd_get_kick_bit");
 	return 0;
 }
 
 static int wd_restart(enum wd_restart_type type)
 {
-    printk("dummy wd_restart");
+    genmsg("dummy wd_restart");
 	return 0;
 }
 
@@ -287,19 +295,19 @@ static int wd_restart(enum wd_restart_type type)
 static int wd_cpu_hot_plug_on_notify(int cpu)
 {
     int res=0;
-    printk("dummy wd_cpu_hot_plug_on_notify");
+    genmsg("dummy wd_cpu_hot_plug_on_notify");
 	return res;
 }
 static int wd_cpu_hot_plug_off_notify(int cpu)
 {
     int res=0;
-    printk("dummy wd_cpu_hot_plug_off_notify");
+    genmsg("dummy wd_cpu_hot_plug_off_notify");
 	return res;
 }
 
 static int wd_sw_reset(int type)
 {
-   printk("dummy wd_sw_reset");
+   genmsg("dummy wd_sw_reset");
    wdt_arch_reset(type);
    return 0;
 }
@@ -307,71 +315,67 @@ static int wd_sw_reset(int type)
 static int mtk_wk_wdt_config(enum ext_wdt_mode mode, int timeout_val)
 {
 
-	printk("dummy mtk_wk_wdt_config");
+	genmsg("dummy mtk_wk_wdt_config");
 	return 0;
 }
 
 static int disable_ext(void)
 {
-  printk("dummy disable_ext");
+  genmsg("dummy disable_ext");
   return 0;
 }
 static int disable_local(void)
 {
-  printk("dummy disable_local");
+  genmsg("dummy disable_local");
   return 0;  
 }
 
 static int set_mode(enum ext_wdt_mode mode)
 {
-   printk("dummy set_mode");
+   genmsg("dummy set_mode");
    return 0;
 
 }
 static int confirm_hwreboot(void)
 {
-  printk("dummy confirm_hwreboot"); 
+  genmsg("dummy confirm_hwreboot");
   return 0;
 }
 
 static void suspend_notify(void)
 {
- 
-  printk("dummy suspend_notify   \n "); 
-  
+  genmsg("dummy suspend_notify   \n ");
 }
 
 static void resume_notify(void)
 {
- 
-  printk("dummy resume_notify  \n "); 
-  
+  genmsg("dummy resume_notify  \n ");
 }
 static int disable_all_wd(void)
 {
-  printk("dummy disable_all_wd  \n "); 
+  genmsg("dummy disable_all_wd  \n ");
   return 0;
 }
 
 static int spmwdt_mode_config(WD_REQ_CTL en,WD_REQ_MODE mode )
 {
    int res =0;
-   printk("dummy spmwdt_mode_config  \n "); 
+   genmsg("dummy spmwdt_mode_config  \n ");
    return res;
 }
 
 static int thermal_mode_config(WD_REQ_CTL en,WD_REQ_MODE mode )
 {
    int res =0;
-   printk("dummy thermal_mode_config  \n "); 
+   genmsg("dummy thermal_mode_config  \n ");
    return res;
 }
 
 static int wd_dram_reserved_mode(bool enabled)
 {
-	int res =0;
-   	printk("dummy wd_dram_reserved_mode  \n "); 
-   	return res;
+    int res =0;
+    genmsg("dummy wd_dram_reserved_mode  \n ");
+    return res;
 }
 
 
@@ -388,21 +392,21 @@ int wd_api_init(void)
   int api_size=0;
 
   api_size = (sizeof(g_wd_api_obj)/4);
-  printk("wd api_size=%d\n",api_size);
+  genmsg("wd api_size=%d\n",api_size);
   //check wd api
   check_p = (int*)&g_wd_api_obj;
   for(i=1;i<api_size;i++)
   {
-	printk("p[%d]=%x\n",i,*(check_p+i));
+	genmsg("p[%d]=%x\n",i,*(check_p+i));
 	if(0 == check_p[i])
 	{
-	   printk("wd_api init fail the %d api not init\n",i);
+	   genmsg("wd_api init fail the %d api not init\n",i);
 	   g_wd_api_obj.ready = 0;
 	   return -1;
 	}
 	
   }
-   printk("wd_api init ok\n");
+   genmsg("wd_api init ok\n");
   return 0;
 }
 
@@ -413,12 +417,12 @@ int get_wd_api(struct wd_api** obj)
    if(NULL == *obj)
    {
       res = -1;
-	  //printk("get_wd_public_interface_obj null pointer error\n");
+	  //genmsg("get_wd_public_interface_obj null pointer error\n");
    }
    if((*obj)->ready == 0)
    {
       res =-2;
-	  //printk("get_wd_public_api not ready\n");
+	  //genmsg("get_wd_public_api not ready\n");
    }
    return res;
 }

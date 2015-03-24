@@ -116,10 +116,21 @@ OVL_CONFIG_STRUCT cached_layer_config[DDP_OVL_LAYER_MUN] =
     {.layer = 3, .isDirty = 1}
 };
 
-static OVL_CONFIG_STRUCT _layer_config[2][DDP_OVL_LAYER_MUN];
+struct layer_config_item
+{
+    OVL_CONFIG_STRUCT config[DDP_OVL_LAYER_MUN];
+    struct list_head list;
+};
+
+#define MAX_LAYER_CONFIGS 2
+static struct layer_config_item _layer_config[MAX_LAYER_CONFIGS];
 static unsigned int layer_config_index = 0;
-OVL_CONFIG_STRUCT* captured_layer_config = _layer_config[0];
-OVL_CONFIG_STRUCT* realtime_layer_config = _layer_config[0];
+OVL_CONFIG_STRUCT* captured_layer_config = _layer_config[0].config;
+OVL_CONFIG_STRUCT* realtime_layer_config = _layer_config[0].config;
+
+static LIST_HEAD(free_layer_config_list);
+static LIST_HEAD(ready_layer_config_list);
+static struct layer_config_item *ready_layer_config_item = NULL;
 
 struct DBG_OVL_CONFIGS
 {
@@ -312,7 +323,7 @@ static int _DISP_CleanUpKThread(void *data)
 #define MAX_BUFFER_COUNT 		3
 #define BPP				 		3
 
-MTK_DISP_MODE disp_mode = DISP_DECOUPLE_MODE;
+MTK_DISP_MODE disp_mode = DISP_DIRECT_LINK_MODE;
 
 static DEFINE_SPINLOCK(mem_rw_lock);
 static unsigned int write_buffer_index;
@@ -876,8 +887,7 @@ DISP_STATUS DISP_Init(UINT32 fbVA, UINT32 fbPA, BOOL isLcmInited)
     {
         DISP_LOG("DISP_InitVSYNC(): Cannot create capture ovl kthread\n");
     }
-    if (gWakeupCaptureOvlThread)
-        wake_up_process(captureovl_task);
+    wake_up_process(captureovl_task);
 
     capturefb_task = kthread_create(_DISP_CaptureFBKThread, mtkfb_fbi, "disp_capturefb_kthread");
     if (IS_ERR(capturefb_task))
@@ -1572,7 +1582,7 @@ static int _DISP_CaptureFBKThread(void *data)
         Bitmap.down_sample_y = gCaptureFBDownY;
         Bitmap.pData = ((struct mtkfb_device*)pInfo->par)->fb_va_base;
         MMProfileLogMetaBitmap(MTKFB_MMP_Events.FBDump, MMProfileFlagPulse, &Bitmap);
-        msleep(gCaptureFBPeriod);
+        msleep_interruptible(gCaptureFBPeriod);
     }
     return 0;
 }
@@ -1805,14 +1815,31 @@ static int _DISP_MergeOVLDirty(disp_path_config_dirty *dirty_flag) {
 	}
 	if (try_cnt < 5000) {
 		dirty_flag->ovl_dirty = atomic_read(&OverlaySettingDirtyFlag);
-		if (dirty_flag->ovl_dirty) {
-			layer_config_index = 1 - layer_config_index;
-			captured_layer_config = _layer_config[layer_config_index];
+		if (dirty_flag->ovl_dirty)
+		{
+
+			if (!list_empty(&ready_layer_config_list))
+			{
+				ready_layer_config_item =
+					list_first_entry(&ready_layer_config_list,
+						struct layer_config_item, list);
+				list_del(&ready_layer_config_item->list);
+				captured_layer_config = ready_layer_config_item->config;
+			}
+			else
+			{
+				layer_config_index = 1 - layer_config_index;
+				captured_layer_config = _layer_config[layer_config_index].config;
+				/* The dirty flag was set from a place where no
+				 * config was queued - so just copy from cached config
+				 */
+				memcpy(captured_layer_config, cached_layer_config,
+				    sizeof(OVL_CONFIG_STRUCT) * DDP_OVL_LAYER_MUN);
+			}
+
 			DISP_LOG("========= cached --> captured ===========\n");
-			memcpy(captured_layer_config, cached_layer_config,
-					sizeof(OVL_CONFIG_STRUCT) * DDP_OVL_LAYER_MUN);
 			MMProfileLogStructure(MTKFB_MMP_Events.ConfigOVL, MMProfileFlagPulse, captured_layer_config, struct DBG_OVL_CONFIGS);
-			atomic_set(&OverlaySettingDirtyFlag, 0);
+			atomic_set(&OverlaySettingDirtyFlag, !list_empty(&ready_layer_config_list));
 			PanDispSettingDirty = 0;
 			dirty = 1;
 		}
@@ -2031,6 +2058,13 @@ static int _DISP_ConfigUpdateKThread(void *data)
 					disp_running = 1;
 					dirty_flag.aal_dirty = 1;
 					_DISP_ConfigDlinkDatapath(&dirty_flag, &mem_out_config);
+					if (ready_layer_config_item != NULL)
+					{
+						mutex_lock(&OverlaySettingMutex);
+						list_add_tail(&ready_layer_config_item->list, &free_layer_config_list);
+						mutex_unlock(&OverlaySettingMutex);
+						ready_layer_config_item = NULL;
+					}
 				} else {
 					_DISP_StartSoftTimer();
 				}
@@ -2262,6 +2296,17 @@ DISP_MERGE_TRIGGER_MODE DISP_Get_MergeTrigger_Mode(void)
 
 void DISP_InitVSYNC(unsigned int vsync_interval)
 {
+    int i;
+
+    INIT_LIST_HEAD(&free_layer_config_list);
+    INIT_LIST_HEAD(&ready_layer_config_list);
+
+    for (i = 0; i < MAX_LAYER_CONFIGS; i++)
+    {
+        INIT_LIST_HEAD(&_layer_config[i].list);
+        list_add_tail(&_layer_config[i].list, &free_layer_config_list);
+    }
+
     init_waitqueue_head(&config_update_wq);
     init_waitqueue_head(&vsync_wq);
     config_update_task = kthread_create(
@@ -2979,6 +3024,30 @@ DISP_STATUS DISP_GetLayerInfo(DISP_LAYER_INFO *pLayer)
     pLayer->next_conn_type = cached_layer_config[id].connected_type;
     pLayer->hw_conn_type = realtime_layer_config[id].connected_type;
     mutex_unlock(&OverlaySettingMutex);
+    return DISP_STATUS_OK;
+}
+
+DISP_STATUS DISP_EnqueueConfig()
+{
+    struct layer_config_item *free_item = NULL;
+    if (list_empty(&free_layer_config_list))
+    {
+        free_item = (struct layer_config_item *)kmalloc(
+            sizeof(struct layer_config_item), GFP_KERNEL);
+        if (free_item == NULL)
+            return DISP_STATUS_ERROR;
+        INIT_LIST_HEAD(&free_item->list);
+    }
+    else
+    {
+        free_item = list_first_entry(&free_layer_config_list,
+                                     struct layer_config_item, list);
+        list_del(&free_item->list);
+    }
+
+    memcpy(free_item->config, cached_layer_config,
+           sizeof(OVL_CONFIG_STRUCT) * DDP_OVL_LAYER_MUN);
+    list_add_tail(&free_item->list, &ready_layer_config_list);
     return DISP_STATUS_OK;
 }
 

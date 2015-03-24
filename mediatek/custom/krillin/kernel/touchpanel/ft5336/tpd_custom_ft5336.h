@@ -23,7 +23,7 @@
 //#define TPD_HAVE_CALIBRATION
 //#define TPD_HAVE_BUTTON
 //#define TPD_HAVE_TREMBLE_ELIMINATION
-#define TPD_HAVE_BUTTON
+//#define TPD_HAVE_BUTTON
 #define TPD_BUTTON_HEIGH        (100)
 #define TPD_KEY_COUNT           3
 #define TPD_KEYS                { KEY_MENU, KEY_HOMEPAGE ,KEY_BACK}

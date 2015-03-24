@@ -38,31 +38,31 @@ static U16 gs6333_pmic_read(U16 addr)
 static void mt_power_gs_compare_pll(void)
 {
     if (pll_is_on(MSDCPLL)) {
-        printk("MSDCPLL: %s\n", pll_is_on(MSDCPLL) ?  "on" : "off");
+        pr_debug("MSDCPLL: %s\n", pll_is_on(MSDCPLL) ?  "on" : "off");
     }
 
     if (subsys_is_on(SYS_MD1)) {
-        printk("SYS_MD1: %s\n", subsys_is_on(SYS_MD1) ? "on" : "off");
+        pr_debug("SYS_MD1: %s\n", subsys_is_on(SYS_MD1) ? "on" : "off");
     }
 
     if (subsys_is_on(SYS_CONN)) {
-        printk("SYS_CONN: %s\n", subsys_is_on(SYS_CONN) ? "on" : "off");
+        pr_debug("SYS_CONN: %s\n", subsys_is_on(SYS_CONN) ? "on" : "off");
     }
 
     if (subsys_is_on(SYS_DIS)) {
-        printk("SYS_DIS: %s\n", subsys_is_on(SYS_DIS) ? "on" : "off");
+        pr_debug("SYS_DIS: %s\n", subsys_is_on(SYS_DIS) ? "on" : "off");
     }
 
     if (subsys_is_on(SYS_MFG)) {
-        printk("SYS_MFG: %s\n", subsys_is_on(SYS_MFG) ? "on" : "off");
+        pr_debug("SYS_MFG: %s\n", subsys_is_on(SYS_MFG) ? "on" : "off");
     }
 
     if (subsys_is_on(SYS_ISP)) {
-        printk("SYS_ISP: %s\n", subsys_is_on(SYS_ISP) ? "on" : "off");
+        pr_debug("SYS_ISP: %s\n", subsys_is_on(SYS_ISP) ? "on" : "off");
     }
 
     if (subsys_is_on(SYS_VDE)) {
-        printk("SYS_VDE: %s\n", subsys_is_on(SYS_VDE) ? "on" : "off");
+        pr_debug("SYS_VDE: %s\n", subsys_is_on(SYS_VDE) ? "on" : "off");
     }
 }
 
@@ -73,11 +73,11 @@ void mt_power_gs_diff_output(unsigned int val1, unsigned int val2)
 
     while (diff != 0)
     {
-        if ((diff % 2) != 0) printk("%d ", i);
+        if ((diff % 2) != 0) pr_debug("%d ", i);
         diff /= 2;
         i++;
     }
-    printk("\n");
+    pr_debug("\n");
 }
 
 void mt_power_gs_compare(char *scenario, \
@@ -94,7 +94,7 @@ void mt_power_gs_compare(char *scenario, \
         val2 = mt6582_power_gs[i+2] & mt6582_power_gs[i+1];
         if (val1 != val2)
         {
-            printk("%s - MT6582 - 0x%x - 0x%x - 0x%x - 0x%x - ", \
+            pr_debug("%s - MT6582 - 0x%x - 0x%x - 0x%x - 0x%x - ", \
                     scenario, mt6582_power_gs[i], gs_read(mt6582_power_gs[i]), mt6582_power_gs[i+1], mt6582_power_gs[i+2]);
             mt_power_gs_diff_output(val1, val2);
         }
@@ -107,7 +107,7 @@ void mt_power_gs_compare(char *scenario, \
         val2 = mt6323_power_gs[i+2] & mt6323_power_gs[i+1];
         if (val1 != val2)
         {
-            printk("%s - MT6323 - 0x%x - 0x%x - 0x%x - 0x%x - ", \
+            pr_debug("%s - MT6323 - 0x%x - 0x%x - 0x%x - 0x%x - ", \
                     scenario, mt6323_power_gs[i], gs6323_pmic_read(mt6323_power_gs[i]), mt6323_power_gs[i+1], mt6323_power_gs[i+2]);
             mt_power_gs_diff_output(val1, val2);
         }
@@ -121,7 +121,7 @@ void mt_power_gs_compare(char *scenario, \
         val2 = mt6333_power_gs[i+2] & mt6333_power_gs[i+1];
         if (val1 != val2)
         {
-            printk("%s - MT6333 - 0x%x - 0x%x - 0x%x - 0x%x - ", \
+            pr_debug("%s - MT6333 - 0x%x - 0x%x - 0x%x - 0x%x - ", \
                     scenario, mt6333_power_gs[i], gs6333_pmic_read(mt6333_power_gs[i]), mt6333_power_gs[i+1], mt6333_power_gs[i+2]);
             mt_power_gs_diff_output(val1, val2);
         }

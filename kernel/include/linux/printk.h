@@ -25,6 +25,7 @@ extern const char linux_proc_banner[];
 #define KERN_CONT	"<c>"
 
 extern int console_printk[];
+extern int printk_debug;
 
 #define console_loglevel (console_printk[0])
 #define default_message_loglevel (console_printk[1])

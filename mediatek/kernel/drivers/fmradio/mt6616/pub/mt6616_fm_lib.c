@@ -838,9 +838,9 @@ static fm_s32 mt6626_GetCurRSSI(fm_u16 *pRSSI)
 
     if (pRSSI) {
         *pRSSI = (rssi > 511) ? ((fm_s16)(((rssi - 1024) * 6) >> 4) + 113) : ((rssi * 6) >> 4);
+        WCN_DBG(FM_DBG | CHIP, "rssi:%d, dBuV:%d\n", rssi, *pRSSI);
     }
 
-    WCN_DBG(FM_DBG | CHIP, "rssi:%d, dBuV:%d\n", rssi, *pRSSI);
     return 0;
 }
 

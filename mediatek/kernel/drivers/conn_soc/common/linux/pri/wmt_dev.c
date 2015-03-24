@@ -839,7 +839,7 @@ static INT32 wmt_internal_loopback(INT32 count, INT32 max)
         pOp->op.au4OpData[0] = lpbk_buffer.payload_length;    //packet length
         pOp->op.au4OpData[1] = (UINT32)&gLpbkBuf[0];        //packet buffer pointer
         pSignal->timeoutValue = MAX_EACH_WMT_CMD;
-        WMT_INFO_FUNC("OPID(%d) type(%d) start\n",
+        WMT_DBG_FUNC("OPID(%d) type(%d) start\n",
                 pOp->op.opId,
                 pOp->op.au4OpData[0]);
         if (DISABLE_PSM_MONITOR()) {
@@ -858,7 +858,7 @@ static INT32 wmt_internal_loopback(INT32 count, INT32 max)
             break;
         }
         else {
-            WMT_INFO_FUNC("OPID(%d) length(%d) ok\n",
+            WMT_DBG_FUNC("OPID(%d) length(%d) ok\n",
             pOp->op.opId, pOp->op.au4OpData[0]);
 
 			memcpy(&lpbk_buffer.in_payload[0],&gLpbkBuf[0],max);
@@ -921,7 +921,7 @@ static INT32 wmt_dbg_set_mcu_clock(INT32 par1, INT32 par2, INT32 par3)
     pOp->op.au4OpData[0] = kind;
     pSignal->timeoutValue = MAX_EACH_WMT_CMD;
 	
-    WMT_INFO_FUNC("OPID(%d) kind(%d) start\n",pOp->op.opId,pOp->op.au4OpData[0]);
+    WMT_DBG_FUNC("OPID(%d) kind(%d) start\n",pOp->op.opId,pOp->op.au4OpData[0]);
     if (DISABLE_PSM_MONITOR()) {
         WMT_ERR_FUNC("wake up failed\n");
         wmt_lib_put_op_to_free_queue(pOp);
@@ -937,7 +937,7 @@ static INT32 wmt_dbg_set_mcu_clock(INT32 par1, INT32 par2, INT32 par3)
         return -3;
     }
     else {
-        WMT_INFO_FUNC("OPID(%d) kind(%d) ok\n",
+        WMT_DBG_FUNC("OPID(%d) kind(%d) ok\n",
         pOp->op.opId, pOp->op.au4OpData[0]);
     }
 
@@ -1453,7 +1453,7 @@ static UINT32 wmt_dev_tra_ahb_poll(void)
     //count_last_access_sdio = 0;
     jiffies_last_poll = jiffies;
 
-    WMT_INFO_FUNC("**poll_during_time = %lu > %lu, ahb_during_count = %lu > %lu, query\n", 
+    WMT_DBG_FUNC("**poll_during_time = %lu > %lu, ahb_during_count = %lu > %lu, query\n", 
             jiffies_to_msecs(poll_during_time), TIME_THRESHOLD_TO_TEMP_QUERY,
             jiffies_to_msecs(ahb_during_count) , COUNT_THRESHOLD_TO_TEMP_QUERY);
 
@@ -1483,7 +1483,7 @@ LONG wmt_dev_tm_temp_query(void)
        if(temp_table[index] >= TEMP_THRESHOLD)
        {
             query_cond = 1;
-            WMT_INFO_FUNC("temperature table is still intial value, we should query temp temperature..\n");
+            WMT_DBG_FUNC("temperature table is still intial value, we should query temp temperature..\n");
        }            
     }
 
@@ -1496,7 +1496,7 @@ LONG wmt_dev_tm_temp_query(void)
         if( wmt_dev_tra_ahb_poll()==0)
         {
             query_cond = 1;
-            WMT_INFO_FUNC("ahb traffic , we must query temperature..\n");
+            WMT_DBG_FUNC("ahb traffic , we must query temperature..\n");
         }
         else
         {
@@ -1532,7 +1532,7 @@ LONG wmt_dev_tm_temp_query(void)
         {               
             query_cond = 1;
 
-            WMT_INFO_FUNC("It is long time (> %d sec) not to query, we must query temp temperature..\n", REFRESH_TIME);
+            WMT_DBG_FUNC("It is long time (> %d sec) not to query, we must query temp temperature..\n", REFRESH_TIME);
             for (index = 0; index < HISTORY_NUM ; index++)
             {
                 temp_table[index] = 99;                
@@ -1551,7 +1551,7 @@ LONG wmt_dev_tm_temp_query(void)
         temp_table[idx_temp_table] = current_temp;
         do_gettimeofday(&query_time);
 
-        WMT_INFO_FUNC("[Thermal] current_temp = 0x%x \n", (current_temp & 0xFF));
+        WMT_DBG_FUNC("[Thermal] current_temp = 0x%x \n", (current_temp & 0xFF));
     }
     else
     {
@@ -1834,7 +1834,7 @@ WMT_unlocked_ioctl (
             pOp->op.au4OpData[1] = (UINT32)&gLpbkBuf[0];        //packet buffer pointer
             memcpy(&gLpbkBufLog, &gLpbkBuf[((effectiveLen >=4) ? effectiveLen-4:0)], 4);
             pSignal->timeoutValue = MAX_EACH_WMT_CMD;
-            WMT_INFO_FUNC("OPID(%d) type(%d) start\n",
+            WMT_DBG_FUNC("OPID(%d) type(%d) start\n",
                 pOp->op.opId,
                 pOp->op.au4OpData[0]);
             if (DISABLE_PSM_MONITOR()) {
@@ -1854,7 +1854,7 @@ WMT_unlocked_ioctl (
                 break;
             }
             else {
-                WMT_INFO_FUNC("OPID(%d) length(%d) ok\n",
+                WMT_DBG_FUNC("OPID(%d) length(%d) ok\n",
                     pOp->op.opId, pOp->op.au4OpData[0]);
                 iRet = pOp->op.au4OpData[0] ;
                 if (copy_to_user((void *)arg + sizeof(ULONG) + sizeof(UCHAR[2048]), gLpbkBuf, iRet)) {
@@ -1884,7 +1884,7 @@ WMT_unlocked_ioctl (
 			pOp->op.au4OpData[0] = 0;
             pOp->op.au4OpData[1] = (UINT32)&gLpbkBuf[0];   
             pSignal->timeoutValue = MAX_EACH_WMT_CMD;
-            WMT_INFO_FUNC("OPID(%d) start\n",pOp->op.opId);
+            WMT_DBG_FUNC("OPID(%d) start\n",pOp->op.opId);
             if (DISABLE_PSM_MONITOR()) {
                 WMT_ERR_FUNC("wake up failed\n");
                 wmt_lib_put_op_to_free_queue(pOp);
@@ -1899,7 +1899,7 @@ WMT_unlocked_ioctl (
                 break;
             }
             else {
-                WMT_INFO_FUNC("OPID(%d) length(%d) ok\n",
+                WMT_DBG_FUNC("OPID(%d) length(%d) ok\n",
                     pOp->op.opId, pOp->op.au4OpData[0]);
                 iRet = pOp->op.au4OpData[0] ;
 				if (copy_to_user((void *)arg + sizeof(ULONG), gLpbkBuf, iRet)) {
@@ -2042,7 +2042,7 @@ WMT_unlocked_ioctl (
             pOp->op.au4OpData[0] = effectiveLen;    //packet length
             pOp->op.au4OpData[1] = (UINT32)&desense_buf[0];        //packet buffer pointer
             pSignal->timeoutValue = MAX_EACH_WMT_CMD;
-            WMT_INFO_FUNC("OPID(%d) start\n",pOp->op.opId);
+            WMT_DBG_FUNC("OPID(%d) start\n",pOp->op.opId);
             if (DISABLE_PSM_MONITOR()) {
                 WMT_ERR_FUNC("wake up failed\n");
                 wmt_lib_put_op_to_free_queue(pOp);
@@ -2057,7 +2057,7 @@ WMT_unlocked_ioctl (
                 break;
             }
             else {
-                WMT_INFO_FUNC("OPID(%d) length(%d) ok\n",
+                WMT_DBG_FUNC("OPID(%d) length(%d) ok\n",
                     pOp->op.opId, pOp->op.au4OpData[0]);
                 iRet = pOp->op.au4OpData[0] ;
             }

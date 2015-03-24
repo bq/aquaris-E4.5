@@ -57,6 +57,14 @@
 #include <linux/mtk_ram_console.h>
 /******************************************************************************/
 
+
+#ifdef CONFIG_MT_ENG_BUILD
+  #define genmsg printk
+#else /* CONFIG_MT_ENG_BUILD */
+  #define genmsg(...) ((void)0)
+#endif /* CONFIG_MT_ENG_BUILD */
+
+
 /*
  * as from 2.5, kernels no longer have an init_tasks structure
  * so we need some other way of telling a new secondary core
@@ -188,10 +196,10 @@ void __cpu_die(unsigned int cpu)
 		pr_err("CPU%u: cpu didn't die\n", cpu);
 		return;
 	}
-	printk(KERN_NOTICE "CPU%u: shutdown\n", cpu);
+	genmsg(KERN_NOTICE "CPU%u: shutdown\n", cpu);
 
 	if (!platform_cpu_kill(cpu))
-		printk("CPU%u: unable to kill\n", cpu);
+		printk(KERN_ERR "CPU%u: unable to kill\n", cpu);
 }
 
 /*
@@ -280,7 +288,7 @@ asmlinkage void __cpuinit secondary_start_kernel(void)
 	cpumask_set_cpu(cpu, mm_cpumask(mm));
 	aee_rr_rec_hoplug(cpu, 3, 0);
 
-	printk("CPU%u: Booted secondary processor\n", cpu);
+	genmsg("CPU%u: Booted secondary processor\n", cpu);
 
 	cpu_init();
 	aee_rr_rec_hoplug(cpu, 4, 0);
@@ -338,7 +346,7 @@ void __init smp_cpus_done(unsigned int max_cpus)
 	for_each_online_cpu(cpu)
 		bogosum += per_cpu(cpu_data, cpu).loops_per_jiffy;
 
-	printk(KERN_INFO "SMP: Total of %d processors activated "
+	genmsg(KERN_INFO "SMP: Total of %d processors activated "
 	       "(%lu.%02lu BogoMIPS).\n",
 	       num_online_cpus(),
 	       bogosum / (500000/HZ),
@@ -527,7 +535,7 @@ static DEFINE_RAW_SPINLOCK(stop_lock);
  */
 static void ipi_cpu_stop(unsigned int cpu)
 {
-    printk("\n CPU%u: stopping and cpu_relax,state:%d\n", cpu, system_state);
+    genmsg("\n CPU%u: stopping and cpu_relax,state:%d\n", cpu, system_state);
     dump_stack();
 	if (system_state == SYSTEM_BOOTING ||
 	    system_state == SYSTEM_RUNNING) {
@@ -741,7 +749,7 @@ void smp_send_stop(void)
 	cpumask_clear_cpu(smp_processor_id(), &mask);
 	if (!cpumask_empty(&mask))
 	{
-		printk("Send IPI to stop CPUs...\n");
+		genmsg("Send IPI to stop CPUs...\n");
 		smp_cross_call(&mask, IPI_CPU_STOP);
 	}
 

@@ -372,7 +372,8 @@ typedef enum _ENUM_DBG_MODULE_T {
     #define ERRORLOG(_Fmt)
     #define WARNLOG(_Fmt)
 
-#if defined(LINUX)
+// Disabled DBGLOG for Ubuntu builds
+#if defined(LINUX) && 0
     #define DBGLOG(_Module, _Class, _Fmt) \
     { \
         if (aucDebugModule[DBG_##_Module##_IDX] & DBG_CLASS_##_Class) { \

@@ -340,7 +340,7 @@ static int KXTJ2_1009_ReadData(struct i2c_client *client, s16 data[KXTJ2_1009_AX
 /*----------------------------------------------------------------------------*/
 static int KXTJ2_1009_ReadOffset(struct i2c_client *client, s8 ofs[KXTJ2_1009_AXES_NUM])
 {    
-	int err;
+	int err = KXTJ2_1009_SUCCESS;
 
 	ofs[1]=ofs[2]=ofs[0]=0x00;
 
@@ -353,7 +353,7 @@ static int KXTJ2_1009_ResetCalibration(struct i2c_client *client)
 {
 	struct kxtj2_1009_i2c_data *obj = i2c_get_clientdata(client);
 	u8 ofs[4]={0,0,0,0};
-	int err;
+	int err = KXTJ2_1009_SUCCESS;
 
 	memset(obj->cali_sw, 0x00, sizeof(obj->cali_sw));
 	memset(obj->offset, 0x00, sizeof(obj->offset));

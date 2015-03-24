@@ -317,7 +317,7 @@ static int DMARD08_ReadData(struct i2c_client *client, s16 data[DMARD08_AXES_NUM
 /*----------------------------------------------------------------------------*/
 static int DMARD08_ReadOffset(struct i2c_client *client, s8 ofs[DMARD08_AXES_NUM])
 {    
-	int err;
+	int err = DMARD08_SUCCESS;
 #ifdef SW_CALIBRATION
 	ofs[0]=ofs[1]=ofs[2]=0x0;
 #else
@@ -332,7 +332,7 @@ static int DMARD08_ResetCalibration(struct i2c_client *client)
 {
 	struct dmard08_i2c_data *obj = i2c_get_clientdata(client);
 	u8 ofs[4]={0,0,0,0};
-	int err;
+	int err = DMARD08_SUCCESS;
 	
 	#ifdef SW_CALIBRATION
 		

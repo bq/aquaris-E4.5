@@ -1499,8 +1499,10 @@ static void release_one_tty(struct work_struct *work)
 
 	put_pid(tty->pgrp);
 	put_pid(tty->session);
+#ifdef CONFIG_MT_ENG_BUILD
 	printk(KERN_DEBUG "%s: grab tty(%s/%p)'s work %p before free it\n", __func__, 
 		tty_name(tty, tty_n), tty, &tty->buf.work);
+#endif /* CONFIG_MT_ENG_BUILD */
 	grab_pending_work(&tty->buf.work);
 	free_tty_struct(tty);
 }

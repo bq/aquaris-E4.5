@@ -61,7 +61,8 @@ static int test_case  = 0;
 module_param(test_case, int, 00664);
 static DEFINE_SPINLOCK(wdt_test_lock0);
 static DEFINE_SPINLOCK(wdt_test_lock1);
-static struct task_struct *wk_tsk[2];// cpu: 2
+static struct task_struct *wk_tsk[16];// max cpu 16
+
 static int data;
 
 

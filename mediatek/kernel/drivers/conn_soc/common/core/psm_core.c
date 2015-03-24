@@ -4,7 +4,7 @@
 #include "stp_core.h"
 #include <mach/mtk_wcn_cmb_stub.h>
 
-INT32         gPsmDbgLevel = STP_PSM_LOG_INFO;
+INT32         gPsmDbgLevel = STP_PSM_LOG_WARN;
 MTKSTP_PSM_T  stp_psm_i;
 MTKSTP_PSM_T  *stp_psm = &stp_psm_i; 
 
@@ -156,7 +156,7 @@ static P_OSAL_OP _stp_psm_get_op (
 	
     if((pOpQ == &stp_psm->rActiveOpQ) && (NULL != pOp))
     {
-        STP_PSM_INFO_FUNC("last_active_opId(%d)\n", stp_psm->last_active_opId);
+        STP_PSM_DBG_FUNC("last_active_opId(%d)\n", stp_psm->last_active_opId);
     }
 	
     if (!pOp) 
@@ -1360,7 +1360,7 @@ static inline void _stp_psm_stp_is_idle(ULONG data)
         return ;
      }
 
-     STP_PSM_INFO_FUNC("**IDLE is over %d msec, go to sleep!!!**\n", stp_psm->idle_time_to_sleep);
+     STP_PSM_DBG_FUNC("**IDLE is over %d msec, go to sleep!!!**\n", stp_psm->idle_time_to_sleep);
      _stp_psm_notify_wmt_sleep_wq(stp_psm);
 }
 
@@ -1439,7 +1439,7 @@ static inline INT32  _stp_psm_do_wait(MTKSTP_PSM_T *stp_psm, MTKSTP_PSM_STATE_T 
      {
         osal_sleep_ms(POLL_WAIT);
         i++;
-        STP_PSM_INFO_FUNC("STP is waiting state for %s, i=%d, state = %d\n", g_psm_state[state],i , _stp_psm_get_state(stp_psm));
+        STP_PSM_DBG_FUNC("STP is waiting state for %s, i=%d, state = %d\n", g_psm_state[state],i , _stp_psm_get_state(stp_psm));
      }
 
      if(i == limit)

@@ -186,6 +186,14 @@ int osal_filp_open_read_only(const char *file_path)
             break;
         }
     }
+
+    /* the fp_id = 0 will be thought as NULL file ponter */
+    if (filp_id >= OSAL_FP_OVERFLOW)
+    {
+        g_osal_fp[OSAL_FILE_NULL] = (struct file *)(-ENOMEM);//Out of memory
+        up(&osal_fp_sem);
+        return OSAL_FILE_NULL;
+    }
     
     g_osal_fp[filp_id] = filp_open(file_path, O_RDONLY, 0777);
 
@@ -195,15 +203,7 @@ int osal_filp_open_read_only(const char *file_path)
         g_osal_fp[filp_id] = NULL;
         filp_id = OSAL_FILE_NULL;
     }
-
     up(&osal_fp_sem);
-    
-    /* the fp_id = 0 will be thought as NULL file ponter */
-    if(filp_id >= OSAL_FP_OVERFLOW ) 
-    {
-        g_osal_fp[OSAL_FILE_NULL] = (struct file *)(-ENOMEM);//Out of memory
-        return OSAL_FILE_NULL;
-    }
     
     return filp_id;
 }

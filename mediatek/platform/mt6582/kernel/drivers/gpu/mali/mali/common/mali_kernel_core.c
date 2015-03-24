@@ -1196,7 +1196,7 @@ _mali_osk_errcode_t _mali_ukk_request_high_priority( _mali_uk_request_high_prior
 
 	if (!session->use_high_priority_job_queue) {
 		session->use_high_priority_job_queue = MALI_TRUE;
-		MALI_DEBUG_PRINT(2, ("Session 0x%08X with pid %d was granted higher priority.\n", session, _mali_osk_get_pid()));
+		MALI_DEBUG_PRINT(3, ("Session 0x%08X with pid %d was granted higher priority.\n", session, _mali_osk_get_pid()));
 	}
 
 	MALI_SUCCESS;
@@ -1295,7 +1295,7 @@ _mali_osk_errcode_t _mali_ukk_open(void **context)
 	/* Add session to the list of all sessions. */
 	mali_session_add(session);
 
-	MALI_DEBUG_PRINT(2, ("Session started\n"));
+	MALI_DEBUG_PRINT(3, ("Session started\n"));
 	MALI_SUCCESS;
 }
 
@@ -1377,7 +1377,7 @@ _mali_osk_errcode_t _mali_ukk_close(void **context)
 
 	*context = NULL;
 
-	MALI_DEBUG_PRINT(2, ("Session has ended\n"));
+	MALI_DEBUG_PRINT(3, ("Session has ended\n"));
 
 	MALI_SUCCESS;
 }

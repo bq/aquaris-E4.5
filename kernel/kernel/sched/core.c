@@ -105,6 +105,14 @@
 #include <trace/events/mtk_events.h>
 #endif
 
+
+#ifdef CONFIG_MT_ENG_BUILD
+  #define genmsg printk
+#else /* CONFIG_MT_ENG_BUILD */
+  #define genmsg(...)  ((void)0)
+#endif /* CONFIG_MT_ENG_BUILD */
+
+
 void start_bandwidth_timer(struct hrtimer *period_timer, ktime_t period)
 {
 	unsigned long delta;
@@ -3734,7 +3742,7 @@ need_resched:
 #ifdef CONFIG_MT_SCHED_MONITOR
         __raw_get_cpu_var(te_sched) = sched_clock();
         if((__raw_get_cpu_var(te_sched) - __raw_get_cpu_var(ts_sched)) > 10000000)
-            printk("Sched Warning: %llu ns > 10 ms(s:%llu e:%llu)\n", __raw_get_cpu_var(te_sched) - __raw_get_cpu_var(ts_sched), __raw_get_cpu_var(ts_sched), __raw_get_cpu_var(te_sched));
+            genmsg("Sched Warning: %llu ns > 10 ms(s:%llu e:%llu)\n", __raw_get_cpu_var(te_sched) - __raw_get_cpu_var(ts_sched), __raw_get_cpu_var(ts_sched), __raw_get_cpu_var(te_sched));
     __raw_get_cpu_var(MT_trace_in_sched) = 0;
 #endif
 	post_schedule(rq);
@@ -4647,7 +4655,7 @@ recheck:
 
     if(rt_policy(policy)){                                                                                
         if (!check_mt_allow_rt((struct sched_param *)param)){
-            printk("[RT_MONITOR]WARNNING [%d:%s] SET NOT ALLOW RT Prio [%d] for proc [%d:%s]\n", current->pid, current->comm, param->sched_priority, p->pid, p->comm);
+            genmsg("[RT_MONITOR]WARNNING [%d:%s] SET NOT ALLOW RT Prio [%d] for proc [%d:%s]\n", current->pid, current->comm, param->sched_priority, p->pid, p->comm);
 			//dump_stack();
         }
     }
@@ -5482,14 +5490,14 @@ void mt_mutex_state(struct task_struct *p)
     if(p->blocked_on){
         locker =  p->blocked_on->task_wait_on;
         if(find_task_by_vpid(locker->pid) !=  NULL){
-            printk("Hint: wait on mutex, holder is [%d:%s:%ld]\n", locker->pid, locker->comm, locker->state);
+            genmsg("Hint: wait on mutex, holder is [%d:%s:%ld]\n", locker->pid, locker->comm, locker->state);
             if(locker->state != TASK_RUNNING){
-                printk("Mutex holder process[%d:%s] is not running now:\n", locker->pid, locker->comm);
+                genmsg("Mutex holder process[%d:%s] is not running now:\n", locker->pid, locker->comm);
                 show_stack(locker, NULL);
-                printk("----\n");
+                genmsg("----\n");
             }
         }else{
-            printk("Hint: wait on mutex, but holder already released lock\n");
+            genmsg("Hint: wait on mutex, but holder already released lock\n");
         }
     }
 }
@@ -5500,23 +5508,23 @@ void sched_show_task(struct task_struct *p)
 	unsigned state;
 
 	state = p->state ? __ffs(p->state) + 1 : 0;
-	printk(KERN_INFO "%-15.15s %c", p->comm,
+	genmsg(KERN_INFO "%-15.15s %c", p->comm,
 		state < sizeof(stat_nam) - 1 ? stat_nam[state] : '?');
 #if BITS_PER_LONG == 32
 	if (state == TASK_RUNNING)
-		printk(KERN_CONT " running  ");
+		genmsg(KERN_CONT " running  ");
 	else
-		printk(KERN_CONT " %08lx ", thread_saved_pc(p));
+		genmsg(KERN_CONT " %08lx ", thread_saved_pc(p));
 #else
 	if (state == TASK_RUNNING)
-		printk(KERN_CONT "  running task    ");
+		genmsg(KERN_CONT "  running task    ");
 	else
-		printk(KERN_CONT " %016lx ", thread_saved_pc(p));
+		genmsg(KERN_CONT " %016lx ", thread_saved_pc(p));
 #endif
 #ifdef CONFIG_DEBUG_STACK_USAGE
 	free = stack_not_used(p);
 #endif
-	printk(KERN_CONT "%5lu %5d %6d 0x%08lx\n", free,
+	genmsg(KERN_CONT "%5lu %5d %6d 0x%08lx\n", free,
 		task_pid_nr(p), task_pid_nr(rcu_dereference(p->real_parent)),
 		(unsigned long)task_thread_info(p)->flags);
 
@@ -5532,10 +5540,10 @@ void show_state_filter(unsigned long state_filter)
 	struct task_struct *g, *p;
 
 #if BITS_PER_LONG == 32
-	printk(KERN_INFO
+	genmsg(KERN_INFO
 		"  task                PC stack   pid father\n");
 #else
-	printk(KERN_INFO
+	genmsg(KERN_INFO
 		"  task                        PC stack   pid father\n");
 #endif
 	rcu_read_lock();
@@ -6071,11 +6079,11 @@ static void cpu_domain_online_cpu(int cpu)
 	
 	if(cluster){
 		cpumask_set_cpu(cpu, &cluster->cpus);
-//		printk("cpu_domain_online_cpu(cpu%d), cpus = %lu, onlineCPU=%lu\n", 
+//		genmsg("cpu_domain_online_cpu(cpu%d), cpus = %lu, onlineCPU=%lu\n",
 //			cpu,cluster->cpus.bits[0], cpu_online_mask->bits[0]);
 	}
 	else {
-		printk("cpu_domain_online_cpu(cpu%d), cluster info is NULL, onlineCPU=%lu\n", 
+		genmsg("cpu_domain_online_cpu(cpu%d), cluster info is NULL, onlineCPU=%lu\n",
 			cpu, cpu_online_mask->bits[0]);
 	}	
 }
@@ -6086,11 +6094,11 @@ static void cpu_domain_offline_cpu(int cpu)
 
 	if(cluster) {
 		cpumask_clear_cpu(cpu, &cluster->cpus);
-//		printk("cpu_domain_offline_cpu(cpu%d), cpus = %lu, onlineCPU=%lu\n", 
+//		genmsg("cpu_domain_offline_cpu(cpu%d), cpus = %lu, onlineCPU=%lu\n",
 //			cpu,cluster->cpus.bits[0], cpu_online_mask->bits[0]);
 	}
 	else {
-		printk("cpu_domain_offline_cpu(cpu%d), cluster info is NULL, onlineCPU=%lu\n", 
+		genmsg("cpu_domain_offline_cpu(cpu%d), cluster info is NULL, onlineCPU=%lu\n",
 			cpu, cpu_online_mask->bits[0]);
 	}
 }
@@ -6118,7 +6126,7 @@ migration_call(struct notifier_block *nfb, unsigned long action, void *hcpu)
 		if (rq->rd) {
 			BUG_ON(!cpumask_test_cpu(cpu, rq->rd->span));
 #ifdef CONFIG_MTK_SCHED_CMP_TGS
-//			printk("migration_call(CPU_ONLINE), cpu%d\n", cpu);
+//			genmsg("migration_call(CPU_ONLINE), cpu%d\n", cpu);
 			cpu_domain_online_cpu(cpu);
 #endif
 			set_rq_online(rq);
@@ -6134,7 +6142,7 @@ migration_call(struct notifier_block *nfb, unsigned long action, void *hcpu)
 		if (rq->rd) {
 			BUG_ON(!cpumask_test_cpu(cpu, rq->rd->span));
 #ifdef CONFIG_MTK_SCHED_CMP_TGS
-//			printk("migration_call(CPU_DYING), cpu%d\n", cpu);			
+//			genmsg("migration_call(CPU_DYING), cpu%d\n", cpu);
 			cpu_domain_offline_cpu(cpu);
 #endif			
 			set_rq_offline(rq);
@@ -6234,17 +6242,17 @@ static int sched_domain_debug_one(struct sched_domain *sd, int cpu, int level,
 	cpulist_scnprintf(str, sizeof(str), sched_domain_span(sd));
 	cpumask_clear(groupmask);
 
-	printk(KERN_DEBUG "%*s domain %d: ", level, "", level);
+	genmsg(KERN_DEBUG "%*s domain %d: ", level, "", level);
 
 	if (!(sd->flags & SD_LOAD_BALANCE)) {
-		printk("does not load-balance\n");
+		genmsg("does not load-balance\n");
 		if (sd->parent)
 			printk(KERN_ERR "ERROR: !SD_LOAD_BALANCE domain"
 					" has parent");
 		return -1;
 	}
 
-	printk(KERN_CONT "span %s level %s\n", str, sd->name);
+	genmsg(KERN_CONT "span %s level %s\n", str, sd->name);
 
 	if (!cpumask_test_cpu(cpu, sched_domain_span(sd))) {
 		printk(KERN_ERR "ERROR: domain->span does not contain "
@@ -6286,9 +6294,9 @@ static int sched_domain_debug_one(struct sched_domain *sd, int cpu, int level,
 
 		cpulist_scnprintf(str, sizeof(str), sched_group_cpus(group));
 
-		printk(KERN_CONT " %s", str);
+		genmsg(KERN_CONT " %s", str);
 		if (group->sgp->power != SCHED_POWER_SCALE) {
-			printk(KERN_CONT " (cpu_power = %d)",
+			genmsg(KERN_CONT " (cpu_power = %d)",
 				group->sgp->power);
 		}
 
@@ -6314,11 +6322,11 @@ static void sched_domain_debug(struct sched_domain *sd, int cpu)
 		return;
 
 	if (!sd) {
-		printk(KERN_DEBUG "CPU%d attaching NULL sched-domain.\n", cpu);
+		genmsg(KERN_DEBUG "CPU%d attaching NULL sched-domain.\n", cpu);
 		return;
 	}
 
-	printk(KERN_DEBUG "CPU%d attaching sched-domain:\n", cpu);
+	genmsg(KERN_DEBUG "CPU%d attaching sched-domain:\n", cpu);
 
 	for (;;) {
 		if (sched_domain_debug_one(sd, cpu, level, sched_domains_tmpmask))
@@ -7185,7 +7193,7 @@ static int build_sched_domains(const struct cpumask *cpu_map,
 	struct s_data d;
 	int i, ret = -ENOMEM;
 
-	printk("[Sched] build_sched_domains\n");
+	genmsg("[Sched] build_sched_domains\n");
 	alloc_state = __visit_domain_allocation_hell(&d, cpu_map);
 	if (alloc_state != sa_rootdomain)
 		goto error;
@@ -7563,7 +7571,7 @@ static int cpuset_cpu_active(struct notifier_block *nfb, unsigned long action,
 
 	case CPU_ONLINE:
 	case CPU_DOWN_FAILED:
-		printk("[Sched] cpuset_cpu_active %lu\n", action);
+		genmsg("[Sched] cpuset_cpu_active %lu\n", action);
 		cpuset_update_active_cpus();
 		break;
 	default:

@@ -208,7 +208,7 @@ static ssize_t eemcs_sysfs_show_statistics(struct device *dev, struct device_att
 {
     int i = 0;
     char line[121]={0};
-    char c_time_string[30]={0};
+    char c_time_string[64]={0};
     int pos = 0;
     struct timeval	tv;
     struct rtc_time tm;

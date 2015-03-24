@@ -15,10 +15,18 @@
 #include <linux/security.h>
 #include <linux/sysctl.h>
 #include <linux/ptrace.h>
+#include <linux/fs.h>
 #include <linux/prctl.h>
 #include <linux/ratelimit.h>
 
-static int ptrace_scope = 1;
+#define YAMA_SCOPE_DISABLED	0
+#define YAMA_SCOPE_RELATIONAL	1
+#define YAMA_SCOPE_CAPABILITY	2
+#define YAMA_SCOPE_NO_ATTACH	3
+
+static int ptrace_scope = YAMA_SCOPE_RELATIONAL;
+static int protected_sticky_symlinks = 1;
+static int protected_nonaccess_hardlinks = 1;
 
 /* describe a ptrace relationship for potential exception */
 struct ptrace_relation {
@@ -95,7 +103,7 @@ static void yama_ptracer_del(struct task_struct *tracer,
  * yama_task_free - check for task_pid to remove from exception list
  * @task: task being removed
  */
-static void yama_task_free(struct task_struct *task)
+void yama_task_free(struct task_struct *task)
 {
 	yama_ptracer_del(task, task);
 }
@@ -111,7 +119,7 @@ static void yama_task_free(struct task_struct *task)
  * Return 0 on success, -ve on error.  -ENOSYS is returned when Yama
  * does not handle the given option.
  */
-static int yama_task_prctl(int option, unsigned long arg2, unsigned long arg3,
+int yama_task_prctl(int option, unsigned long arg2, unsigned long arg3,
 			   unsigned long arg4, unsigned long arg5)
 {
 	int rc;
@@ -238,7 +246,7 @@ static int ptracer_exception_found(struct task_struct *tracer,
  *
  * Returns 0 if following the ptrace is allowed, -ve on error.
  */
-static int yama_ptrace_access_check(struct task_struct *child,
+int yama_ptrace_access_check(struct task_struct *child,
 				    unsigned int mode)
 {
 	int rc;
@@ -251,17 +259,32 @@ static int yama_ptrace_access_check(struct task_struct *child,
 		return rc;
 
 	/* require ptrace target be a child of ptracer on attach */
-	if (mode == PTRACE_MODE_ATTACH &&
-	    ptrace_scope &&
-	    !task_is_descendant(current, child) &&
-	    !ptracer_exception_found(current, child) &&
-	    !capable(CAP_SYS_PTRACE))
-		rc = -EPERM;
+	if (mode == PTRACE_MODE_ATTACH) {
+		switch (ptrace_scope) {
+		case YAMA_SCOPE_DISABLED:
+			/* No additional restrictions. */
+			break;
+		case YAMA_SCOPE_RELATIONAL:
+			if (!task_is_descendant(current, child) &&
+			    !ptracer_exception_found(current, child) &&
+			    !capable(CAP_SYS_PTRACE))
+				rc = -EPERM;
+			break;
+		case YAMA_SCOPE_CAPABILITY:
+			if (!capable(CAP_SYS_PTRACE))
+				rc = -EPERM;
+			break;
+		case YAMA_SCOPE_NO_ATTACH:
+		default:
+			rc = -EPERM;
+			break;
+		}
+	}
 
 	if (rc) {
 		char name[sizeof(current->comm)];
-		printk_ratelimited(KERN_NOTICE "ptrace of non-child"
-			" pid %d was attempted by: %s (pid %d)\n",
+		printk_ratelimited(KERN_NOTICE
+			"ptrace of pid %d was attempted by: %s (pid %d)\n",
 			child->pid,
 			get_task_comm(name, current),
 			current->pid);
@@ -270,17 +293,195 @@ static int yama_ptrace_access_check(struct task_struct *child,
 	return rc;
 }
 
+/**
+ * yama_ptrace_traceme - validate PTRACE_TRACEME calls
+ * @parent: task that will become the ptracer of the current task
+ *
+ * Returns 0 if following the ptrace is allowed, -ve on error.
+ */
+int yama_ptrace_traceme(struct task_struct *parent)
+{
+	int rc;
+
+	/* If standard caps disallows it, so does Yama.  We should
+	 * only tighten restrictions further.
+	 */
+	rc = cap_ptrace_traceme(parent);
+	if (rc)
+		return rc;
+
+	/* Only disallow PTRACE_TRACEME on more aggressive settings. */
+	switch (ptrace_scope) {
+	case YAMA_SCOPE_CAPABILITY:
+		if (!ns_capable(task_user_ns(parent), CAP_SYS_PTRACE))
+			rc = -EPERM;
+		break;
+	case YAMA_SCOPE_NO_ATTACH:
+		rc = -EPERM;
+		break;
+	}
+
+	if (rc) {
+		char name[sizeof(current->comm)];
+		printk_ratelimited(KERN_NOTICE
+			"ptraceme of pid %d was attempted by: %s (pid %d)\n",
+			current->pid,
+			get_task_comm(name, parent),
+			parent->pid);
+	}
+
+	return rc;
+}
+
+/**
+ * yama_inode_follow_link - check for symlinks in sticky world-writeable dirs
+ * @dentry: The inode/dentry of the symlink
+ * @nameidata: The path data of the symlink
+ *
+ * In the case of the protected_sticky_symlinks sysctl being enabled,
+ * CAP_DAC_OVERRIDE needs to be specifically ignored if the symlink is
+ * in a sticky world-writable directory.  This is to protect privileged
+ * processes from failing races against path names that may change out
+ * from under them by way of other users creating malicious symlinks.
+ * It will permit symlinks to only be followed when outside a sticky
+ * world-writable directory, or when the uid of the symlink and follower
+ * match, or when the directory owner matches the symlink's owner.
+ *
+ * Returns 0 if following the symlink is allowed, -ve on error.
+ */
+int yama_inode_follow_link(struct dentry *dentry,
+			   struct nameidata *nameidata)
+{
+	int rc = 0;
+	const struct inode *parent;
+	const struct inode *inode;
+	const struct cred *cred;
+
+	if (!protected_sticky_symlinks)
+		return 0;
+
+	/* if inode isn't a symlink, don't try to evaluate blocking it */
+	inode = dentry->d_inode;
+	if (!S_ISLNK(inode->i_mode))
+		return 0;
+
+	/* owner and follower match? */
+	cred = current_cred();
+	if (cred->fsuid == inode->i_uid)
+		return 0;
+
+	/* check parent directory mode and owner */
+	spin_lock(&dentry->d_lock);
+	parent = dentry->d_parent->d_inode;
+	if ((parent->i_mode & (S_ISVTX|S_IWOTH)) == (S_ISVTX|S_IWOTH) &&
+	    parent->i_uid != inode->i_uid) {
+		rc = -EACCES;
+	}
+	spin_unlock(&dentry->d_lock);
+
+	if (rc) {
+		char name[sizeof(current->comm)];
+		printk_ratelimited(KERN_NOTICE "non-matching-uid symlink "
+			"following attempted in sticky world-writable "
+			"directory by %s (fsuid %d != %d)\n",
+			get_task_comm(name, current),
+			cred->fsuid, inode->i_uid);
+	}
+
+	return rc;
+}
+
+static int yama_generic_permission(struct inode *inode, int mask)
+{
+	int retval;
+
+	if (inode->i_op->permission)
+		retval = inode->i_op->permission(inode, mask);
+	else
+		retval = generic_permission(inode, mask);
+	return retval;
+}
+
+/**
+ * yama_path_link - verify that hardlinking is allowed
+ * @old_dentry: the source inode/dentry to hardlink from
+ * @new_dir: target directory
+ * @new_dentry: the target inode/dentry to hardlink to
+ *
+ * Block hardlink when all of:
+ *  - fsuid does not match inode
+ *  - not CAP_FOWNER
+ *  - and at least one of:
+ *    - inode is not a regular file
+ *    - inode is setuid
+ *    - inode is setgid and group-exec
+ *    - access failure for read and write
+ *
+ * Returns 0 if successful, -ve on error.
+ */
+int yama_path_link(struct dentry *old_dentry, struct path *new_dir,
+		   struct dentry *new_dentry)
+{
+	int rc = 0;
+	struct inode *inode = old_dentry->d_inode;
+	const int mode = inode->i_mode;
+	const struct cred *cred = current_cred();
+
+	if (!protected_nonaccess_hardlinks)
+		return 0;
+
+	if (cred->fsuid != inode->i_uid &&
+	    (!S_ISREG(mode) || (mode & S_ISUID) ||
+	     ((mode & (S_ISGID | S_IXGRP)) == (S_ISGID | S_IXGRP)) ||
+	     (yama_generic_permission(inode, MAY_READ | MAY_WRITE))) &&
+	    !capable(CAP_FOWNER)) {
+		char name[sizeof(current->comm)];
+		printk_ratelimited(KERN_NOTICE "non-accessible hardlink"
+			" creation was attempted by: %s (fsuid %d)\n",
+			get_task_comm(name, current),
+			cred->fsuid);
+		rc = -EPERM;
+	}
+
+	return rc;
+}
+
+#ifndef CONFIG_SECURITY_YAMA_STACKED
 static struct security_operations yama_ops = {
 	.name =			"yama",
 
 	.ptrace_access_check =	yama_ptrace_access_check,
+	.ptrace_traceme =	yama_ptrace_traceme,
 	.task_prctl =		yama_task_prctl,
 	.task_free =		yama_task_free,
+	.inode_follow_link =	yama_inode_follow_link,
+	.path_link =		yama_path_link,
 };
+#endif
 
 #ifdef CONFIG_SYSCTL
+static int yama_dointvec_minmax(struct ctl_table *table, int write,
+				void __user *buffer, size_t *lenp, loff_t *ppos)
+{
+	int rc;
+
+	if (write && !capable(CAP_SYS_PTRACE))
+		return -EPERM;
+
+	rc = proc_dointvec_minmax(table, write, buffer, lenp, ppos);
+	if (rc)
+		return rc;
+
+	/* Lock the max value if it ever gets set. */
+	if (write && *(int *)table->data == *(int *)table->extra2)
+		table->extra1 = table->extra2;
+
+	return rc;
+}
+
 static int zero;
 static int one = 1;
+static int max_scope = YAMA_SCOPE_NO_ATTACH;
 
 struct ctl_path yama_sysctl_path[] = {
 	{ .procname = "kernel", },
@@ -290,13 +491,31 @@ struct ctl_path yama_sysctl_path[] = {
 
 static struct ctl_table yama_sysctl_table[] = {
 	{
-		.procname       = "ptrace_scope",
-		.data           = &ptrace_scope,
+		.procname       = "protected_sticky_symlinks",
+		.data           = &protected_sticky_symlinks,
 		.maxlen         = sizeof(int),
 		.mode           = 0644,
 		.proc_handler   = proc_dointvec_minmax,
 		.extra1         = &zero,
 		.extra2         = &one,
+	},
+	{
+		.procname       = "protected_nonaccess_hardlinks",
+		.data           = &protected_nonaccess_hardlinks,
+		.maxlen         = sizeof(int),
+		.mode           = 0644,
+		.proc_handler   = proc_dointvec_minmax,
+		.extra1         = &zero,
+		.extra2         = &one,
+	},
+	{
+		.procname       = "ptrace_scope",
+		.data           = &ptrace_scope,
+		.maxlen         = sizeof(int),
+		.mode           = 0644,
+		.proc_handler   = yama_dointvec_minmax,
+		.extra1         = &zero,
+		.extra2         = &max_scope,
 	},
 	{ }
 };
@@ -304,13 +523,17 @@ static struct ctl_table yama_sysctl_table[] = {
 
 static __init int yama_init(void)
 {
+#ifndef CONFIG_SECURITY_YAMA_STACKED
 	if (!security_module_enable(&yama_ops))
 		return 0;
+#endif
 
 	printk(KERN_INFO "Yama: becoming mindful.\n");
 
+#ifndef CONFIG_SECURITY_YAMA_STACKED
 	if (register_security(&yama_ops))
 		panic("Yama: kernel registration failed.\n");
+#endif
 
 #ifdef CONFIG_SYSCTL
 	if (!register_sysctl_paths(yama_sysctl_path, yama_sysctl_table))

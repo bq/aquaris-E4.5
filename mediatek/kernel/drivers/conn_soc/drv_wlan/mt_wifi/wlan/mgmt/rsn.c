@@ -1386,7 +1386,7 @@ rsnGenerateWPAIE (
         (prAdapter->rWifiVar.rConnSettings.eAuthMode == AUTH_MODE_WPA_PSK)))) 
 #endif
     {
-        if (prP2pSpecificBssInfo->u2WpaIeLen != 0)
+        if (prP2pSpecificBssInfo && prP2pSpecificBssInfo->u2WpaIeLen != 0)
         {
             kalMemCopy(pucBuffer, prP2pSpecificBssInfo->aucWpaIeBuffer,
                 prP2pSpecificBssInfo->u2WpaIeLen);

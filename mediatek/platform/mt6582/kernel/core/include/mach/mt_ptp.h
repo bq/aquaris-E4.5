@@ -102,7 +102,7 @@
 #define ptp_warning(fmt, args...)   printk(KERN_WARNING "[PTP] " fmt, ##args)
 #define ptp_notice(fmt, args...)    printk(KERN_NOTICE "[PTP] " fmt, ##args)
 #define ptp_info(fmt, args...)      printk(KERN_INFO "[PTP] " fmt, ##args)
-#define ptp_debug(fmt, args...)     printk(KERN_DEBUG "[PTP] " fmt, ##args)
+#define ptp_debug(fmt, args...)     pr_debug("[PTP] " fmt, ##args)
 
 #if EN_ISR_LOG
 #define ptp_isr_info(fmt, args...)  ptp_notice( fmt, ##args)

@@ -251,7 +251,6 @@ from_old_alarm_set:
 		spin_lock_irqsave(&alarm_slock, flags);
 		pr_alarm(IO, "alarm wait\n");
 		if (!alarm_pending && wait_pending) {
-			wake_unlock(&alarm_wake_lock);
 			wait_pending = 0;
 		}
 		spin_unlock_irqrestore(&alarm_slock, flags);

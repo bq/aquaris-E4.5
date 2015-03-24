@@ -2347,8 +2347,8 @@ aisFsmSteps (
                 if(prAdapter->prGlueInfo->u2WSCIELen > 0) {
                     kalMemCopy(prScanReqMsg->aucIE, &prAdapter->prGlueInfo->aucWSCIE, prAdapter->prGlueInfo->u2WSCIELen);
                 }
-            }
 #endif
+            }
 
             prScanReqMsg->u2IELen = u2ScanIELen;
 
@@ -2356,7 +2356,7 @@ aisFsmSteps (
                     MBOX_ID_0,
                     (P_MSG_HDR_T) prScanReqMsg,
                     MSG_SEND_METHOD_BUF);
-			DBGLOG(AIS, WARN, ("SendSR%d\n", prScanReqMsg->ucSeqNum));
+			DBGLOG(AIS, LOUD, ("SendSR%d\n", prScanReqMsg->ucSeqNum));
             prAisFsmInfo->fgTryScan = FALSE; /* Will enable background sleep for infrastructure */
 
             break;
@@ -2514,7 +2514,7 @@ aisFsmRunEventScanDone (
     ASSERT(prAdapter);
     ASSERT(prMsgHdr);
 
-	DBGLOG(AIS, WARN, ("ScanDone\n"));
+	DBGLOG(AIS, LOUD, ("ScanDone\n"));
     DBGLOG(AIS, LOUD, ("EVENT-SCAN DONE: Current Time = %ld\n", kalGetTimeTick()));
 
     prAisFsmInfo = &(prAdapter->rWifiVar.rAisFsmInfo);

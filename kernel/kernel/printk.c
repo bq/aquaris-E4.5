@@ -116,6 +116,9 @@ int console_printk[4] = {
 };
 EXPORT_SYMBOL_GPL(console_printk);
 
+int printk_debug = 0;
+EXPORT_SYMBOL_GPL(printk_debug);
+
 /*
  * Low level drivers may need that to know if they can schedule in
  * their unblank() callback or not. So let's export it.
@@ -1069,70 +1072,75 @@ asmlinkage int vprintk(const char *fmt, va_list args)
 
 			if (printk_time) {
 				/* Add the current time stamp */
-				char tbuf[50], *tp, state;
+				char tbuf[50], *tp;
 				unsigned tlen;
 				unsigned long long t;
 				unsigned long nanosec_rem;
-#ifdef CONFIG_MT_SCHED_MONITOR
-                if(in_irq_disable)
-                    state = '-';
-                else
-                    state = ' ';
-#else
-                state = ' ';
-#endif
+
 				t = cpu_clock(printk_cpu);
 				nanosec_rem = do_div(t, 1000000000);
-#ifdef CONFIG_MT_PRINTK_UART_CONSOLE                                                    
-                if(printk_disable_uart == 0 && state == ' '){
-                    state = '.';
-                }
+
+				if (printk_debug) {
+					char state;
+#ifdef CONFIG_MT_SCHED_MONITOR
+					if (in_irq_disable)
+						state = '-';
+					else
+						state = ' ';
+#else
+					state = ' ';
 #endif
-                tlen = sprintf(tbuf, "[%5lu.%06lu]%c",
-                        (unsigned long) t,
-                        nanosec_rem / 1000, state);
+#ifdef CONFIG_MT_PRINTK_UART_CONSOLE
+					if (printk_disable_uart == 0 && state == ' ') {
+						state = '.';
+					}
+#endif
+					tlen = sprintf(tbuf, "[%5lu.%06lu]%c",
+						(unsigned long) t,
+						nanosec_rem / 1000, state);
+				} else {
+					tlen = sprintf(tbuf, "[%5lu.%06lu]",
+						(unsigned long) t,
+						nanosec_rem / 1000);
+				}
+
 				for (tp = tbuf; tp < tbuf + tlen; tp++)
 					emit_log_char(*tp);
 				printed_len += tlen;
 			}
-            switch (printk_prefix) {
-                case 1: {
-                            emit_log_char('(');
-                            /* We don't expect to support CPU# > 16 */
-                            if (this_cpu < 16) {
-                                char cbuf = hex_asc_lo(this_cpu);
-                                emit_log_char(cbuf);
-                            }
-                            else {
-                                emit_log_char('X');
-                            }
-                            emit_log_char(')');
 
-                            printed_len += 4;
-                            break;
-                        }
+			if (printk_debug) {
+				char tbuf[50], *tp;
+				unsigned tlen;
 
-                case 2: {
-                            char tbuf[50], *tp;
-                            unsigned tlen;
-                            if(console_suspended == 0){
-                            tlen = snprintf(tbuf, sizeof(tbuf), "(%x)[%d:%s]",
-                                    this_cpu, current->pid, current->comm);
-                            }else{
-                                tlen = snprintf(tbuf, sizeof(tbuf), "%x)",this_cpu);
-                            }
-                            for (tp = tbuf; tp < tbuf + tlen; tp++)
-                                emit_log_char(*tp);
-                            printed_len += tlen;
-                            break;
-
-                        }
-
-            }
-
-
-            if (!*p)
-                break;
+				switch (printk_prefix) {
+				case 1:
+					emit_log_char('(');
+					/* We don't expect to support CPU# > 16 */
+					if (this_cpu < 16) {
+						char cbuf = hex_asc_lo(this_cpu);
+						emit_log_char(cbuf);
+					} else {
+						emit_log_char('X');
+					}
+					emit_log_char(')');
+					printed_len += 4;
+					break;
+				case 2:
+					if (console_suspended == 0) {
+						tlen = snprintf(tbuf, sizeof(tbuf), "(%x)[%d:%s]",
+							this_cpu, current->pid, current->comm);
+					} else {
+						tlen = snprintf(tbuf, sizeof(tbuf), "%x)",this_cpu);
+					}
+					for (tp = tbuf; tp < tbuf + tlen; tp++)
+						emit_log_char(*tp);
+					printed_len += tlen;
+					break;
+				}
+			}
+			if (!*p)
+				break;
 		}
 
 		emit_log_char(*p);

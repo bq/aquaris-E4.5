@@ -47,7 +47,7 @@
 #include <mach/hal_pub_kpd.h>
 
 #define KPD_AUTOTEST	KPD_YES
-#define KPD_DEBUG	KPD_YES
+#define KPD_DEBUG	KPD_NO
 
 #if KPD_AUTOTEST
 #define PRESS_OK_KEY		_IO('k', 1)

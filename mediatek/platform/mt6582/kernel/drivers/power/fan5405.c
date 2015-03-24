@@ -541,13 +541,11 @@ void fan5405_set_v_safe(kal_uint32 val)
 void fan5405_dump_register(void)
 {
     int i=0;
-    printk("[fan5405] ");
     for (i=0;i<fan5405_REG_NUM;i++)
     {
         fan5405_read_byte(i, &fan5405_reg[i]);
-        printk("[0x%x]=0x%x ", i, fan5405_reg[i]);        
+        battery_xlog_printk(BAT_LOG_FULL, "[fan5405] [0x%x]=0x%x \n", i, fan5405_reg[i]);
     }
-    printk("\n");
 }
 
 #if 0

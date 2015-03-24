@@ -1070,12 +1070,14 @@ static long MTK_M4U_ioctl(struct file * a_pstFile,
         
         case MTK_M4U_T_REGISTER_BUFFER:
         {
-            mva_info_t *pMvaInfo = NULL;
+            mva_info_t *pMvaInfo = (mva_info_t*)kmalloc(sizeof(mva_info_t), GFP_KERNEL);
             M4U_ASSERT(a_Param);
             ret = copy_from_user(&m4u_module, (void*)a_Param , sizeof(M4U_MOUDLE_STRUCT));
             if(ret)
             {
             	M4UERR(" MTK_M4U_T_ALLOC_MVA, copy_from_user failed: %d\n", ret);
+                kfree(pMvaInfo);
+                pMvaInfo = NULL;
             	return -EFAULT;
             }  
             M4ULOG("-MTK_M4U_T_REGISTER_BUF, module_id=%d, BufAddr=0x%x, BufSize=%d \r\n",
@@ -3324,7 +3326,8 @@ static int m4u_sec_init()
 
 
     {
-        volatile int i, j;
+        volatile int i = 0;
+        volatile int j = 0;
         for(i=0; i<10000000; i++)
             j++;
 	}
@@ -4532,7 +4535,8 @@ out:
 int m4u_do_dma_cache_maint(M4U_MODULE_ID_ENUM eModuleID, const void *va, size_t size, int direction)
 {
     // By range operation
-    unsigned int start, end, page_num, i, page_start;
+    unsigned int start = 0;
+    unsigned int end, page_num, i, page_start;
     struct page* ppage;
     phys_addr_t phys_addr;
     unsigned int *pPhys = NULL;

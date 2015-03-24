@@ -99,7 +99,7 @@ void mtk_xhci_eint_iddig_init(void){
 
 void mtk_xhci_ck_timer_init(){
 	__u32 __iomem *addr;
-	u32 temp;
+	u32 temp = 0;
 	int num_u3_port;
 
     num_u3_port = SSUSB_U3_PORT_NUM(readl((void __iomem *)SSUSB_IP_CAP));
