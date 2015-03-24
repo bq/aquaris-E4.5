@@ -141,6 +141,7 @@ struct lsm330_gyro_data {
     int RVx;
     int RVy;
     int RVz;
+	int Scalar;
 }lsm330_gy_data;
 
 static DECLARE_WAIT_QUEUE_HEAD(open_wq);
@@ -490,7 +491,7 @@ static int L3GD20_SetPowerMode(struct i2c_client *client, bool enable)
 
 	sensor_power = enable;
 
-
+    msleep(200); // 确保状态改变后,gyro稳定 苏 勇 2014年07月21日 17:55:52
 	return L3GD20_SUCCESS;
 }
 
@@ -652,7 +653,11 @@ static int L3GD20_ReadGyroData(struct i2c_client *client, char *buf, int bufsize
 
 	}
 
-
+	GYRO_LOG("data= %d %d %d cali_sw= %d %d %d dyna_cali_sw= %d %d %d\n", 
+	data[0], data[1], data[2],
+	obj->cali_sw[0],obj->cali_sw[1],obj->cali_sw[2],
+	obj->dyna_cali_sw[0],obj->dyna_cali_sw[1],obj->dyna_cali_sw[2]);
+	
 	sprintf(buf, "%04x %04x %04x", data[L3GD20_AXIS_X],data[L3GD20_AXIS_Y],data[L3GD20_AXIS_Z]);
 
 #if DEBUG
@@ -671,7 +676,7 @@ static int L3GD20_ReadGyroData1(struct i2c_client *client, char *buf)    //, cha
 	char databuf[6];
 	int data[3];
         long long cur_t1,cur_t2;
-
+	s16 objdata[3];
 	struct l3gd20_i2c_data *obj = i2c_get_clientdata(client);
 
 	if((sensor_power == false)&&(atomic_read(&gyro_suspend) == 0 ))
@@ -689,9 +694,9 @@ static int L3GD20_ReadGyroData1(struct i2c_client *client, char *buf)    //, cha
 	}
 	else
 	{
-		obj->data[L3GD20_AXIS_X] = (s16)((databuf[L3GD20_AXIS_X*2+1] << 8) | (databuf[L3GD20_AXIS_X*2]));
-		obj->data[L3GD20_AXIS_Y] = (s16)((databuf[L3GD20_AXIS_Y*2+1] << 8) | (databuf[L3GD20_AXIS_Y*2]));
-		obj->data[L3GD20_AXIS_Z] = (s16)((databuf[L3GD20_AXIS_Z*2+1] << 8) | (databuf[L3GD20_AXIS_Z*2]));
+		objdata[L3GD20_AXIS_X] = (s16)((databuf[L3GD20_AXIS_X*2+1] << 8) | (databuf[L3GD20_AXIS_X*2]));
+		objdata[L3GD20_AXIS_Y] = (s16)((databuf[L3GD20_AXIS_Y*2+1] << 8) | (databuf[L3GD20_AXIS_Y*2]));
+		objdata[L3GD20_AXIS_Z] = (s16)((databuf[L3GD20_AXIS_Z*2+1] << 8) | (databuf[L3GD20_AXIS_Z*2]));
 	  //getTimestamp_l3gd20(&cur_t1,&cur_t2);
          //GYRO_ERR("---- L3GD20 DRIVER ST current end read data regccur_time %lld %lld\n", cur_t1,cur_t2);
 
@@ -701,19 +706,19 @@ static int L3GD20_ReadGyroData1(struct i2c_client *client, char *buf)    //, cha
 			GYRO_LOG("read gyro register: %x, %x, %x, %x, %x, %x",
 				databuf[0], databuf[1], databuf[2], databuf[3], databuf[4], databuf[5]);
 			GYRO_LOG("get gyro raw data (0x%08X, 0x%08X, 0x%08X) -> (%5d, %5d, %5d)\n",
-				obj->data[L3GD20_AXIS_X],obj->data[L3GD20_AXIS_Y],obj->data[L3GD20_AXIS_Z],
-				obj->data[L3GD20_AXIS_X],obj->data[L3GD20_AXIS_Y],obj->data[L3GD20_AXIS_Z]);
+				objdata[L3GD20_AXIS_X],objdata[L3GD20_AXIS_Y],objdata[L3GD20_AXIS_Z],
+				objdata[L3GD20_AXIS_X],objdata[L3GD20_AXIS_Y],objdata[L3GD20_AXIS_Z]);
 		}
 #endif
 
-		obj->data[L3GD20_AXIS_X] = obj->data[L3GD20_AXIS_X] + obj->cali_sw[L3GD20_AXIS_X];
-		obj->data[L3GD20_AXIS_Y] = obj->data[L3GD20_AXIS_Y] + obj->cali_sw[L3GD20_AXIS_Y];
-		obj->data[L3GD20_AXIS_Z] = obj->data[L3GD20_AXIS_Z] + obj->cali_sw[L3GD20_AXIS_Z];
+		objdata[L3GD20_AXIS_X] = objdata[L3GD20_AXIS_X] + obj->cali_sw[L3GD20_AXIS_X];
+		objdata[L3GD20_AXIS_Y] = objdata[L3GD20_AXIS_Y] + obj->cali_sw[L3GD20_AXIS_Y];
+		objdata[L3GD20_AXIS_Z] = objdata[L3GD20_AXIS_Z] + obj->cali_sw[L3GD20_AXIS_Z];
 	
 		/*remap coordinate*/
-		data[obj->cvt.map[L3GD20_AXIS_X]] = obj->cvt.sign[L3GD20_AXIS_X]*obj->data[L3GD20_AXIS_X];
-		data[obj->cvt.map[L3GD20_AXIS_Y]] = obj->cvt.sign[L3GD20_AXIS_Y]*obj->data[L3GD20_AXIS_Y];
-		data[obj->cvt.map[L3GD20_AXIS_Z]] = obj->cvt.sign[L3GD20_AXIS_Z]*obj->data[L3GD20_AXIS_Z];
+		data[obj->cvt.map[L3GD20_AXIS_X]] = obj->cvt.sign[L3GD20_AXIS_X]*objdata[L3GD20_AXIS_X];
+		data[obj->cvt.map[L3GD20_AXIS_Y]] = obj->cvt.sign[L3GD20_AXIS_Y]*objdata[L3GD20_AXIS_Y];
+		data[obj->cvt.map[L3GD20_AXIS_Z]] = obj->cvt.sign[L3GD20_AXIS_Z]*objdata[L3GD20_AXIS_Z];
         }
 
 #if DEBUG
@@ -722,7 +727,11 @@ static int L3GD20_ReadGyroData1(struct i2c_client *client, char *buf)    //, cha
 		GYRO_LOG("get gyro data packet:[%d %d %d]\n", data[0], data[1], data[2]);
 	}
 #endif
-
+	GYRO_LOG("1data= %d %d %d cali_sw= %d %d %d dyna_cali_sw= %d %d %d\n", 
+	data[0], data[1], data[2],
+	obj->cali_sw[0],obj->cali_sw[1],obj->cali_sw[2],
+	obj->dyna_cali_sw[0],obj->dyna_cali_sw[1],obj->dyna_cali_sw[2]);
+	
     return sprintf(buf, "%d %d %d\n", data[L3GD20_AXIS_X],data[L3GD20_AXIS_Y],data[L3GD20_AXIS_Z]);
 }
 
@@ -792,7 +801,9 @@ static int L3GD20_SelfTest(struct i2c_client *client)
 	// 2 check ZYXDA bit
 	hwmsen_read_byte(client,L3GD20_STATUS_REG,&data);
 	GYRO_LOG("L3GD20_STATUS_REG=%d\n",data );
-	while(0x04 != (data&0x04))
+// 这里就不检查状态寄存器了,检查其实作用不大,更重要的是下面的循环中data一旦赋值就不会变化,
+// 那么实际上就可能是永远不会退出了 苏 勇 2014年07月22日 18:15:02
+// 苏 勇 2014年07月22日 18:14:12	while(0x04 != (data&0x04))
 	{
 	  msleep(10);
 	}
@@ -1236,7 +1247,7 @@ static int lsm330gy_ReadRotationVectorData(char *buf, int bufsize)
 
 	read_lock(&lsm330_gy_data.datalock);
 	sprintf(buf, "%d %d %d %d", lsm330_gy_data.RVx, lsm330_gy_data.RVy,
-		lsm330_gy_data.RVz);
+		lsm330_gy_data.RVz,lsm330_gy_data.Scalar);
 	read_unlock(&lsm330_gy_data.datalock);
 	return 0;
 }
@@ -1615,6 +1626,7 @@ int lsm330gy_rotation_vector_operate(void* self, uint32_t command, void* buff_in
 				rvsensor_data->values[0] = lsm330_gy_data.RVx;
 				rvsensor_data->values[1] = lsm330_gy_data.RVy;
 				rvsensor_data->values[2] = lsm330_gy_data.RVz;
+				rvsensor_data->values[3] = lsm330_gy_data.Scalar;
 				rvsensor_data->status = SENSOR_STATUS_ACCURACY_HIGH;
 				read_unlock(&lsm330_gy_data.datalock);
 
@@ -2051,6 +2063,7 @@ static long l3gd20_ioctl(struct file *file, unsigned int cmd,
             lsm330_gy_data.RVx = valuebuf[0];
             lsm330_gy_data.RVy = valuebuf[1];
             lsm330_gy_data.RVz = valuebuf[2];
+			lsm330_gy_data.Scalar = valuebuf[3];
 			write_unlock(&lsm330_gy_data.datalock);
 
 			//GYRO_LOG("SET_ROTATION_VECTOR rvsensor data: %d, %d, %d!\n", lsm303mmid_data.RVx,lsm303mmid_data.RVy,lsm303mmid_data.RVz);
@@ -2525,6 +2538,8 @@ static int l3gd20_probe(struct platform_device *pdev)
 
 	L3GD20_power(hw, 1);
 //	l3gd20_force[0] = hw->i2c_num;
+	rwlock_init(&lsm330_gy_data.datalock);
+
 	if(i2c_add_driver(&l3gd20_i2c_driver))
 	{
 		GYRO_ERR("add driver error\n");

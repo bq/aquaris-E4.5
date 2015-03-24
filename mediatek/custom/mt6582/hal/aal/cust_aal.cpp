@@ -25,6 +25,6 @@ struct CUST_AAL_LCM_DATA aLCMCalData[] =
 struct CUST_AAL_PARAM aAALParam[] =
 {
     // LCM 0    
-    {  5, 2, 5, 5, 0, 5 },
+    {  5, 6, 8, 9, 0, 5 },
 };
 

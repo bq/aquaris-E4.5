@@ -116,6 +116,8 @@ typedef int                 MBOOL;
 #define GPIO_RANGE          (0x1000)
 #define EFUSE_BASE_ADDR      0x10206000
 #define EFUSE_RANGE          (0x1000)   //0x400,the same with the value in seninf_drv.cpp and page-aligned
+//security concern
+#define ISP_RANGE         (0x10000)
 ///////////////////////////////////////////////////////////////////
 
 
@@ -1832,8 +1834,15 @@ static MINT32 ISP_ReadReg(ISP_REG_IO_STRUCT *pRegIo)
             goto EXIT;
         }
         pData++;
-        
+        if((ISP_ADDR_CAMINF + reg.Addr >= ISP_ADDR) && (ISP_ADDR_CAMINF + reg.Addr < (ISP_ADDR_CAMINF+ISP_RANGE)))
+        {
         reg.Val = ISP_RD32((void *)(ISP_ADDR_CAMINF + reg.Addr));
+        }
+        else
+        {
+            LOG_ERR("Wrong address(0x%x)",(unsigned int)(ISP_ADDR_CAMINF + reg.Addr));
+            reg.Val = 0;
+        }
         if(0 != put_user(reg.Val, pData))
         {
             LOG_ERR("put_user failed");
@@ -1867,7 +1876,14 @@ static MINT32 ISP_WriteRegToHw(ISP_REG_STRUCT *pReg,MUINT32 Count)
         {
             LOG_DBG("Addr(0x%08X), Val(0x%08X)", (MUINT32)(ISP_ADDR_CAMINF + pReg[i].Addr), (MUINT32)(pReg[i].Val));
         }
+        if(((ISP_ADDR_CAMINF + pReg[i].Addr) >= ISP_ADDR) && ((ISP_ADDR_CAMINF + pReg[i].Addr) < (ISP_ADDR_CAMINF+ISP_RANGE)))
+        {
         ISP_WR32((void *)(ISP_ADDR_CAMINF + pReg[i].Addr), pReg[i].Val);
+        }
+        else
+        {
+            LOG_ERR("wrong address(0x%x)",(unsigned int)(ISP_ADDR_CAMINF + pReg[i].Addr));
+        }
     }
     spin_unlock(&(g_IspInfo.SpinLockIsp));
     

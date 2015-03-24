@@ -11,7 +11,7 @@ AUTO_ADD_GLOBAL_DEFINE_BY_VALUE=MTK_PLATFORM CUSTOM_KERNEL_LENS CUSTOM_KERNEL_MA
 
 # support build CTS or not
 BUILD_CTS=yes
-BUILD_GMS=no
+BUILD_GMS=yes
 
 # Decide whether to build kernel or not.
 BUILD_KERNEL=yes
@@ -291,7 +291,7 @@ MTK_3GDONGLE_SUPPORT=no
 
 # yes: enable this feature
 # no: disable this feature
-MTK_AAL_SUPPORT=no
+MTK_AAL_SUPPORT=yes
 
 # For ACMT DEUG use
 MTK_ACMT_DEBUG=no
@@ -1216,7 +1216,7 @@ MTK_SHARED_SDCARD=yes
 MTK_SHOW_MSENSOR_TOAST_SUPPORT=no
 
 # A mechanism for customer to enable their own sign key.
-MTK_SIGNATURE_CUSTOMIZATION=no
+MTK_SIGNATURE_CUSTOMIZATION=yes
 MTK_SIGNMODEM_SUPPORT=yes
 
 # MTK_SIM1_SOCKET_TYPE=1: support type 1 socket type
@@ -1616,7 +1616,7 @@ MTK_WLAN_SUPPORT=yes
 # ckt zhangyan 20140326 add begin
 BQ_PRODUCT_MODEL = Aquaris E4.5
 BQ_PRODUCT_BRAND = bq
-BQ_PRODUCT_NAME = Aquaris_E4.5
+BQ_PRODUCT_NAME = Aquaris_E45
 BQ_TARGET_DEVICE = Aquaris_E45
 # ckt zhangyan 20140326 add end
 

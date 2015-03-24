@@ -429,6 +429,7 @@ struct input_keymap_entry {
 #define KEY_WIMAX 246
 #define KEY_RFKILL 247
 #define KEY_MICMUTE 248
+#define KEY_APP_SWITCH 252
 #define BTN_MISC 0x100
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #define BTN_0 0x100

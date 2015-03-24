@@ -10,7 +10,7 @@ AUTO_ADD_GLOBAL_DEFINE_BY_VALUE=MTK_PLATFORM CUSTOM_KERNEL_LENS CUSTOM_KERNEL_MA
 
 # support build CTS or not
 BUILD_CTS=yes
-BUILD_GMS=no
+BUILD_GMS=yes
 
 # Decide whether to build kernel or not.
 BUILD_KERNEL=yes
@@ -1613,8 +1613,8 @@ MTK_WLAN_SUPPORT=yes
 # ckt zhangyan 20140326 add begin
 BQ_PRODUCT_MODEL = Aquaris E 5.0 HD
 BQ_PRODUCT_BRAND = bq
-BQ_PRODUCT_NAME = Aquaris_E_5.0_HD
-BQ_TARGET_DEVICE = Aquaris_E_5.0_HD
+BQ_PRODUCT_NAME = Aquaris_E_5_HD
+BQ_TARGET_DEVICE = Aquaris_E_5_HD
 # ckt zhangyan 20140326 add end
 
 

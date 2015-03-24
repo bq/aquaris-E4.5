@@ -11,7 +11,7 @@ AUTO_ADD_GLOBAL_DEFINE_BY_VALUE=MTK_PLATFORM CUSTOM_KERNEL_LENS CUSTOM_KERNEL_MA
 
 # support build CTS or not
 BUILD_CTS=yes
-BUILD_GMS=no
+BUILD_GMS=yes
 
 # Decide whether to build kernel or not.
 BUILD_KERNEL=yes
@@ -656,7 +656,7 @@ MTK_DVFS_DISABLE_LOW_VOLTAGE_SUPPORT=yes
 MTK_DX_HDCP_SUPPORT=no
 
 # if this feature option is enabled, then Android OS support eap-sim and eap-aka authentication when using Wi-Fi.
-MTK_EAP_SIM_AKA=no
+MTK_EAP_SIM_AKA=yes
 
 # yes: enable
 # no:  disable
@@ -1217,7 +1217,7 @@ MTK_SHARED_SDCARD=yes
 MTK_SHOW_MSENSOR_TOAST_SUPPORT=no
 
 # A mechanism for customer to enable their own sign key.
-MTK_SIGNATURE_CUSTOMIZATION=no
+MTK_SIGNATURE_CUSTOMIZATION=yes
 MTK_SIGNMODEM_SUPPORT=yes
 
 # MTK_SIM1_SOCKET_TYPE=1: support type 1 socket type
