@@ -392,7 +392,7 @@ int OVLLayerConfig(unsigned int layer,
     }
 #else
     if (src_pitch && ( (src_pitch&0x7f) != 0 || (start&0x70) >= 0x50 || (end&0x70) < 0x30 )) {
-        printk("[DDP] warning: hw request(pitch:0x%x,star:0x%x,end:0x%x)\n", src_pitch, start, end);
+        pr_debug("[DDP] warning: hw request(pitch:0x%x,star:0x%x,end:0x%x)\n", src_pitch, start, end);
     }
 #endif
     switch(layer) {
