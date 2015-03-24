@@ -1,1 +1,0 @@
-../../../../../mediatek/platform/mt6583/kernel/core/include/mach/mt_sync_write.h

@@ -1,1 +1,0 @@
-../../../../../../mediatek/platform/mt6577/kernel/core/include/mach/sync_write.h
