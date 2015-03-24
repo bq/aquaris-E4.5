@@ -1979,9 +1979,7 @@ static int ft5x0x_read_Touchdata(void)
           if (tpd_touchinfo(&cinfo, &pinfo))
           {
 		    //TPD_DEBUG("point_num = %d\n",point_num);
-            if(cinfo.y[i] < 1000)
-            {
-              TPD_DEBUG_SET_TIME;
+			TPD_DEBUG_SET_TIME;
 
 
             if(point_num >0) 
@@ -2015,8 +2013,7 @@ static int ft5x0x_read_Touchdata(void)
                 input_sync(tpd->dev);
             }
         }
-		}
-      mt_eint_unmask(CUST_EINT_TOUCH_PANEL_NUM);
+        	  mt_eint_unmask(CUST_EINT_TOUCH_PANEL_NUM); 
 
  }while(!kthread_should_stop());
  			  mt_eint_unmask(CUST_EINT_TOUCH_PANEL_NUM); 
