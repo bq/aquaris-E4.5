@@ -14,7 +14,7 @@
 #define RDS_RX_GROUP_SIZE (2*RDS_RX_BLOCK_PER_GROUP)
 #define MAX_RDS_RX_GROUP_CNT (12)
 #define RDS_RT_MULTI_REV_TH 80//100
-//#define RDS_CBC_DEPENDENCY
+#define RDS_CBC_DEPENDENCY
 
 typedef struct rds_packet_t {
     fm_u16 blkA;

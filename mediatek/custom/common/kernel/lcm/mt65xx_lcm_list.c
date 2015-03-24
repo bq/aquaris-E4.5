@@ -140,6 +140,7 @@ extern LCM_DRIVER rm68210_hd720_dsi_ufoe_cmd_lcm_drv;
 extern LCM_DRIVER r63311_fhd_dsi_vedio_lcm_drv;
 extern LCM_DRIVER hx8394_hd720_dsi_vdo_truly_lcm_drv;
 extern LCM_DRIVER hx8389_qhd_dsi_vdo_truly_lcm_drv;
+extern LCM_DRIVER otm1285a_hd720_dsi_vdo_tianma_lcm_drv;
 LCM_DRIVER* lcm_driver_list[] = 
 { 
 #if defined(R63311_FHD_DSI_VDO)
@@ -610,6 +611,10 @@ LCM_DRIVER* lcm_driver_list[] =
 
 #if defined(HX8389_QHD_DSI_VDO_TRULY)
   &hx8389_qhd_dsi_vdo_truly_lcm_drv,
+#endif
+
+#if defined(OTM1285A_HD720_DSI_VDO_TIANMA)
+  &otm1285a_hd720_dsi_vdo_tianma_lcm_drv,
 #endif
 
 };

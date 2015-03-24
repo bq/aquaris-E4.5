@@ -33,6 +33,10 @@ extern int  mt_mt65xx_blink_set(struct led_classdev *led_cdev,
 			     unsigned long *delay_on,
 			     unsigned long *delay_off);
 
+#ifdef RESPIRATION_LAMP
+extern int mt_led_blink_pmic_cust(struct nled_setting* led);
+#endif
+
 struct cust_mt65xx_led* mt_get_cust_led_list(void);
 
 

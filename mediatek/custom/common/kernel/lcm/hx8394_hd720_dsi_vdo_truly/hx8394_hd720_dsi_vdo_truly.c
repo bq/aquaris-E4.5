@@ -26,6 +26,8 @@
     #define FALSE 0
 #endif
 
+#define HX8394_LCM_ID				(0x94)
+
 #ifndef BUILD_LK
 static unsigned int lcm_esd_test = FALSE;      ///only for ESD test
 #endif
@@ -61,7 +63,7 @@ static bool lcm_is_init = false;
 
 #ifdef BUILD_LK
 #include  <platform/mt_pmic.h>
-void dct_pmic_VGP2_enable(bool dctEnable)
+static void dct_pmic_VGP2_enable(bool dctEnable)
 {
 	pmic_config_interface(DIGLDO_CON29, 0x5, PMIC_RG_VGP2_VOSEL_MASK, PMIC_RG_VGP2_VOSEL_SHIFT); // 2.8v ËÕ ÓÂ 2013Äê10ÔÂ31ÈÕ 17:55:43
 	pmic_config_interface( (U32)(DIGLDO_CON8),
@@ -76,7 +78,7 @@ void dct_pmic_VGP2_enable(bool dctEnable);
 
 extern void DSI_clk_ULP_mode(bool enter);
 extern void DSI_lane0_ULP_mode(bool enter);
-void DSI_Enter_ULPM(bool enter)
+static void DSI_Enter_ULPM(bool enter)
 {
 	DSI_clk_ULP_mode(enter);  //enter ULPM
 	DSI_lane0_ULP_mode(enter);
@@ -324,14 +326,11 @@ static unsigned int lcm_compare_id(void)
 	return (ret == 0)?1:0; 
 #else
 	unsigned int id=0;
-	unsigned char buffer[2];
+	unsigned char buffer[2] = {0,0};
 	unsigned int array[16];  
 
-    //SET_RESET_PIN(1);
-    //SET_RESET_PIN(0);
-    //MDELAY(1);
-    //SET_RESET_PIN(1);
-    //MDELAY(10);//Must over 6 ms
+	dct_pmic_VGP2_enable(1);
+
 	mt_set_gpio_mode(GPIO112,GPIO_MODE_00);
 	mt_set_gpio_dir(GPIO112,GPIO_DIR_OUT);
 	mt_set_gpio_out(GPIO112,GPIO_OUT_ONE);
@@ -345,24 +344,29 @@ static unsigned int lcm_compare_id(void)
 	mt_set_gpio_out(GPIO112,GPIO_OUT_ONE);
 	MDELAY(105); 
 
-	array[0]=0x00043902;
-	array[1]=0x8983FFB9;// page enable
+	array[0] = 0x00043902;
+	array[1] = 0x9483FFB9;// page enable
 	dsi_set_cmdq(&array, 2, 1);
 	MDELAY(10);
 
-	array[0] = 0x00023700;// return byte number
+	array[0] = 0x00023902;
+	array[1] = 0x000013BA;       	  
+	dsi_set_cmdq(array, 2, 1);
+	MDELAY(10);
+
+	array[0] = 0x00013700;// return byte number
 	dsi_set_cmdq(&array, 1, 1);
 	MDELAY(10);
 
-	read_reg_v2(0xF4, buffer, 2);
+	read_reg_v2(0xF4, buffer, 1);
 	id = buffer[0]; 
 
 	#ifdef BUILD_LK
-	  printf("[LK]---cmd---hx8394_hd720_dsi_vdo_truly----%s------[%x,%x]\n",__func__,buffer[0],buffer[1]);
+	//printf("[LK]---cmd---hx8394_hd720_dsi_vdo_truly----%s------[%x]\n",__func__,buffer[0]);
     #else
-	  printk("[KERNEL]---cmd---hx8394_hd720_dsi_vdo_truly----%s------[%x,%x]\n",__func__,buffer[0],buffer[1]);
+	//printk("[KERNEL]---cmd---hx8394_hd720_dsi_vdo_truly----%s------[%x]\n",__func__,buffer[0]);
     #endif	
-	return 1;
+	return (id == HX8394_LCM_ID)?1:0;
 #endif
 }
 

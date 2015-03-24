@@ -1545,7 +1545,11 @@ static void ac_update(struct ac_data *ac_data)
     if( BMT_status.charger_exist == KAL_TRUE )
     {         
         if ( (BMT_status.charger_type == NONSTANDARD_CHARGER) || 
-             (BMT_status.charger_type == STANDARD_CHARGER)        )
+             (BMT_status.charger_type == STANDARD_CHARGER)        
+             ||(BMT_status.charger_type == APPLE_2_1A_CHARGER)
+             ||(BMT_status.charger_type == APPLE_1_0A_CHARGER)
+             ||(BMT_status.charger_type == APPLE_0_5A_CHARGER)
+             )
         {
             ac_data->AC_ONLINE = 1;        
             ac_psy->type = POWER_SUPPLY_TYPE_MAINS;

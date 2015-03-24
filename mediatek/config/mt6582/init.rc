@@ -448,6 +448,8 @@ on post-fs-data
     chown root diag /sys/module/tpd_debug/parameters/tpd_em_log_to_fs
 
     chmod 0666 /dev/pmem_multimedia    
+    
+    chmod 0666 /sys/devices/platform/mtk-tpd/control_double_tap
 
     # watch dog kicker
     write /proc/wdk "0 20 30"

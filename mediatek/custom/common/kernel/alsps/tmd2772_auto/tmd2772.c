@@ -1955,6 +1955,9 @@ static long TMD2772_unlocked_ioctl(struct file *file, unsigned int cmd,
 					goto err_out;
 			   offset_data = dat;
 			   printk("ALSPS_SET_PS_CALI data:%d\n",offset_data);
+			   // xiangfei.peng add 20140513 for update ps's threshold also,when entry alsps item without entry ps cali fisrt.
+			   tmd2772_ps_calibrate_call(obj->client);
+			   // xiangfei.peng add 20140513 for update ps's threshold also,when entry alsps item without entry ps cali fisrt.
 			   TMD2772_init_client(client);
 			   enable_flag = 0;
 			   if((err = store_status(&enable_flag)))

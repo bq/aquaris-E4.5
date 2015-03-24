@@ -54,7 +54,7 @@ CUSTOM_HAL_EEPROM=dummy_eeprom
 CUSTOM_HAL_FLASHLIGHT=dummy_flashlight
 
 # User space image sensor driver. Define  project used all image sensors. The value is combination of CUSTOM_HAL_MAIN_IMGSENSOR, CUSTOM_HAL_MAIN_BACKUP_IMGSENSOR, CUSTOM_HAL_SUB_IMGSENSOR, and CUSTOM_HAL_SUB_BACKUP_IMGSENSOR
-CUSTOM_HAL_IMGSENSOR=t4k04_mipi_raw ov12830_mipi_raw ov5648_mipi_raw
+CUSTOM_HAL_IMGSENSOR=t4k04_mipi_raw ov12830_mipi_raw ov5648_mipi_raw ov13850_mipi_raw
 
 # = CUSTOM_HAL_MAIN_LENS +CUSTOM_HAL_MAIN_BACKUP_LENS + CUSTOM_HAL_SUB_LENS + CUSTOM_HAL_SUB_BACKUP_LENS
 CUSTOM_HAL_LENS=fm50af bu6424af dummy_lens
@@ -124,7 +124,7 @@ CUSTOM_KERNEL_GYROSCOPE=l3gd20
 CUSTOM_KERNEL_HEADSET=accdet
 
 # Kernel space image sensor driver. Define  project used all image sensors .The value is combination of CUSTOM_KERNEL_MAIN_IMGSENSOR, CUSTOM_KERNEL_MAIN_BACKUP_IMGSENSOR, CUSTOM_KERNEL_SUB_IMGSENSOR, and CUSTOM_KERNEL_SUB_BACKUP_IMGSENSOR
-CUSTOM_KERNEL_IMGSENSOR=t4k04_mipi_raw ov12830_mipi_raw ov5648_mipi_raw
+CUSTOM_KERNEL_IMGSENSOR=t4k04_mipi_raw ov12830_mipi_raw ov5648_mipi_raw ov13850_mipi_raw
 
 # key pad driver to report key event
 CUSTOM_KERNEL_KPD=kpd
@@ -177,7 +177,8 @@ CUSTOM_KERNEL_USB=mt6577
 CUSTOM_KERNEL_VIBRATOR=vibrator
 
 # To choose LK LCM driver name
-CUSTOM_LK_LCM=hx8394_hd720_dsi_vdo_truly
+CUSTOM_LK_LCM=hx8394_hd720_dsi_vdo_truly otm1285a_hd720_dsi_vdo_tianma
+
 # add for factory mmi test
 CUSTOM_MMI_TEST = yes
 
@@ -1154,7 +1155,7 @@ MTK_RTSP_BITRATE_ADAPTATION_SUPPORT=no
 
 # Support stereo 3D display or not
 MTK_S3D_SUPPORT=no
-MTK_SAFEMEDIA_SUPPORT=no
+MTK_SAFEMEDIA_SUPPORT=yes
 
 # Entry switch of FOTA and SCOMO
 MTK_SCOMO_ENTRY=no
@@ -1580,10 +1581,10 @@ MTK_HDMI_SUPPORT=no
 BOOT_LOGO=cu_hd720
 
 # To choose kernel LCM driver name
-CUSTOM_KERNEL_LCM=hx8394_hd720_dsi_vdo_truly
+CUSTOM_KERNEL_LCM=hx8394_hd720_dsi_vdo_truly otm1285a_hd720_dsi_vdo_tianma
 
 # To choose uboot LCM driver name
-CUSTOM_UBOOT_LCM=hx8394_hd720_dsi_vdo_truly
+CUSTOM_UBOOT_LCM=hx8394_hd720_dsi_vdo_truly otm1285a_hd720_dsi_vdo_tianma
 
 # To set LCM resolution height size
 LCM_HEIGHT=1280

@@ -9,7 +9,7 @@ CKT_AUTO_ADD_GLOBAL_DEFINE_BY_VALUE = PROJ_NAME
 PROJ_NAME = VEGETAHD
 CUST_NAME = BQ
 SOFTCODE = S0B
-BASEVERNO = 209
+BASEVERNO = 211
 #############################
 #会用他设置ro.product.model
 CKT_PRODUCT_MODEL=CKT_$(strip $(PROJ_NAME) )
@@ -19,7 +19,12 @@ TIMEZONE=Europe/Amsterdam
 
 ############usb相关#################
 USB_MANUFACTURER_STRING=$(strip $(CUST_NAME) )
-USB_PRODUCT_STRING=Aquaris_E5_HD
+
+#[CTS TEST] com.android.cts.usb.TestUsbTest#testUsbSerial FAIL 
+#junit.framework.ComparisonFailure: adb serial != ro.serialno
+#Modity by EminHuang 20140523
+#USB_PRODUCT_STRING=Aquaris_E5_HD
+USB_PRODUCT_STRING=0123456789ABCDEF
 USB_STRING_SERIAL_IDX=$(strip $(USB_PRODUCT_STRING) )
 ############exif相关#################
 CUSTOM_EXIF_STRING_MAKE=$(strip $(CUST_NAME) )
@@ -41,8 +46,8 @@ TESTC = testc_none
 #############################
 
 #如果要固定版本号,请在这设置,否则注释调它,而不是留空!!!
-CKT_BUILD_VERNO = VEGETA01A-S11A_BQ_L41ES_209_140513
-CKT_BUILD_INTERNAL_VERNO =VEGETA01A-S11A_BQ_L41ES_209_140513174600
+CKT_BUILD_VERNO = VEGETA01A-S11A_BQ_L41ES_211_140606
+CKT_BUILD_INTERNAL_VERNO =VEGETA01A-S11A_BQ_L41ES_211_140606174900
 
 #############################
 #摄像头软件插值

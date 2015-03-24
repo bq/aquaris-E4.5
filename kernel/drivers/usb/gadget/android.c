@@ -103,7 +103,6 @@ extern u32 get_devinfo_with_index(u32 index);
 #endif//CKT_MAKE_ADB_DEVICES_NAME_TO_RANDOM
 
 
-
 struct android_usb_function {
 	char *name;
 	void *config;
@@ -166,6 +165,8 @@ static void android_unbind_config(struct usb_configuration *c);
 static char manufacturer_string[256];
 static char product_string[256];
 static char serial_string[256];
+
+static char sn_buf[256];
 
 /* String Table */
 static struct usb_string strings_dev[] = {
@@ -2042,7 +2043,7 @@ static int android_bind(struct usb_composite_dev *cdev)
 	struct android_dev *dev = _android_dev;
 	struct usb_gadget	*gadget = cdev->gadget;
 	int			gcnum, id, ret;
-
+	
 	/*
 	 * Start disconnected. Userspace will connect the gadget once
 	 * it is done configuring the functions.
@@ -2078,6 +2079,7 @@ static int android_bind(struct usb_composite_dev *cdev)
 		return id;
 	strings_dev[STRING_SERIAL_IDX].id = id;
 	device_desc.iSerialNumber = id;
+	strings_dev[STRING_SERIAL_IDX].s = sn_buf;	//Add by EminHuang 20140527
 
 	gcnum = usb_gadget_controller_number(gadget);
 	if (gcnum >= 0)
@@ -2207,7 +2209,6 @@ static int android_create_device(struct android_dev *dev)
 	return 0;
 }
 
-
 static int __init init(void)
 {
 	struct android_dev *dev;
@@ -2241,7 +2242,6 @@ static int __init init(void)
 	composite_driver.disconnect = android_disconnect;
 
 	pr_info("android usb init %s\r\n", android_usb_driver.name);
-
 
 	#ifdef CKT_MAKE_ADB_DEVICES_NAME_TO_RANDOM
 	// CKT Helin 2013-11-29 18:29:09 modify start	
@@ -2307,6 +2307,46 @@ static int __init init(void)
 	return usb_composite_probe(&android_usb_driver, android_bind);
 }
 late_initcall(init);
+
+//Add by EminHuang 20140527  set c_sn serial to adb device's name --- [CTS TEST] com.android.cts.usb.TestUsbTest#testUsbSerial FAIL
+static int sn_proc_read(char *buf, char **start, off_t offset, int count, int *eof, void *data)
+{
+	return snprintf(buf, count, "sn: %s\n", sn_buf);
+}
+
+static int sn_proc_write(struct file *file, const char *buf, unsigned long count, void *data)
+{
+	int ret;
+	int timeout;
+	int mode;
+	int kinterval;
+
+	if (count == 0)
+		return -1;
+	if(count > sizeof(sn_buf) - 1)
+		count = sizeof(sn_buf) - 1;
+
+	ret = copy_from_user(sn_buf, buf, count);
+	if (ret < 0)
+		return -1;
+	sn_buf[count] = '\0';
+
+	return count;
+}
+
+static int __init sn_proc_init(void)
+{
+	strncpy(sn_buf, USB_STRING_SERIAL_IDX, sizeof(sn_buf) - 1);
+
+	struct proc_dir_entry *de  = create_proc_entry("c_sn", 0666, NULL);
+	if (de) {
+		de->read_proc = sn_proc_read;
+		de->write_proc = sn_proc_write;
+	}
+	return 0 ;
+}
+module_init(sn_proc_init);
+//End by EminHuang
 
 static void __exit cleanup(void)
 {

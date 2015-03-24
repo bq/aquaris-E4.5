@@ -133,9 +133,8 @@ typedef struct{
 #define ALSPS_GET_ALS_MODE					_IOR(ALSPS, 0x06, int)
 #define ALSPS_GET_ALS_DATA					_IOR(ALSPS, 0x07, int)
 #define ALSPS_GET_ALS_RAW_DATA           	_IOR(ALSPS, 0x08, int)
-#define ALSPS_SET_PS_CALI           	        _IOR(ALSPS, 0x09, int)
 /*-------------------yucong add-------------------------------------------*/
-//#define ALSPS_GET_PS_TEST_RESULT           	_IOR(ALSPS, 0x09, int)
+#define ALSPS_GET_PS_TEST_RESULT           	_IOR(ALSPS, 0x09, int)
 #define ALSPS_GET_ALS_TEST_RESULT           	_IOR(ALSPS, 0x0A, int)
 #define ALSPS_GET_PS_THRESHOLD_HIGH           	_IOR(ALSPS, 0x0B, int)
 #define ALSPS_GET_PS_THRESHOLD_LOW           	_IOR(ALSPS, 0x0C, int)
@@ -149,6 +148,8 @@ typedef struct{
 #define ALSPS_GET_PS_CALI                   _IOR(ALSPS, 0x14, int)
 #define ALSPS_GET_ID                        _IOR(ALSPS, 0x15, int)
 #define ALSPS_RESET_PS                      _IOR(ALSPS, 0x16, int)
+#define ALSPS_SET_PS_CALI           	    _IOR(ALSPS, 0x17, int)
+// xiangfei.peng 20140513 because _IOR(ALSPS, 0x09, int) is already defined for ALSPS_GET_PS_TEST_RESULT
 
 #define GYROSCOPE							0X86
 #define GYROSCOPE_IOCTL_INIT					_IO(GYROSCOPE, 0x01)

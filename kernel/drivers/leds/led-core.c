@@ -30,6 +30,9 @@ static void led_stop_software_blink(struct led_classdev *led_cdev)
 	del_timer_sync(&led_cdev->blink_timer);
 	led_cdev->blink_delay_on = 0;
 	led_cdev->blink_delay_off = 0;
+	#ifdef RESPIRATION_LAMP
+	led_cdev->trig_brightness = 0;
+	#endif
 }
 
 static void led_set_software_blink(struct led_classdev *led_cdev,
