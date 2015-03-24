@@ -152,7 +152,8 @@ static atomic_t rv_flag = ATOMIC_INIT(0);
 static atomic_t la_flag = ATOMIC_INIT(0);
 
 static int delay = 10;
-static int gyro_suspend =0;
+// 苏 勇 2014年06月27日 10:52:26static int gyro_suspend =0;
+static atomic_t gyro_suspend = ATOMIC_INIT(0);
 
 static const struct i2c_device_id l3gd20_i2c_id[] = {{L3GD20_DEV_NAME,0},{}};
 static struct i2c_board_info __initdata i2c_l3gd20={ I2C_BOARD_INFO(L3GD20_DEV_NAME, (L3GD20_I2C_SLAVE_ADDR>>1))};
@@ -210,6 +211,7 @@ struct l3gd20_i2c_data {
     atomic_t                selftest;
     atomic_t				filter;
     s16                     cali_sw[L3GD20_AXES_NUM+1];
+	s16                     dyna_cali_sw[L3GD20_AXES_NUM+1];
 
     /*data*/
     s8                      offset[L3GD20_AXES_NUM+1];  /*+1: for 4-byte alignment*/
@@ -355,11 +357,20 @@ static int L3GD20_ResetCalibration(struct i2c_client *client)
 	memset(obj->cali_sw, 0x00, sizeof(obj->cali_sw));
 	return 0;
 }
+
+static int L3GD20_ResetDynaCalibration(struct i2c_client *client)
+{
+	struct l3gd20_i2c_data *obj = i2c_get_clientdata(client);
+
+	memset(obj->dyna_cali_sw, 0x00, sizeof(obj->dyna_cali_sw));
+	return 0;
+}
+	
 /*----------------------------------------------------------------------------*/
 static int L3GD20_ReadCalibration(struct i2c_client *client, int dat[L3GD20_AXES_NUM])
 {
     struct l3gd20_i2c_data *obj = i2c_get_clientdata(client);
-    int mul = 0;
+    int mul = 1;
     dat[obj->cvt.map[L3GD20_AXIS_X]] = obj->cvt.sign[L3GD20_AXIS_X]*obj->cali_sw[L3GD20_AXIS_X] * mul;
     dat[obj->cvt.map[L3GD20_AXIS_Y]] = obj->cvt.sign[L3GD20_AXIS_Y]*obj->cali_sw[L3GD20_AXIS_Y] * mul;
     dat[obj->cvt.map[L3GD20_AXIS_Z]] = obj->cvt.sign[L3GD20_AXIS_Z]*obj->cali_sw[L3GD20_AXIS_Z] * mul;
@@ -594,7 +605,7 @@ static int L3GD20_ReadGyroData(struct i2c_client *client, char *buf, int bufsize
 	int data[3];
 	struct l3gd20_i2c_data *obj = i2c_get_clientdata(client);
 
-	if((sensor_power == false)&&(gyro_suspend ==0))
+	if((sensor_power == false)&&(atomic_read(&gyro_suspend) == 0 ))
 	{
 		L3GD20_SetPowerMode(client, true);
               // for gyro calibration
@@ -624,14 +635,20 @@ static int L3GD20_ReadGyroData(struct i2c_client *client, char *buf, int bufsize
 				obj->data[L3GD20_AXIS_X],obj->data[L3GD20_AXIS_Y],obj->data[L3GD20_AXIS_Z]);
 		}
 #endif
+		obj->data[L3GD20_AXIS_X] = obj->data[L3GD20_AXIS_X] + obj->cali_sw[L3GD20_AXIS_X];
+		obj->data[L3GD20_AXIS_Y] = obj->data[L3GD20_AXIS_Y] + obj->cali_sw[L3GD20_AXIS_Y];
+		obj->data[L3GD20_AXIS_Z] = obj->data[L3GD20_AXIS_Z] + obj->cali_sw[L3GD20_AXIS_Z];
+	
 		/*remap coordinate*/
 		data[obj->cvt.map[L3GD20_AXIS_X]] = obj->cvt.sign[L3GD20_AXIS_X]*obj->data[L3GD20_AXIS_X];
 		data[obj->cvt.map[L3GD20_AXIS_Y]] = obj->cvt.sign[L3GD20_AXIS_Y]*obj->data[L3GD20_AXIS_Y];
 		data[obj->cvt.map[L3GD20_AXIS_Z]] = obj->cvt.sign[L3GD20_AXIS_Z]*obj->data[L3GD20_AXIS_Z];
 
-		data[L3GD20_AXIS_X] = (data[L3GD20_AXIS_X] * L3GD20_OUT_MAGNIFY + obj->cali_sw[L3GD20_AXIS_X] * L3GD20_FS_2000_LSB) / L3GD20_FS_2000_LSB;
-		data[L3GD20_AXIS_Y] = (data[L3GD20_AXIS_Y] * L3GD20_OUT_MAGNIFY + obj->cali_sw[L3GD20_AXIS_Y] * L3GD20_FS_2000_LSB) / L3GD20_FS_2000_LSB;
-		data[L3GD20_AXIS_Z] = (data[L3GD20_AXIS_Z] * L3GD20_OUT_MAGNIFY + obj->cali_sw[L3GD20_AXIS_Z] * L3GD20_FS_2000_LSB) / L3GD20_FS_2000_LSB;
+	
+		//Out put the degree/second(o/s)
+		data[L3GD20_AXIS_X] = data[L3GD20_AXIS_X] * L3GD20_OUT_MAGNIFY / L3GD20_FS_2000_LSB+ obj->dyna_cali_sw[L3GD20_AXIS_X];
+		data[L3GD20_AXIS_Y] = data[L3GD20_AXIS_Y] * L3GD20_OUT_MAGNIFY / L3GD20_FS_2000_LSB+ obj->dyna_cali_sw[L3GD20_AXIS_Y];
+		data[L3GD20_AXIS_Z] = data[L3GD20_AXIS_Z] * L3GD20_OUT_MAGNIFY / L3GD20_FS_2000_LSB+ obj->dyna_cali_sw[L3GD20_AXIS_Z];
 
 	}
 
@@ -657,7 +674,7 @@ static int L3GD20_ReadGyroData1(struct i2c_client *client, char *buf)    //, cha
 
 	struct l3gd20_i2c_data *obj = i2c_get_clientdata(client);
 
-	if((sensor_power == false)&&(gyro_suspend ==0))
+	if((sensor_power == false)&&(atomic_read(&gyro_suspend) == 0 ))
 	{
 		L3GD20_SetPowerMode(client, true);
 
@@ -689,6 +706,10 @@ static int L3GD20_ReadGyroData1(struct i2c_client *client, char *buf)    //, cha
 		}
 #endif
 
+		obj->data[L3GD20_AXIS_X] = obj->data[L3GD20_AXIS_X] + obj->cali_sw[L3GD20_AXIS_X];
+		obj->data[L3GD20_AXIS_Y] = obj->data[L3GD20_AXIS_Y] + obj->cali_sw[L3GD20_AXIS_Y];
+		obj->data[L3GD20_AXIS_Z] = obj->data[L3GD20_AXIS_Z] + obj->cali_sw[L3GD20_AXIS_Z];
+	
 		/*remap coordinate*/
 		data[obj->cvt.map[L3GD20_AXIS_X]] = obj->cvt.sign[L3GD20_AXIS_X]*obj->data[L3GD20_AXIS_X];
 		data[obj->cvt.map[L3GD20_AXIS_Y]] = obj->cvt.sign[L3GD20_AXIS_Y]*obj->data[L3GD20_AXIS_Y];
@@ -1295,11 +1316,16 @@ int l3gd20_operate(void* self, uint32_t command, void* buff_in, int size_in,
 			else
 			{
 				value = *(int *)buff_in;
-				if(((value == 0) && (sensor_power == false)) ||((value == 1) && (sensor_power == true)))
-				{
-					GYRO_LOG("gyroscope device have updated!\n");
-				}
-				else
+// 考虑以下的一种情况 苏 勇 2014年07月03日 11:13:31
+// 先打开gyro,此时gy_flag和sensor_power都是1
+// 关闭gyro,但是线性加速度,或者rv之类继续工作,这个时候gy_flag是0,但sensor_power是1了
+// 然后再次打开gyro,这个时候 由于value是1 sensor_power也是1 则被注释的条件成立,也就是不会设置gy_flag
+// 当然gy_flag的设置错误,问题不大,只是会影响到gy的校准
+// 苏 勇 2014年07月03日 11:13:19				if(((value == 0) && (sensor_power == false)) ||((value == 1) && (sensor_power == true)))
+// 苏 勇 2014年07月03日 11:13:19				{
+// 苏 勇 2014年07月03日 11:13:19					GYRO_LOG("gyroscope device have updated!\n");
+// 苏 勇 2014年07月03日 11:13:19				}
+// 苏 勇 2014年07月03日 11:13:19				else
 				{
 					if(value==1)
 					{
@@ -1721,9 +1747,9 @@ static int lsm330gy_GetOpenStatus(void)
     int objsuspend = atomic_read(&(obj->suspend ));
 
 #ifdef FAC_CALI_GYRO
-    wait_event_interruptible(open_wq, ( (atomic_read(&open_flag)  == 1) && (gyro_suspend ==0) && ( fac_flag == 0)));
+    wait_event_interruptible(open_wq, ( (atomic_read(&open_flag)  == 1) && (atomic_read(&gyro_suspend) == 0 ) && ( fac_flag == 0)));
 #else
-    wait_event_interruptible(open_wq, ( (atomic_read(&open_flag)  == 1) && (gyro_suspend ==0) ) );
+    wait_event_interruptible(open_wq, ( (atomic_read(&open_flag)  == 1) && (atomic_read(&gyro_suspend) == 0 ) ) );
 #endif
 	//GYRO_ERR("wait event to wake, block here ........ \n ");
     // printk("wait event to wake, block here ........ \n ");
@@ -1734,7 +1760,7 @@ static int lsm330gy_GetSuspendStatus(void)
 {
    struct l3gd20_i2c_data *obj = obj_i2c_data;
    int status_gy = -1;
-   status_gy = gyro_suspend;
+   status_gy =  atomic_read(&gyro_suspend);
    //GYRO_ERR(" ===== --- obj->suspend  = %d \n",status_gy);
    return status_gy;
 }
@@ -1834,12 +1860,10 @@ static long l3gd20_ioctl(struct file *file, unsigned int cmd,
 
 			else
 			{
-
-                struct l3gd20_i2c_data *obj = i2c_get_clientdata(client);
-				obj->cali_sw[L3GD20_AXIS_X] = sensor_data.x ;
-				obj->cali_sw[L3GD20_AXIS_Y] = sensor_data.y ;
-				obj->cali_sw[L3GD20_AXIS_Z] = sensor_data.z ;
-				//err = L3GD20_WriteCalibration(client, cali);
+				cali[L3GD20_AXIS_X] = sensor_data.x * L3GD20_FS_2000_LSB / L3GD20_OUT_MAGNIFY;
+				cali[L3GD20_AXIS_Y] = sensor_data.y * L3GD20_FS_2000_LSB / L3GD20_OUT_MAGNIFY;
+				cali[L3GD20_AXIS_Z] = sensor_data.z * L3GD20_FS_2000_LSB / L3GD20_OUT_MAGNIFY;			  
+				err = L3GD20_WriteCalibration(client, cali);
 			}
 			break;
 
@@ -1876,6 +1900,31 @@ static long l3gd20_ioctl(struct file *file, unsigned int cmd,
 				break;
 			}
 			break;
+		case GYROSCOPE_IOCTL_CLEAR_DYNAMIC_CALI:
+			err=L3GD20_ResetDynaCalibration(client);
+			break;
+		case GYROSCOPE_IOCTL_SET_DYNAMIC_CALI:
+			data = (void __user*)arg;
+			if(data == NULL)
+			{
+				err = -EINVAL;
+				break;
+			}
+			if(copy_from_user(&sensor_data, data, sizeof(sensor_data)))
+			{
+				err = -EFAULT;
+				break;
+			}
+
+			else
+			{
+				struct l3gd20_i2c_data *obj = i2c_get_clientdata(client);
+               obj->dyna_cali_sw[L3GD20_AXIS_X] = sensor_data.x ;
+               obj->dyna_cali_sw[L3GD20_AXIS_Y] = sensor_data.y ;
+               obj->dyna_cali_sw[L3GD20_AXIS_Z] = sensor_data.z ;
+			}
+			break;
+
 		case GYROSCOPE_IOC_GET_OFLAG:
 			sensor_status = atomic_read(&or_flag);
 			if(copy_to_user(data, &sensor_status, sizeof(sensor_status)))
@@ -2128,7 +2177,7 @@ static int l3gd20_suspend(struct i2c_client *client, pm_message_t msg)
 		}
 
 		atomic_set(&obj->suspend, 1);
-		gyro_suspend = 1;
+		atomic_set(&gyro_suspend, 1);
 		err = L3GD20_SetPowerMode(client, false);
 		if(err <= 0)
 		{
@@ -2163,7 +2212,7 @@ static int l3gd20_resume(struct i2c_client *client)
 
 
 	atomic_set(&obj->suspend, 0);
-        gyro_suspend = 0;
+    atomic_set(&gyro_suspend, 0);
         wake_up(&open_wq);
 
 	return 0;
@@ -2183,7 +2232,7 @@ static void l3gd20_early_suspend(struct early_suspend *h)
 		return;
 	}
 	atomic_set(&obj->suspend, 1);
-        gyro_suspend = 1;
+    atomic_set(&gyro_suspend, 1);
 	err = L3GD20_SetPowerMode(obj->client, false);
 	if(err)
 	{
@@ -2221,7 +2270,7 @@ static void l3gd20_late_resume(struct early_suspend *h)
 		return;
 	}
 	atomic_set(&obj->suspend, 0);
-    gyro_suspend =0;
+    atomic_set(&gyro_suspend, 0);
 
     wake_up(&open_wq);
 }
