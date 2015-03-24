@@ -269,6 +269,8 @@ extern void mt_usb_disconnect(void);
 #define mt_usb_disconnect() do { } while (0)
 #endif
 //extern int set_rtc_spare_fg_value(int val);
+extern void tp_write_reg0(void);
+extern void tp_write_reg1(void);
 
 int read_tbat_value(void)
 {
@@ -2432,6 +2434,17 @@ void do_chrdet_int_task(void)
         {
             mt_battery_update_status();
         }
+
+        if (BMT_status.charger_exist == KAL_TRUE)
+        {
+            tp_write_reg1();
+        }
+
+        if (BMT_status.charger_exist == KAL_FALSE)
+        {
+            tp_write_reg0();
+        }
+
         wake_up_bat();
     }    
     else
@@ -2441,6 +2454,14 @@ void do_chrdet_int_task(void)
 
 }
 
+kal_bool check_charger_exist(void)
+{
+   if (BMT_status.charger_exist == KAL_TRUE)
+   {
+	return KAL_TRUE;
+   }
+}
+EXPORT_SYMBOL(check_charger_exist);
 
 void BAT_thread(void)
 {

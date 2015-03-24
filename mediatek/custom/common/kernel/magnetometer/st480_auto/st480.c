@@ -419,6 +419,20 @@ static ssize_t show_calidata_value(struct device_driver *ddri, char *buf)
 	return sprintf(buf, "%s\n", strbuf);            
 }
 
+
+static ssize_t  show_sensordata_calidata(struct device_driver *ddri, char *buf)
+{
+	int tmp[3];
+	char strbuf[ST480_BUFSIZE];
+	
+	read_lock(&st480sensordata.datalock);
+	sprintf(strbuf, "%d %d %d\n", st480sensordata.nmx, st480sensordata.nmy, 
+		st480sensordata.nmz);
+	read_unlock(&st480sensordata.datalock);
+	return sprintf(buf, "%s\n", strbuf);;           
+}
+
+
 /*----------------------------------------------------------------------------*/
 static ssize_t show_layout_value(struct device_driver *ddri, char *buf)
 {
@@ -527,6 +541,7 @@ static DRIVER_ATTR(calidata,    S_IRUGO, show_calidata_value, NULL);
 static DRIVER_ATTR(layout,      S_IRUGO | S_IWUSR, show_layout_value, store_layout_value );
 static DRIVER_ATTR(status,      S_IRUGO, show_status_value, NULL);
 static DRIVER_ATTR(trace,       S_IRUGO | S_IWUSR, show_trace_value, store_trace_value );
+static DRIVER_ATTR(calidata1,  S_IRUGO, show_sensordata_calidata, NULL);
 /*----------------------------------------------------------------------------*/
 static struct driver_attribute *st480_attr_list[] = {
     &driver_attr_daemon,
@@ -537,6 +552,7 @@ static struct driver_attribute *st480_attr_list[] = {
 	&driver_attr_layout,
 	&driver_attr_status,
 	&driver_attr_trace,
+	&driver_attr_calidata1
 };
 /*----------------------------------------------------------------------------*/
 static int st480_create_attr(struct device_driver *driver) 

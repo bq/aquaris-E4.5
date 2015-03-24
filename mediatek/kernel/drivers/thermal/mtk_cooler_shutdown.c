@@ -293,10 +293,18 @@ static int __init mtk_cooler_shutdown_init(void)
         }
 #endif
 
-        entry = proc_create("driver/mtk_cl_sd_pid", S_IRUGO | S_IWUSR, NULL, &_cl_sd_pid_fops);
+        entry = proc_create("driver/mtk_cl_sd_pid", S_IRUGO | S_IWUSR | S_IWGRP, NULL, &_cl_sd_pid_fops);
         if (!entry)
         {
             xlog_printk(ANDROID_LOG_DEBUG, "thermal/cooler/shutdown", "mtk_cooler_shutdown_init driver/mtk_cl_sd_pid creation failed\n");
+        }
+        else
+        {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 10, 0)
+            proc_set_user(entry, 0, 1000);
+#else
+            entry->gid = 1000;
+#endif
         }
     }
     

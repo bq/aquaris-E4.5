@@ -64,7 +64,7 @@
 
 
 #define CONVERT_M			25
-#define CONVERT_M_DIV		8096			
+#define CONVERT_M_DIV		8192			
 #define CONVERT_O			45
 #define CONVERT_O_DIV		8192
 

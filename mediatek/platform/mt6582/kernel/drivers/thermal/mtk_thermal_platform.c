@@ -222,8 +222,8 @@ static int cpuloadings[NO_CPU_CORES];
 //*********************************************
 // CPU Index
 //*********************************************
-
-static int get_sys_cpu_usage_info_ex(void)
+#if 0
+static int get_sys_cpu_usage_info_ex_procstat(void)
 {
     int fd;
     int nReadSize;
@@ -336,7 +336,154 @@ static int get_sys_cpu_usage_info_ex(void)
     return 0;
 
 }
+#endif
 
+#include <linux/kernel_stat.h>
+#include <linux/cpumask.h>
+#include <asm/cputime.h>
+#include <linux/sched.h>
+#include <linux/tick.h>
+#include <linux/time.h>
+
+#ifdef arch_idle_time
+
+static cputime64_t get_idle_time(int cpu)
+{
+	cputime64_t idle;
+
+	idle = kcpustat_cpu(cpu).cpustat[CPUTIME_IDLE];
+	if (cpu_online(cpu) && !nr_iowait_cpu(cpu))
+		idle += arch_idle_time(cpu);
+	return idle;
+}
+
+static cputime64_t get_iowait_time(int cpu)
+{
+	cputime64_t iowait;
+
+	iowait = kcpustat_cpu(cpu).cpustat[CPUTIME_IOWAIT];
+	if (cpu_online(cpu) && nr_iowait_cpu(cpu))
+		iowait += arch_idle_time(cpu);
+	return iowait;
+}
+
+#else
+
+static u64 get_idle_time(int cpu)
+{
+	u64 idle, idle_time = -1ULL;
+
+	if (cpu_online(cpu))
+		idle_time = get_cpu_idle_time_us(cpu, NULL);
+
+	if (idle_time == -1ULL)
+		/* !NO_HZ or cpu offline so we can rely on cpustat.idle */
+		idle = kcpustat_cpu(cpu).cpustat[CPUTIME_IDLE];
+	else
+		idle = usecs_to_cputime64(idle_time);
+
+	return idle;
+}
+
+static u64 get_iowait_time(int cpu)
+{
+	u64 iowait, iowait_time = -1ULL;
+
+	if (cpu_online(cpu))
+		iowait_time = get_cpu_iowait_time_us(cpu, NULL);
+
+	if (iowait_time == -1ULL)
+		/* !NO_HZ or cpu offline so we can rely on cpustat.iowait */
+		iowait = kcpustat_cpu(cpu).cpustat[CPUTIME_IOWAIT];
+	else
+		iowait = usecs_to_cputime64(iowait_time);
+
+	return iowait;
+}
+
+#endif
+
+static int get_sys_cpu_usage_info_ex(void)
+{
+    int nCoreIndex = 0, i;
+
+    for (i = 0; i < NO_CPU_CORES; i ++)
+        cpuloadings[i] = 0;
+
+	for_each_online_cpu(nCoreIndex) {
+
+		/* Get CPU Info */
+		cpu_index_list[nCoreIndex].u[CPU_USAGE_CURRENT_FIELD] = kcpustat_cpu(nCoreIndex).cpustat[CPUTIME_USER];
+        cpu_index_list[nCoreIndex].n[CPU_USAGE_CURRENT_FIELD] = kcpustat_cpu(nCoreIndex).cpustat[CPUTIME_NICE];
+        cpu_index_list[nCoreIndex].s[CPU_USAGE_CURRENT_FIELD] = kcpustat_cpu(nCoreIndex).cpustat[CPUTIME_SYSTEM];
+        cpu_index_list[nCoreIndex].i[CPU_USAGE_CURRENT_FIELD] = get_idle_time(nCoreIndex);
+        cpu_index_list[nCoreIndex].w[CPU_USAGE_CURRENT_FIELD] = get_iowait_time(nCoreIndex);
+        cpu_index_list[nCoreIndex].q[CPU_USAGE_CURRENT_FIELD] = kcpustat_cpu(nCoreIndex).cpustat[CPUTIME_IRQ];
+        cpu_index_list[nCoreIndex].sq[CPU_USAGE_CURRENT_FIELD] = kcpustat_cpu(nCoreIndex).cpustat[CPUTIME_SOFTIRQ];
+
+		/* Frame */
+	    cpu_index_list[nCoreIndex].u[CPU_USAGE_FRAME_FIELD] = cpu_index_list[nCoreIndex].u[CPU_USAGE_CURRENT_FIELD] -
+                                                                cpu_index_list[nCoreIndex].u[CPU_USAGE_SAVE_FIELD];
+		cpu_index_list[nCoreIndex].n[CPU_USAGE_FRAME_FIELD] = cpu_index_list[nCoreIndex].n[CPU_USAGE_CURRENT_FIELD] -
+                                                                cpu_index_list[nCoreIndex].n[CPU_USAGE_SAVE_FIELD];
+		cpu_index_list[nCoreIndex].s[CPU_USAGE_FRAME_FIELD] = cpu_index_list[nCoreIndex].s[CPU_USAGE_CURRENT_FIELD] -
+                                                                cpu_index_list[nCoreIndex].s[CPU_USAGE_SAVE_FIELD];
+		cpu_index_list[nCoreIndex].i[CPU_USAGE_FRAME_FIELD] = TRIMz_ex(cpu_index_list[nCoreIndex].tz,
+                                                                (cpu_index_list[nCoreIndex].i[CPU_USAGE_CURRENT_FIELD] -
+                                                                cpu_index_list[nCoreIndex].i[CPU_USAGE_SAVE_FIELD])) ;
+		cpu_index_list[nCoreIndex].w[CPU_USAGE_FRAME_FIELD] = cpu_index_list[nCoreIndex].w[CPU_USAGE_CURRENT_FIELD] -
+                                                                cpu_index_list[nCoreIndex].w[CPU_USAGE_SAVE_FIELD];
+		cpu_index_list[nCoreIndex].q[CPU_USAGE_FRAME_FIELD] = cpu_index_list[nCoreIndex].q[CPU_USAGE_CURRENT_FIELD] -
+                                                                cpu_index_list[nCoreIndex].q[CPU_USAGE_SAVE_FIELD] ;
+		cpu_index_list[nCoreIndex].sq[CPU_USAGE_FRAME_FIELD] = cpu_index_list[nCoreIndex].sq[CPU_USAGE_CURRENT_FIELD] -
+                                                                cpu_index_list[nCoreIndex].sq[CPU_USAGE_SAVE_FIELD];
+
+		/* Total Frame */
+		cpu_index_list[nCoreIndex].tot_frme = cpu_index_list[nCoreIndex].u[CPU_USAGE_FRAME_FIELD] +
+											  cpu_index_list[nCoreIndex].n[CPU_USAGE_FRAME_FIELD] +
+											  cpu_index_list[nCoreIndex].s[CPU_USAGE_FRAME_FIELD] +
+											  cpu_index_list[nCoreIndex].i[CPU_USAGE_FRAME_FIELD] +
+											  cpu_index_list[nCoreIndex].w[CPU_USAGE_FRAME_FIELD] +
+											  cpu_index_list[nCoreIndex].q[CPU_USAGE_FRAME_FIELD] +
+											  cpu_index_list[nCoreIndex].sq[CPU_USAGE_FRAME_FIELD];
+
+		/* CPU Usage */
+		if (cpu_index_list[nCoreIndex].tot_frme > 0) {
+			cpuloadings[nCoreIndex] = (100-(((int)cpu_index_list[nCoreIndex].i[CPU_USAGE_FRAME_FIELD]*100)/(int)cpu_index_list[nCoreIndex].tot_frme));
+		} else {
+			/* CPU unplug case */
+			cpuloadings[nCoreIndex] = 0;
+		}
+
+		cpu_index_list[nCoreIndex].u[CPU_USAGE_SAVE_FIELD]  = cpu_index_list[nCoreIndex].u[CPU_USAGE_CURRENT_FIELD];
+	    cpu_index_list[nCoreIndex].n[CPU_USAGE_SAVE_FIELD]  = cpu_index_list[nCoreIndex].n[CPU_USAGE_CURRENT_FIELD];
+	    cpu_index_list[nCoreIndex].s[CPU_USAGE_SAVE_FIELD]  = cpu_index_list[nCoreIndex].s[CPU_USAGE_CURRENT_FIELD];
+		cpu_index_list[nCoreIndex].i[CPU_USAGE_SAVE_FIELD]  = cpu_index_list[nCoreIndex].i[CPU_USAGE_CURRENT_FIELD];
+		cpu_index_list[nCoreIndex].w[CPU_USAGE_SAVE_FIELD]  = cpu_index_list[nCoreIndex].w[CPU_USAGE_CURRENT_FIELD];
+		cpu_index_list[nCoreIndex].q[CPU_USAGE_SAVE_FIELD]  = cpu_index_list[nCoreIndex].q[CPU_USAGE_CURRENT_FIELD];
+		cpu_index_list[nCoreIndex].sq[CPU_USAGE_SAVE_FIELD] = cpu_index_list[nCoreIndex].sq[CPU_USAGE_CURRENT_FIELD];
+
+		THRML_LOG("CPU%d Frame:%d USAGE:%d\n", nCoreIndex, cpu_index_list[nCoreIndex].tot_frme, cpuloadings[nCoreIndex]);
+
+        for (i=0 ; i<3 ; i++) {
+            THRML_LOG("Index %d [u:%d] [n:%d] [s:%d] [i:%d] [w:%d] [q:%d] [sq:%d] \n", 
+                      i, 
+                      cpu_index_list[nCoreIndex].u[i], 
+                      cpu_index_list[nCoreIndex].n[i],
+                      cpu_index_list[nCoreIndex].s[i],
+                      cpu_index_list[nCoreIndex].i[i],
+                      cpu_index_list[nCoreIndex].w[i],
+                      cpu_index_list[nCoreIndex].q[i],
+                      cpu_index_list[nCoreIndex].sq[i]);
+
+        }
+	}
+
+    return 0;
+
+}
+
+#if 0
 static int get_sys_cpu_freq_info(char* dev, int nRetryNr)
 {
     int fd;
@@ -377,31 +524,22 @@ static int get_sys_cpu_freq_info(char* dev, int nRetryNr)
 
     return nRet;
 }
+#endif
 
 extern int mtktscpu_limited_dmips;
 static bool dmips_limit_warned = false;
 static int check_dmips_limit = 0;
 
+#include <linux/cpufreq.h>
 static int get_sys_all_cpu_freq_info(void)
 {
-    int nCPU_freq_temp, i;
-    char szTempBuf[512];
+    int i;
     int cpu_total_dmips = 0;
 
-    for (i=0 ; i<NUMBER_OF_CORE ; i++)
-    {
-        sprintf(szTempBuf, "/sys/devices/system/cpu/cpu%01d/cpufreq/cpuinfo_cur_freq", i);
-        nCPU_freq_temp = get_sys_cpu_freq_info(szTempBuf, 3);
-        if(nCPU_freq_temp > 0)
+    for (i=0 ; i<NO_CPU_CORES ; i++)
         {
-            cpufreqs[i] = nCPU_freq_temp/1000;
-            cpu_total_dmips += nCPU_freq_temp;
-        }
-        else
-        {
-            /* CPU is unplug now */
-            cpufreqs[i] = nCPU_freq_temp*10;
-        }
+        cpufreqs[i] = cpufreq_quick_get(i)/1000; // MHz
+        cpu_total_dmips += cpufreqs[i];
     }
 
     cpu_total_dmips /= 1000;
@@ -565,7 +703,7 @@ int mtk_thermal_get_gpu_info(
         unsigned int rd_gpu_loading = 0;
         if (mtk_get_gpu_loading(&rd_gpu_loading))
         {
-            gpuloadings[0] = (int) gpuloading;
+            gpuloadings[0] = (int) rd_gpu_loading;
             *gpuloading = gpuloadings;
         }
     }
