@@ -3,6 +3,10 @@ WHAT IS THIS?
 
 Linux Kernel source code for the device bq Aquaris E4.5
 
+The sources for the Ubuntu Edition can be found on the branch
+aquaris-E4.5-ubuntu-rtm. The README.md there covers building, etc for
+Ubuntu.
+
 BUILD INSTRUCTIONS?
 ===================
 
