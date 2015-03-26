@@ -1744,14 +1744,11 @@ service mdnsd /system/bin/mdnsd
     disabled
     oneshot
 
-###add sensorservice and ubuntuappmanager by ubuntu
+###add sensorservice by ubuntu
 service sensorservice /system/bin/sensorservice
     class late_start
     user root
     group root
-
-service ubuntuappmanager /system/bin/ubuntuappmanager
-    class main
 
 #add for power-off alarm
 service poad /system/bin/poad
