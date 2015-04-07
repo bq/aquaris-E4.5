@@ -38,6 +38,41 @@
 #define FTS_GESTURE_OUTPUT_ADRESS 0xD3
 #define FTS_GESTURE_OUTPUT_UNIT_LENGTH 4
 
+#define FT_UPGRADE_AA	0xAA
+#define FT_UPGRADE_55 	0x55
+#define FT_UPGRADE_EARSE_DELAY		1500
+
+/*upgrade config of FT5606*/
+#define FT5606_UPGRADE_AA_DELAY 		50
+#define FT5606_UPGRADE_55_DELAY 		10
+#define FT5606_UPGRADE_ID_1			0x79
+#define FT5606_UPGRADE_ID_2			0x06
+#define FT5606_UPGRADE_READID_DELAY 	100
+
+/*upgrade config of FT5316*/
+#define FT5316_UPGRADE_AA_DELAY 		50
+#define FT5316_UPGRADE_55_DELAY 		40
+#define FT5316_UPGRADE_ID_1			0x79
+#define FT5316_UPGRADE_ID_2			0x07
+#define FT5316_UPGRADE_READID_DELAY 	1
+
+/*upgrade config of FT5x06(x=2,3,4)*/
+#define FT5X06_UPGRADE_AA_DELAY 		50
+#define FT5X06_UPGRADE_55_DELAY 		30
+#define FT5X06_UPGRADE_ID_1			0x79
+#define FT5X06_UPGRADE_ID_2			0x03
+#define FT5X06_UPGRADE_READID_DELAY 	1
+
+/*upgrade config of FT5X36*/
+#define FT5X36_UPGRADE_AA_DELAY 		30
+#define FT5X36_UPGRADE_55_DELAY 		30
+#define FT5X36_UPGRADE_ID_1			0x79
+#define FT5X36_UPGRADE_ID_2			0x11
+#define FT5X36_UPGRADE_READID_DELAY 	10
+
+
+#define    FTS_SETTING_BUF_LEN        128
+
 //suspend_state_t get_suspend_state(void);
 
 unsigned short coordinate_x[150] = {0};
@@ -440,6 +475,48 @@ static int ft5x0x_i2c_rxdata(char *rxdata, int length)
 	
 	return ret;
 }
+
+static int ft5x0x_i2c_Read(char *writebuf,
+		    int writelen, char *readbuf, int readlen)
+{
+	int ret;
+
+	if (writelen > 0) {
+		struct i2c_msg msgs[] = {
+			{
+			 .addr = ft5336_i2c_client->addr,
+			 .flags = 0,
+			 .len = writelen,
+			 .buf = writebuf,
+			 },
+			{
+			 .addr = ft5336_i2c_client->addr,
+			 .flags = I2C_M_RD,
+			 .len = readlen,
+			 .buf = readbuf,
+			 },
+		};
+		ret = i2c_transfer(ft5336_i2c_client->adapter, msgs, 2);
+		if (ret < 0)
+			dev_err(&ft5336_i2c_client->dev, "f%s: i2c read error.\n",
+				__func__);
+	} else {
+		struct i2c_msg msgs[] = {
+			{
+			 .addr = ft5336_i2c_client->addr,
+			 .flags = I2C_M_RD,
+			 .len = readlen,
+			 .buf = readbuf,
+			 },
+		};
+		ret = i2c_transfer(ft5336_i2c_client->adapter, msgs, 1);
+		if (ret < 0)
+			dev_err(&ft5336_i2c_client->dev, "%s:i2c read error.\n", __func__);
+	}
+	return ret;
+}
+
+
 /***********************************************************************************************
 Name	:	 
 
@@ -817,32 +894,76 @@ extern const LCM_DRIVER  *lcm_drv;
 #define    BL_VERSION_LZ4        0
 #define    BL_VERSION_Z7        1
 #define    BL_VERSION_GZF        2
+#define FTS_UPGRADE_LOOP	3
+struct Upgrade_Info{
+	u16		delay_aa;		/*delay of write FT_UPGRADE_AA*/
+	u16		delay_55;		/*delay of write FT_UPGRADE_55*/
+	u8		upgrade_id_1;	/*upgrade id 1*/
+	u8		upgrade_id_2;	/*upgrade id 2*/
+	u16		delay_readid;	/*delay of read id*/
+};
 
-static E_UPGRADE_ERR_TYPE  fts_ctpm_fw_upgrade(FTS_BYTE* pbt_buf, FTS_DWRD dw_lenth)
+static void fts_get_upgrade_info(struct Upgrade_Info * upgrade_info)
 {
-    FTS_BYTE reg_val[2] = {0};
-    FTS_DWRD i = 0;
-	u8 	 is_5336_new_bootloader = 0;
-	u8 	 is_5336_fwsize_30 = 0;
-    FTS_DWRD  packet_number;
-    FTS_DWRD  j;
-    FTS_DWRD  temp;
-    FTS_DWRD  lenght;
-    FTS_BYTE  packet_buf[FTS_PACKET_LENGTH + 6];
-    FTS_BYTE  auc_i2c_write_buf[10];
-    FTS_BYTE bt_ecc;
-    int      i_ret;
+	switch(DEVICE_IC_TYPE)
+	{
+	case IC_FT5X06:
+		upgrade_info->delay_55 = FT5X06_UPGRADE_55_DELAY;
+		upgrade_info->delay_aa = FT5X06_UPGRADE_AA_DELAY;
+		upgrade_info->upgrade_id_1 = FT5X06_UPGRADE_ID_1;
+		upgrade_info->upgrade_id_2 = FT5X06_UPGRADE_ID_2;
+		upgrade_info->delay_readid = FT5X06_UPGRADE_READID_DELAY;
+		break;
+	case IC_FT5606:
+		upgrade_info->delay_55 = FT5606_UPGRADE_55_DELAY;
+		upgrade_info->delay_aa = FT5606_UPGRADE_AA_DELAY;
+		upgrade_info->upgrade_id_1 = FT5606_UPGRADE_ID_1;
+		upgrade_info->upgrade_id_2 = FT5606_UPGRADE_ID_2;
+		upgrade_info->delay_readid = FT5606_UPGRADE_READID_DELAY;
+		break;
+	case IC_FT5316:
+		upgrade_info->delay_55 = FT5316_UPGRADE_55_DELAY;
+		upgrade_info->delay_aa = FT5316_UPGRADE_AA_DELAY;
+		upgrade_info->upgrade_id_1 = FT5316_UPGRADE_ID_1;
+		upgrade_info->upgrade_id_2 = FT5316_UPGRADE_ID_2;
+		upgrade_info->delay_readid = FT5316_UPGRADE_READID_DELAY;
+		break;
+	case IC_FT5X36:
+		upgrade_info->delay_55 = FT5X36_UPGRADE_55_DELAY;
+		upgrade_info->delay_aa = FT5X36_UPGRADE_AA_DELAY;
+		upgrade_info->upgrade_id_1 = FT5X36_UPGRADE_ID_1;
+		upgrade_info->upgrade_id_2 = FT5X36_UPGRADE_ID_2;
+		upgrade_info->delay_readid = FT5X36_UPGRADE_READID_DELAY;
+		break;
+	default:
+		break;
+	}
+}
+static E_UPGRADE_ERR_TYPE  fts_ctpm_fw_upgrade(u8* pbt_buf, u32 dw_lenth)
+{
 	int ret=0;
-	unsigned char ver;
-    /*********Step 1:Reset  CTPM *****/
-    /*write 0xaa to register 0xfc*/
-	atomic_set(&upgrading, 1);
-	mutex_lock(&fwupgrade_mutex);
-	mt_eint_mask(CUST_EINT_TOUCH_PANEL_NUM);
+	u8 reg_val[2] = {0};
+	u32 i = 0;
+	u8 is_5336_new_bootloader = 0;
+	u8 is_5336_fwsize_30 = 0;
+	u32  packet_number;
+	u32  j;
+	u32  temp;
+	u32  lenght;
+	u8 	packet_buf[FTS_PACKET_LENGTH + 6];
+	u8  	auc_i2c_write_buf[10];
+	u8  	bt_ecc;
+    int      i_ret;
+	unsigned short  fw_filenth=dw_lenth;
+
+	
 #ifdef ESD_CHECK	
  	cancel_delayed_work_sync(&ctp_read_id_work);
 #endif
-	if(pbt_buf[dw_lenth-12] == 30)
+	struct Upgrade_Info upgradeinfo;
+
+	fts_get_upgrade_info(&upgradeinfo);
+	if(pbt_buf[fw_filenth-12] == 30)
 	{
 		is_5336_fwsize_30 = 1;
 	}
@@ -864,13 +985,22 @@ static E_UPGRADE_ERR_TYPE  fts_ctpm_fw_upgrade(FTS_BYTE* pbt_buf, FTS_DWRD dw_le
 // 苏 勇 2014年03月18日 11:10:10   
 // 苏 勇 2014年03月18日 11:10:10    delay_qt_ms(500); 
 	
+	for (i = 0; i < FTS_UPGRADE_LOOP; i++) {
+    	/*********Step 1:Reset  CTPM *****/
+    	/*write 0xaa to register 0xfc*/
+	   	//ft5x0x_write_reg(client, 0xfc, FT_UPGRADE_AA);
+		//msleep(upgradeinfo.delay_aa);
+		
+		 /*write 0x55 to register 0xfc*/
+		//ft5x0x_write_reg(client, 0xfc, FT_UPGRADE_55);   
+		//msleep(upgradeinfo.delay_55);   
 		/*write 0xaa to register 0xfc*/
 	   	ft5x0x_write_reg(0xfc, 0xaa);
-		msleep(30);
+		msleep(upgradeinfo.delay_aa);
 		
 		 /*write 0x55 to register 0xfc*/
 		ft5x0x_write_reg(0xfc, 0x55);   
-		msleep(30);   
+		msleep(upgradeinfo.delay_55);   
 
 
 
@@ -879,46 +1009,36 @@ static E_UPGRADE_ERR_TYPE  fts_ctpm_fw_upgrade(FTS_BYTE* pbt_buf, FTS_DWRD dw_le
     /*********Step 2:Enter upgrade mode *****/
     auc_i2c_write_buf[0] = 0x55;
     auc_i2c_write_buf[1] = 0xaa;
-    do
-    {
-        i ++;
-        i_ret = ft5x0x_i2c_txdata(auc_i2c_write_buf, 2);
-	printk("<suyong> <%d>,%s(),i=%d i_ret=%d\n",__LINE__,__func__,i,i_ret );
 		
-        delay_qt_ms(5);
-    }while(i_ret <= 0 && i < 5 );
-	if(i==5)
-	{
-		ret =-1;
-		goto ERR;
-	}
-	printk("<suyong> <%d>,%s(),Step 2:Enter upgrade mode\n",__LINE__,__func__ );
-	
-    /*********Step 3:check READ-ID***********************/        
-    cmd_write(0x90,0x00,0x00,0x00,4);
-	i=0;
-	i_ret=0;
-    do
-    {
-        i ++;
-        i_ret = byte_read(reg_val,2);
-        delay_qt_ms(10);
-    }while(i_ret <= 0 && i < 5 );
-	if(i==5)
-	{
-		ret =-1;
-		goto ERR;
-	}
+	    i_ret = ft5x0x_i2c_txdata(auc_i2c_write_buf, 2);
+	  
+	    /*********Step 3:check READ-ID***********************/   
+		msleep(upgradeinfo.delay_readid);
+	   	auc_i2c_write_buf[0] = 0x90; 
+		auc_i2c_write_buf[1] = auc_i2c_write_buf[2] = auc_i2c_write_buf[3] = 0x00;
 
-	printk("<suyong> <%d>,%s(),%x  %x\n",__LINE__,__func__,reg_val[0],reg_val[1] );
-        //printk("[TSP] Step 2: CTPM ID,ID1 = 0x%x,ID2 = 0x%x\n",reg_val[0],reg_val[1]);
+		ft5x0x_i2c_Read(auc_i2c_write_buf, 4, reg_val, 2);
+		
+		if (reg_val[0] == upgradeinfo.upgrade_id_1 
+			&& reg_val[1] == upgradeinfo.upgrade_id_2)
+		{
+			//printk(KERN_WARNING "[FTS] Step 3: CTPM ID OK,ID1 = 0x%x,ID2 = 0x%x\n",reg_val[0],reg_val[1]);
+			dev_dbg(&ft5336_i2c_client->dev, "[FTS] Step 3: CTPM ID OK,ID1 = 0x%x,ID2 = 0x%x\n",reg_val[0],reg_val[1]);
+	    		break;
+		}
+		else
+		{
+			dev_err(&ft5336_i2c_client->dev, "[FTS] Step 3: CTPM ID FAILD,ID1 = 0x%x,ID2 = 0x%x\n",reg_val[0],reg_val[1]);
+	    		continue;
+		}
+	}
+	if (i >= FTS_UPGRADE_LOOP)
+		return -EIO;
+		
 	auc_i2c_write_buf[0] = 0xcd;
-	cmd_write(auc_i2c_write_buf[0],0x00,0x00,0x00,1);
-	byte_read(reg_val,1);
+	ft5x0x_i2c_Read(auc_i2c_write_buf, 1, reg_val, 1);
 
-
-
-//   ft5206_i2c_Read(i2c_client, auc_i2c_write_buf, 1, reg_val, 1);
+	printk("[TSP]reg_val[0] =%d\n ",reg_val[0] );
 
 	/*********0705 mshl ********************/
 	/*if (reg_val[0] > 4)
@@ -935,40 +1055,28 @@ static E_UPGRADE_ERR_TYPE  fts_ctpm_fw_upgrade(FTS_BYTE* pbt_buf, FTS_DWRD dw_le
 	{
 		is_5336_new_bootloader = BL_VERSION_GZF ;
 	}
-	printk("<suyong> <%d>,%s(),reg_val[0]=%d is_5336_new_bootloader=%d\n",__LINE__,__func__,reg_val[0],is_5336_new_bootloader );
-	printk("<suyong> <%d>,%s(),Step 3:check READ-ID\n",__LINE__,__func__ );
 
-//	printk("<TSP> <%d>,%s(),is_5336_new_bootloader=%d  0x%x\n",__LINE__,__func__ ,is_5336_new_bootloader,reg_val[0]);
-
-     /*********Step 4:erase app*******************************/
-	 /*********Step 4:erase app and panel paramenter area ********************/
+     /*********Step 4:erase app and panel paramenter area ********************/
+	printk("[TSP] step 4 start\n");
 	if(is_5336_fwsize_30)
-//	if (0)
 	{
 		auc_i2c_write_buf[0] = 0x61;
 // 苏 勇 2014年01月15日 14:15:43		i2c_master_send(i2c_client, auc_i2c_write_buf, 1); /*erase app area*/	
-		cmd_write(auc_i2c_write_buf[0],0x00,0x00,0x00,1);
-
-		delay_qt_ms(4000);
+		ft5x0x_i2c_txdata(auc_i2c_write_buf, 1); /*erase app area*/	
+   		 msleep(FT_UPGRADE_EARSE_DELAY); 
 
 		auc_i2c_write_buf[0] = 0x63;
 // 苏 勇 2014年01月15日 14:15:48		i2c_master_send(i2c_client, auc_i2c_write_buf, 1); /*erase app area*/	
-		cmd_write(auc_i2c_write_buf[0],0x00,0x00,0x00,1);
-
-		msleep(50);
+		ft5x0x_i2c_txdata(auc_i2c_write_buf, 1); /*erase app area*/	
+   		 msleep(50);
 	}
 	else
 	{
 		auc_i2c_write_buf[0] = 0x61;
-// 苏 勇 2014年01月15日 14:15:55		i2c_master_send(i2c_client, auc_i2c_write_buf, 1); /*erase app area*/	
-		cmd_write(auc_i2c_write_buf[0],0x00,0x00,0x00,1);
-		delay_qt_ms(4000);
-
+		ft5x0x_i2c_txdata(auc_i2c_write_buf, 1); /*erase app area*/	
+   		msleep(FT_UPGRADE_EARSE_DELAY); 
 	}
-	printk("<suyong> <%d>,%s(),Step 4: erase\n",__LINE__,__func__ );
-  
-    
-    //printk("[TSP] Step 4: erase.ret=%d\n",ret);
+	printk("[TSP] step 4 end\n");
 
     /*********Step 5:write firmware(FW) to ctpm flash*********/
     bt_ecc = 0;
@@ -987,11 +1095,11 @@ static E_UPGRADE_ERR_TYPE  fts_ctpm_fw_upgrade(FTS_BYTE* pbt_buf, FTS_DWRD dw_le
     for (j=0;j<packet_number;j++)
     {
         temp = j * FTS_PACKET_LENGTH;
-        packet_buf[2] = (FTS_BYTE)(temp>>8);
-        packet_buf[3] = (FTS_BYTE)temp;
-        lenght = FTS_PACKET_LENGTH;
-        packet_buf[4] = (FTS_BYTE)(lenght>>8);
-        packet_buf[5] = (FTS_BYTE)lenght;
+		packet_buf[2] = (u8)(temp>>8);
+		packet_buf[3] = (u8)temp;
+		lenght = FTS_PACKET_LENGTH;
+		packet_buf[4] = (u8)(lenght>>8);
+		packet_buf[5] = (u8)lenght;
 
         for (i=0;i<FTS_PACKET_LENGTH;i++)
         {
@@ -1003,26 +1111,19 @@ static E_UPGRADE_ERR_TYPE  fts_ctpm_fw_upgrade(FTS_BYTE* pbt_buf, FTS_DWRD dw_le
 		if(ret <0)
 		{
 			printk("<suyong> <%d>,%s(),ret=%d\n",__LINE__,__func__,ret );
-			goto ERR;
 		}
-              //printk("[TSP] 111 ret 0x%x \n", ret);
-        //delay_qt_ms(FTS_PACKET_LENGTH/6 + 1);
-        if ((j * FTS_PACKET_LENGTH % 1024) == 0)
-        {
-              //printk("[TSP] upgrade the 0x%x th byte.\n", ((unsigned int)j) * FTS_PACKET_LENGTH);
-        }
 		msleep(FTS_PACKET_LENGTH/6 + 1);
     }
 
     if ((dw_lenth) % FTS_PACKET_LENGTH > 0)
     {
         temp = packet_number * FTS_PACKET_LENGTH;
-        packet_buf[2] = (FTS_BYTE)(temp>>8);
-        packet_buf[3] = (FTS_BYTE)temp;
+		packet_buf[2] = (u8)(temp>>8);
+		packet_buf[3] = (u8)temp;
 
-        temp = (dw_lenth) % FTS_PACKET_LENGTH;
-        packet_buf[4] = (FTS_BYTE)(temp>>8);
-        packet_buf[5] = (FTS_BYTE)temp;
+		temp = (dw_lenth) % FTS_PACKET_LENGTH;
+		packet_buf[4] = (u8)(temp>>8);
+		packet_buf[5] = (u8)temp;
 
         for (i=0;i<temp;i++)
         {
@@ -1034,10 +1135,9 @@ static E_UPGRADE_ERR_TYPE  fts_ctpm_fw_upgrade(FTS_BYTE* pbt_buf, FTS_DWRD dw_le
 		if(ret <0)
 		{
 			printk("<suyong> <%d>,%s(),ret=%d\n",__LINE__,__func__,ret );
-			goto ERR;
 		}
               //printk("[TSP] 222 ret 0x%x \n", ret);
-        delay_qt_ms(20);
+		msleep(20);
     }
 
     //send the last six byte
@@ -1053,21 +1153,16 @@ static E_UPGRADE_ERR_TYPE  fts_ctpm_fw_upgrade(FTS_BYTE* pbt_buf, FTS_DWRD dw_le
 			{
 				temp = 0x6ffa + i;
 			}
-	        packet_buf[2] = (FTS_BYTE)(temp>>8);
-	        packet_buf[3] = (FTS_BYTE)temp;
-	        temp =1;
-	        packet_buf[4] = (FTS_BYTE)(temp>>8);
-	        packet_buf[5] = (FTS_BYTE)temp;
+			packet_buf[2] = (u8)(temp>>8);
+			packet_buf[3] = (u8)temp;
+			temp =1;
+			packet_buf[4] = (u8)(temp>>8);
+			packet_buf[5] = (u8)temp;
 	        packet_buf[6] = pbt_buf[ dw_lenth + i]; 
 	        bt_ecc ^= packet_buf[6];
-	        ret =CTPDMA_i2c_write(0x70,&packet_buf[0],7);  
-			if(ret <0)
-			{
-				printk("<suyong> <%d>,%s(),ret=%d\n",__LINE__,__func__,ret );
-				goto ERR;
-			}
+			ft5x0x_i2c_txdata(packet_buf, 7);
 
-	        delay_qt_ms(20);
+			msleep(10);
 	    }
 	}
 	else if(is_5336_new_bootloader == BL_VERSION_GZF)
@@ -1094,27 +1189,22 @@ static E_UPGRADE_ERR_TYPE  fts_ctpm_fw_upgrade(FTS_BYTE* pbt_buf, FTS_DWRD dw_le
 			if(ret <0)
 			{
 				printk("<suyong> <%d>,%s(),ret=%d\n",__LINE__,__func__,ret );
-				goto ERR;
 			}
 			msleep(10);
 
 		}
 	}
-	printk("<suyong> <%d>,%s(),write firmware(FW)\n",__LINE__,__func__ );
-	
-    /*********Step 6: read out checksum***********************/
-    /*send the opration head*/
-    //cmd_write(0xcc,0x00,0x00,0x00,1);
-    //byte_read(reg_val,1);
-i2c_smbus_read_i2c_block_data(ft5336_i2c_client, 0xcc, 1, &(reg_val[0]));
-	printk("<suyong> <%d>,%s(),ecc read 0x%x, new firmware 0x%x\n",__LINE__,__func__ ,reg_val[0], bt_ecc);
-    //printk("[TSP] Step 6:  ecc read 0x%x, new firmware 0x%x. \n", reg_val[0], bt_ecc);
-    if(reg_val[0] != bt_ecc)
-    {
-        //return ERR_ECC;
-        ret=-1;
-        goto ERR;
-    }
+
+	/*********Step 6: read out checksum***********************/
+	/*send the opration head*/
+	auc_i2c_write_buf[0] = 0xcc;
+	ft5x0x_i2c_Read(auc_i2c_write_buf, 1, reg_val, 1); 
+
+	if(reg_val[0] != bt_ecc)
+	{
+		dev_err(&ft5336_i2c_client->dev, "[FTS]--ecc error! FW=%02x bt_ecc=%02x\n", reg_val[0], bt_ecc);
+	    	return -EIO;
+	}
 	printk("<suyong> <%d>,%s(),Step 6: read out checksum\n",__LINE__,__func__ );
 
     /*********Step 7: reset the new FW***********************/
@@ -1126,13 +1216,9 @@ i2c_smbus_read_i2c_block_data(ft5336_i2c_client, 0xcc, 1, &(reg_val[0]));
     mt_set_gpio_mode(GPIO_CTP_RST_PIN, GPIO_CTP_RST_PIN_M_GPIO);
     mt_set_gpio_dir(GPIO_CTP_RST_PIN, GPIO_DIR_OUT);
     mt_set_gpio_out(GPIO_CTP_RST_PIN, GPIO_OUT_ONE);
-	ret=0;
-	printk("<suyong> <%d>,%s(),reset the new FW\n",__LINE__,__func__ );
-ERR:
-	mt_eint_unmask(CUST_EINT_TOUCH_PANEL_NUM); 
-	mutex_unlock(&fwupgrade_mutex);
-	atomic_set(&upgrading, 0);
-    return ret;
+	
+       printk("<jy> <%d>,%s(),update OK-----------OK\n",__LINE__,__func__);
+	return 0;
 }
 
 #if (0)  //使用新的升级函数,主要是新函数判断了升级的类型和地址等 苏 勇 2014年01月15日 17:47:38
