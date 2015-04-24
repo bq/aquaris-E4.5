@@ -1776,10 +1776,10 @@ service MtkCodecService /system/bin/MtkCodecService
     user root
     group audio media sdcard_r
 
-service inexversion /system/etc/inexversion.sh
-    class main
-    user root
-    oneshot
+#service inexversion /system/etc/inexversion.sh
+#    class main
+#    user root
+#    oneshot
 
    #PS Calibration Daemon
 service pscali_daemon /system/xbin/pscalid
