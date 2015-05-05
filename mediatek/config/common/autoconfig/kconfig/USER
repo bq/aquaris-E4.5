@@ -44,7 +44,7 @@ CONFIG_PANIC_TIMEOUT=1
 
 # CONFIG_DEVKMEM is not set
 
-CONFIG_CMDLINE="console=ttyMT3,921600n1 vmalloc=496M slub_max_order=0 fixrtc"
+CONFIG_CMDLINE="console=ttyMT3,921600n1 vmalloc=496M slub_max_order=0 fixrtc --no-log"
 # CONFIG_CFG80211_DEBUGFS is not set
 # CONFIG_LIB80211_DEBUG is not set
 # CONFIG_DM_DEBUG is not set
