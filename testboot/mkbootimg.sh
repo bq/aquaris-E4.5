@@ -1,1 +1,2 @@
-abootimg --create boot.img -k ../out/target/product/krillin/kernel_krillin.bin -r initrd.img -f bootimg.cfg
+PROJECT=${1:-krillin}
+abootimg --create boot.img -k ../out/target/product/$PROJECT/kernel_$PROJECT.bin -r initrd.img -f bootimg.cfg
