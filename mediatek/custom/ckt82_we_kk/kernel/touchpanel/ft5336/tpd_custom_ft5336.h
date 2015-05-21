@@ -23,10 +23,14 @@
 //#define TPD_HAVE_CALIBRATION
 //#define TPD_HAVE_BUTTON
 //#define TPD_HAVE_TREMBLE_ELIMINATION
-#define TPD_HAVE_BUTTON
+//#define TPD_HAVE_BUTTON
 #define TPD_BUTTON_HEIGH        (100)
 #define TPD_KEY_COUNT           3
 #define TPD_KEYS                { KEY_MENU, KEY_HOMEPAGE ,KEY_BACK}
 #define TPD_KEYS_DIM            {{100,1450,100,100},{400,1450,100,100},{650,1450,100,100}}
+
+
+//#define FTS_GESTRUE			//双击唤醒
+#define FTS_PRESSURE		//压力和面积
 
 #endif /* TOUCHPANEL_H__ */

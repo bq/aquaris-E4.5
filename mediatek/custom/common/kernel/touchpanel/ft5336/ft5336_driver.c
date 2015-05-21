@@ -15,6 +15,7 @@
 #include <mach/mt_typedefs.h>
 #include <mach/mt_boot.h>
 
+#include <cust_vibrator.h>
 #include "cust_gpio_usage.h"
 #define FTS_GESTRUE
 #ifdef FTS_GESTRUE
@@ -37,41 +38,6 @@
 #define FTS_GESTRUE_POINTS_HEADER 8
 #define FTS_GESTURE_OUTPUT_ADRESS 0xD3
 #define FTS_GESTURE_OUTPUT_UNIT_LENGTH 4
-
-#define FT_UPGRADE_AA	0xAA
-#define FT_UPGRADE_55 	0x55
-#define FT_UPGRADE_EARSE_DELAY		1500
-
-/*upgrade config of FT5606*/
-#define FT5606_UPGRADE_AA_DELAY 		50
-#define FT5606_UPGRADE_55_DELAY 		10
-#define FT5606_UPGRADE_ID_1			0x79
-#define FT5606_UPGRADE_ID_2			0x06
-#define FT5606_UPGRADE_READID_DELAY 	100
-
-/*upgrade config of FT5316*/
-#define FT5316_UPGRADE_AA_DELAY 		50
-#define FT5316_UPGRADE_55_DELAY 		40
-#define FT5316_UPGRADE_ID_1			0x79
-#define FT5316_UPGRADE_ID_2			0x07
-#define FT5316_UPGRADE_READID_DELAY 	1
-
-/*upgrade config of FT5x06(x=2,3,4)*/
-#define FT5X06_UPGRADE_AA_DELAY 		50
-#define FT5X06_UPGRADE_55_DELAY 		30
-#define FT5X06_UPGRADE_ID_1			0x79
-#define FT5X06_UPGRADE_ID_2			0x03
-#define FT5X06_UPGRADE_READID_DELAY 	1
-
-/*upgrade config of FT5X36*/
-#define FT5X36_UPGRADE_AA_DELAY 		30
-#define FT5X36_UPGRADE_55_DELAY 		30
-#define FT5X36_UPGRADE_ID_1			0x79
-#define FT5X36_UPGRADE_ID_2			0x11
-#define FT5X36_UPGRADE_READID_DELAY 	10
-
-
-#define    FTS_SETTING_BUF_LEN        128
 
 //suspend_state_t get_suspend_state(void);
 
@@ -98,7 +64,7 @@ unsigned char GestrueEnable=0; //0-不支持 1-支持
 
 //lenovo_sw liaohj merged from putaoya 2012-09-12
  #define TPD_MAX_PONIT       5 
-
+extern void custom_vibration_enable(int);
 extern kal_bool check_charger_exist(void); 
 
 extern struct tpd_device *tpd;
@@ -122,7 +88,7 @@ static int __devinit tpd_probe(struct i2c_client *client, const struct i2c_devic
 static int tpd_detect (struct i2c_client *client, struct i2c_board_info *info);
 static int __devexit tpd_remove(struct i2c_client *client);
 static int touch_event_handler(void *unused);
- 
+
 static int boot_mode = 0;
 static int tpd_halt=0; 
 static int tpd_flag = 0;
@@ -475,48 +441,6 @@ static int ft5x0x_i2c_rxdata(char *rxdata, int length)
 	
 	return ret;
 }
-
-static int ft5x0x_i2c_Read(char *writebuf,
-		    int writelen, char *readbuf, int readlen)
-{
-	int ret;
-
-	if (writelen > 0) {
-		struct i2c_msg msgs[] = {
-			{
-			 .addr = ft5336_i2c_client->addr,
-			 .flags = 0,
-			 .len = writelen,
-			 .buf = writebuf,
-			 },
-			{
-			 .addr = ft5336_i2c_client->addr,
-			 .flags = I2C_M_RD,
-			 .len = readlen,
-			 .buf = readbuf,
-			 },
-		};
-		ret = i2c_transfer(ft5336_i2c_client->adapter, msgs, 2);
-		if (ret < 0)
-			dev_err(&ft5336_i2c_client->dev, "f%s: i2c read error.\n",
-				__func__);
-	} else {
-		struct i2c_msg msgs[] = {
-			{
-			 .addr = ft5336_i2c_client->addr,
-			 .flags = I2C_M_RD,
-			 .len = readlen,
-			 .buf = readbuf,
-			 },
-		};
-		ret = i2c_transfer(ft5336_i2c_client->adapter, msgs, 1);
-		if (ret < 0)
-			dev_err(&ft5336_i2c_client->dev, "%s:i2c read error.\n", __func__);
-	}
-	return ret;
-}
-
-
 /***********************************************************************************************
 Name	:	 
 
@@ -867,6 +791,12 @@ static unsigned char CTPM_FW[]=
 };
 #endif
 
+/*
+two steps:
+1.open FTS_DUAL_VENDOR_COMPAT,then customize CTPM_FW[] and CTPM_FW2[].
+2.open FTS_VENDOR_DISTINCT_BY_LCM,then customize LCM_NAME1 and LCM_NAME2 match with CTPM_FW[] and CTPM_FW2[].
+*/
+
 // the macro below is defined for dual tp vendor hw firmware upgrade  compatible
 #define FTS_DUAL_VENDOR_COMPAT
 
@@ -874,10 +804,28 @@ static unsigned char CTPM_FW[]=
 // the macro below is defined for dual tp vendor distinct by lcm name
 #define FTS_VENDOR_DISTINCT_BY_LCM
 
+#ifdef FTS_VENDOR_DISTINCT_BY_LCM // phil added for customize lcm_name at here!
+#if defined(VEGETAHD)
+#define LCM_NAME1 "hx8394_hd720_dsi_vdo_truly"
+#define LCM_NAME2 "otm1285a_hd720_dsi_vdo_tianma"
+#elif defined(KRILLIN)
+#define LCM_NAME1 "hx8389_qhd_dsi_vdo_truly"
+#define LCM_NAME2 "hx8389b_qhd_dsi_vdo_tianma"
+#endif
+#endif
+
+#if defined(VEGETAHD)
 static unsigned char CTPM_FW2[]=
 {
 #include "FT5336_HiKe_Vegeta_OGS_720X1280_TianMa0x55_Ver0x12_20140528_app.i"
 };
+#elif defined(KRILLIN)
+static unsigned char CTPM_FW2[]=
+{
+/* TianMa lcm used LaiBao tpd */
+#include "FT5336_Hike_Krilin_540X960_LaiBao0x55_Ver0x13_20140813_app.i"
+};
+#endif
 static int compat_fw_ver = 0xff;
 #if defined(FTS_VENDOR_DISTINCT_BY_LCM)
 #include "lcm_drv.h"
@@ -894,76 +842,32 @@ extern const LCM_DRIVER  *lcm_drv;
 #define    BL_VERSION_LZ4        0
 #define    BL_VERSION_Z7        1
 #define    BL_VERSION_GZF        2
-#define FTS_UPGRADE_LOOP	3
-struct Upgrade_Info{
-	u16		delay_aa;		/*delay of write FT_UPGRADE_AA*/
-	u16		delay_55;		/*delay of write FT_UPGRADE_55*/
-	u8		upgrade_id_1;	/*upgrade id 1*/
-	u8		upgrade_id_2;	/*upgrade id 2*/
-	u16		delay_readid;	/*delay of read id*/
-};
 
-static void fts_get_upgrade_info(struct Upgrade_Info * upgrade_info)
+static E_UPGRADE_ERR_TYPE  fts_ctpm_fw_upgrade(FTS_BYTE* pbt_buf, FTS_DWRD dw_lenth)
 {
-	switch(DEVICE_IC_TYPE)
-	{
-	case IC_FT5X06:
-		upgrade_info->delay_55 = FT5X06_UPGRADE_55_DELAY;
-		upgrade_info->delay_aa = FT5X06_UPGRADE_AA_DELAY;
-		upgrade_info->upgrade_id_1 = FT5X06_UPGRADE_ID_1;
-		upgrade_info->upgrade_id_2 = FT5X06_UPGRADE_ID_2;
-		upgrade_info->delay_readid = FT5X06_UPGRADE_READID_DELAY;
-		break;
-	case IC_FT5606:
-		upgrade_info->delay_55 = FT5606_UPGRADE_55_DELAY;
-		upgrade_info->delay_aa = FT5606_UPGRADE_AA_DELAY;
-		upgrade_info->upgrade_id_1 = FT5606_UPGRADE_ID_1;
-		upgrade_info->upgrade_id_2 = FT5606_UPGRADE_ID_2;
-		upgrade_info->delay_readid = FT5606_UPGRADE_READID_DELAY;
-		break;
-	case IC_FT5316:
-		upgrade_info->delay_55 = FT5316_UPGRADE_55_DELAY;
-		upgrade_info->delay_aa = FT5316_UPGRADE_AA_DELAY;
-		upgrade_info->upgrade_id_1 = FT5316_UPGRADE_ID_1;
-		upgrade_info->upgrade_id_2 = FT5316_UPGRADE_ID_2;
-		upgrade_info->delay_readid = FT5316_UPGRADE_READID_DELAY;
-		break;
-	case IC_FT5X36:
-		upgrade_info->delay_55 = FT5X36_UPGRADE_55_DELAY;
-		upgrade_info->delay_aa = FT5X36_UPGRADE_AA_DELAY;
-		upgrade_info->upgrade_id_1 = FT5X36_UPGRADE_ID_1;
-		upgrade_info->upgrade_id_2 = FT5X36_UPGRADE_ID_2;
-		upgrade_info->delay_readid = FT5X36_UPGRADE_READID_DELAY;
-		break;
-	default:
-		break;
-	}
-}
-static E_UPGRADE_ERR_TYPE  fts_ctpm_fw_upgrade(u8* pbt_buf, u32 dw_lenth)
-{
-	int ret=0;
-	u8 reg_val[2] = {0};
-	u32 i = 0;
-	u8 is_5336_new_bootloader = 0;
-	u8 is_5336_fwsize_30 = 0;
-	u32  packet_number;
-	u32  j;
-	u32  temp;
-	u32  lenght;
-	u8 	packet_buf[FTS_PACKET_LENGTH + 6];
-	u8  	auc_i2c_write_buf[10];
-	u8  	bt_ecc;
+    FTS_BYTE reg_val[2] = {0};
+    FTS_DWRD i = 0;
+	u8 	 is_5336_new_bootloader = 0;
+	u8 	 is_5336_fwsize_30 = 0;
+    FTS_DWRD  packet_number;
+    FTS_DWRD  j;
+    FTS_DWRD  temp;
+    FTS_DWRD  lenght;
+    FTS_BYTE  packet_buf[FTS_PACKET_LENGTH + 6];
+    FTS_BYTE  auc_i2c_write_buf[10];
+    FTS_BYTE bt_ecc;
     int      i_ret;
-	unsigned short  fw_filenth=dw_lenth;
-
-	
+	int ret=0;
+	unsigned char ver;
+    /*********Step 1:Reset  CTPM *****/
+    /*write 0xaa to register 0xfc*/
+	atomic_set(&upgrading, 1);
+	mutex_lock(&fwupgrade_mutex);
+	mt_eint_mask(CUST_EINT_TOUCH_PANEL_NUM);
 #ifdef ESD_CHECK	
  	cancel_delayed_work_sync(&ctp_read_id_work);
 #endif
-	struct Upgrade_Info upgradeinfo;
-
-	fts_get_upgrade_info(&upgradeinfo);
-	if(pbt_buf[fw_filenth-12] == 30)
+	if(pbt_buf[dw_lenth-12] == 30)
 	{
 		is_5336_fwsize_30 = 1;
 	}
@@ -985,22 +889,13 @@ static E_UPGRADE_ERR_TYPE  fts_ctpm_fw_upgrade(u8* pbt_buf, u32 dw_lenth)
 // 苏 勇 2014年03月18日 11:10:10   
 // 苏 勇 2014年03月18日 11:10:10    delay_qt_ms(500); 
 	
-	for (i = 0; i < FTS_UPGRADE_LOOP; i++) {
-    	/*********Step 1:Reset  CTPM *****/
-    	/*write 0xaa to register 0xfc*/
-	   	//ft5x0x_write_reg(client, 0xfc, FT_UPGRADE_AA);
-		//msleep(upgradeinfo.delay_aa);
-		
-		 /*write 0x55 to register 0xfc*/
-		//ft5x0x_write_reg(client, 0xfc, FT_UPGRADE_55);   
-		//msleep(upgradeinfo.delay_55);   
 		/*write 0xaa to register 0xfc*/
 	   	ft5x0x_write_reg(0xfc, 0xaa);
-		msleep(upgradeinfo.delay_aa);
+		msleep(30);
 		
 		 /*write 0x55 to register 0xfc*/
 		ft5x0x_write_reg(0xfc, 0x55);   
-		msleep(upgradeinfo.delay_55);   
+		msleep(30);
 
 
 
@@ -1009,36 +904,44 @@ static E_UPGRADE_ERR_TYPE  fts_ctpm_fw_upgrade(u8* pbt_buf, u32 dw_lenth)
     /*********Step 2:Enter upgrade mode *****/
     auc_i2c_write_buf[0] = 0x55;
     auc_i2c_write_buf[1] = 0xaa;
+    do
+    {
+        i ++;
+        i_ret = ft5x0x_i2c_txdata(auc_i2c_write_buf, 2);
+	printk("<suyong> <%d>,%s(),i=%d i_ret=%d\n",__LINE__,__func__,i,i_ret );
 		
-	    i_ret = ft5x0x_i2c_txdata(auc_i2c_write_buf, 2);
-	  
-	    /*********Step 3:check READ-ID***********************/   
-		msleep(upgradeinfo.delay_readid);
-	   	auc_i2c_write_buf[0] = 0x90; 
-		auc_i2c_write_buf[1] = auc_i2c_write_buf[2] = auc_i2c_write_buf[3] = 0x00;
-
-		ft5x0x_i2c_Read(auc_i2c_write_buf, 4, reg_val, 2);
-		
-		if (reg_val[0] == upgradeinfo.upgrade_id_1 
-			&& reg_val[1] == upgradeinfo.upgrade_id_2)
-		{
-			//printk(KERN_WARNING "[FTS] Step 3: CTPM ID OK,ID1 = 0x%x,ID2 = 0x%x\n",reg_val[0],reg_val[1]);
-			dev_dbg(&ft5336_i2c_client->dev, "[FTS] Step 3: CTPM ID OK,ID1 = 0x%x,ID2 = 0x%x\n",reg_val[0],reg_val[1]);
-	    		break;
-		}
-		else
-		{
-			dev_err(&ft5336_i2c_client->dev, "[FTS] Step 3: CTPM ID FAILD,ID1 = 0x%x,ID2 = 0x%x\n",reg_val[0],reg_val[1]);
-	    		continue;
-		}
+        delay_qt_ms(5);
+    }while(i_ret <= 0 && i < 5 );
+	if(i==5)
+	{
+		ret =-1;
+		goto ERR;
 	}
-	if (i >= FTS_UPGRADE_LOOP)
-		return -EIO;
-		
-	auc_i2c_write_buf[0] = 0xcd;
-	ft5x0x_i2c_Read(auc_i2c_write_buf, 1, reg_val, 1);
+	printk("<suyong> <%d>,%s(),Step 2:Enter upgrade mode\n",__LINE__,__func__ );
 
-	printk("[TSP]reg_val[0] =%d\n ",reg_val[0] );
+    /*********Step 3:check READ-ID***********************/
+    cmd_write(0x90,0x00,0x00,0x00,4);
+	i=0;
+	i_ret=0;
+    do
+    {
+        i ++;
+        i_ret = byte_read(reg_val,2);
+        delay_qt_ms(10);
+    }while(i_ret <= 0 && i < 5 );
+	if(i==5)
+	{
+		ret =-1;
+		goto ERR;
+	}
+
+	// printk("<suyong> <%d>,%s(),%x  %x\n",__LINE__,__func__,reg_val[0],reg_val[1] );
+    //printk("[TSP] Step 2: CTPM ID,ID1 = 0x%x,ID2 = 0x%x\n",reg_val[0],reg_val[1]);
+	auc_i2c_write_buf[0] = 0xcd;
+	cmd_write(auc_i2c_write_buf[0],0x00,0x00,0x00,1);
+	byte_read(reg_val,1);
+
+
 
 	/*********0705 mshl ********************/
 	/*if (reg_val[0] > 4)
@@ -1057,24 +960,26 @@ static E_UPGRADE_ERR_TYPE  fts_ctpm_fw_upgrade(u8* pbt_buf, u32 dw_lenth)
 	}
 
      /*********Step 4:erase app and panel paramenter area ********************/
-	printk("[TSP] step 4 start\n");
 	if(is_5336_fwsize_30)
 	{
 		auc_i2c_write_buf[0] = 0x61;
 // 苏 勇 2014年01月15日 14:15:43		i2c_master_send(i2c_client, auc_i2c_write_buf, 1); /*erase app area*/	
-		ft5x0x_i2c_txdata(auc_i2c_write_buf, 1); /*erase app area*/	
-   		 msleep(FT_UPGRADE_EARSE_DELAY); 
+		cmd_write(auc_i2c_write_buf[0],0x00,0x00,0x00,1);
+
+		delay_qt_ms(4000);
 
 		auc_i2c_write_buf[0] = 0x63;
 // 苏 勇 2014年01月15日 14:15:48		i2c_master_send(i2c_client, auc_i2c_write_buf, 1); /*erase app area*/	
-		ft5x0x_i2c_txdata(auc_i2c_write_buf, 1); /*erase app area*/	
-   		 msleep(50);
+		cmd_write(auc_i2c_write_buf[0],0x00,0x00,0x00,1);
+
+		msleep(50);
 	}
 	else
 	{
 		auc_i2c_write_buf[0] = 0x61;
-		ft5x0x_i2c_txdata(auc_i2c_write_buf, 1); /*erase app area*/	
-   		msleep(FT_UPGRADE_EARSE_DELAY); 
+		cmd_write(auc_i2c_write_buf[0],0x00,0x00,0x00,1);
+		delay_qt_ms(4000);
+
 	}
 	printk("[TSP] step 4 end\n");
 
@@ -1095,11 +1000,11 @@ static E_UPGRADE_ERR_TYPE  fts_ctpm_fw_upgrade(u8* pbt_buf, u32 dw_lenth)
     for (j=0;j<packet_number;j++)
     {
         temp = j * FTS_PACKET_LENGTH;
-		packet_buf[2] = (u8)(temp>>8);
-		packet_buf[3] = (u8)temp;
-		lenght = FTS_PACKET_LENGTH;
-		packet_buf[4] = (u8)(lenght>>8);
-		packet_buf[5] = (u8)lenght;
+        packet_buf[2] = (FTS_BYTE)(temp>>8);
+        packet_buf[3] = (FTS_BYTE)temp;
+        lenght = FTS_PACKET_LENGTH;
+        packet_buf[4] = (FTS_BYTE)(lenght>>8);
+        packet_buf[5] = (FTS_BYTE)lenght;
 
         for (i=0;i<FTS_PACKET_LENGTH;i++)
         {
@@ -1111,19 +1016,26 @@ static E_UPGRADE_ERR_TYPE  fts_ctpm_fw_upgrade(u8* pbt_buf, u32 dw_lenth)
 		if(ret <0)
 		{
 			printk("<suyong> <%d>,%s(),ret=%d\n",__LINE__,__func__,ret );
+			goto ERR;
 		}
+        //printk("[TSP] 111 ret 0x%x \n", ret);
+        //delay_qt_ms(FTS_PACKET_LENGTH/6 + 1);
+        if ((j * FTS_PACKET_LENGTH % 1024) == 0)
+        {
+              //printk("[TSP] upgrade the 0x%x th byte.\n", ((unsigned int)j) * FTS_PACKET_LENGTH);
+        }
 		msleep(FTS_PACKET_LENGTH/6 + 1);
     }
 
     if ((dw_lenth) % FTS_PACKET_LENGTH > 0)
     {
         temp = packet_number * FTS_PACKET_LENGTH;
-		packet_buf[2] = (u8)(temp>>8);
-		packet_buf[3] = (u8)temp;
+        packet_buf[2] = (FTS_BYTE)(temp>>8);
+        packet_buf[3] = (FTS_BYTE)temp;
 
-		temp = (dw_lenth) % FTS_PACKET_LENGTH;
-		packet_buf[4] = (u8)(temp>>8);
-		packet_buf[5] = (u8)temp;
+        temp = (dw_lenth) % FTS_PACKET_LENGTH;
+        packet_buf[4] = (FTS_BYTE)(temp>>8);
+        packet_buf[5] = (FTS_BYTE)temp;
 
         for (i=0;i<temp;i++)
         {
@@ -1135,9 +1047,10 @@ static E_UPGRADE_ERR_TYPE  fts_ctpm_fw_upgrade(u8* pbt_buf, u32 dw_lenth)
 		if(ret <0)
 		{
 			printk("<suyong> <%d>,%s(),ret=%d\n",__LINE__,__func__,ret );
+			goto ERR;
 		}
               //printk("[TSP] 222 ret 0x%x \n", ret);
-		msleep(20);
+        delay_qt_ms(20);
     }
 
     //send the last six byte
@@ -1153,16 +1066,21 @@ static E_UPGRADE_ERR_TYPE  fts_ctpm_fw_upgrade(u8* pbt_buf, u32 dw_lenth)
 			{
 				temp = 0x6ffa + i;
 			}
-			packet_buf[2] = (u8)(temp>>8);
-			packet_buf[3] = (u8)temp;
-			temp =1;
-			packet_buf[4] = (u8)(temp>>8);
-			packet_buf[5] = (u8)temp;
+	        packet_buf[2] = (FTS_BYTE)(temp>>8);
+	        packet_buf[3] = (FTS_BYTE)temp;
+	        temp =1;
+	        packet_buf[4] = (FTS_BYTE)(temp>>8);
+	        packet_buf[5] = (FTS_BYTE)temp;
 	        packet_buf[6] = pbt_buf[ dw_lenth + i]; 
 	        bt_ecc ^= packet_buf[6];
-			ft5x0x_i2c_txdata(packet_buf, 7);
+	        ret =CTPDMA_i2c_write(0x70,&packet_buf[0],7);
+			if(ret <0)
+			{
+				printk("<suyong> <%d>,%s(),ret=%d\n",__LINE__,__func__,ret );
+				goto ERR;
+			}
 
-			msleep(10);
+	        delay_qt_ms(20);
 	    }
 	}
 	else if(is_5336_new_bootloader == BL_VERSION_GZF)
@@ -1189,21 +1107,25 @@ static E_UPGRADE_ERR_TYPE  fts_ctpm_fw_upgrade(u8* pbt_buf, u32 dw_lenth)
 			if(ret <0)
 			{
 				printk("<suyong> <%d>,%s(),ret=%d\n",__LINE__,__func__,ret );
+				goto ERR;
 			}
 			msleep(10);
 
 		}
 	}
+	printk("<suyong> <%d>,%s(),write firmware(FW)\n",__LINE__,__func__ );
 
 	/*********Step 6: read out checksum***********************/
 	/*send the opration head*/
-	auc_i2c_write_buf[0] = 0xcc;
-	ft5x0x_i2c_Read(auc_i2c_write_buf, 1, reg_val, 1); 
-
+    //cmd_write(0xcc,0x00,0x00,0x00,1);
+    //byte_read(reg_val,1);
+    i2c_smbus_read_i2c_block_data(ft5336_i2c_client, 0xcc, 1, &(reg_val[0]));
+	printk("<suyong> <%d>,%s(),ecc read 0x%x, new firmware 0x%x\n",__LINE__,__func__ ,reg_val[0], bt_ecc);
 	if(reg_val[0] != bt_ecc)
 	{
-		dev_err(&ft5336_i2c_client->dev, "[FTS]--ecc error! FW=%02x bt_ecc=%02x\n", reg_val[0], bt_ecc);
-	    	return -EIO;
+        //return ERR_ECC;
+        ret=-1;
+        goto ERR;
 	}
 	printk("<suyong> <%d>,%s(),Step 6: read out checksum\n",__LINE__,__func__ );
 
@@ -1216,9 +1138,13 @@ static E_UPGRADE_ERR_TYPE  fts_ctpm_fw_upgrade(u8* pbt_buf, u32 dw_lenth)
     mt_set_gpio_mode(GPIO_CTP_RST_PIN, GPIO_CTP_RST_PIN_M_GPIO);
     mt_set_gpio_dir(GPIO_CTP_RST_PIN, GPIO_DIR_OUT);
     mt_set_gpio_out(GPIO_CTP_RST_PIN, GPIO_OUT_ONE);
-	
-       printk("<jy> <%d>,%s(),update OK-----------OK\n",__LINE__,__func__);
-	return 0;
+	ret=0;
+	printk("<suyong> <%d>,%s(),reset the new FW\n",__LINE__,__func__ );
+ERR:
+	mt_eint_unmask(CUST_EINT_TOUCH_PANEL_NUM);
+	mutex_unlock(&fwupgrade_mutex);
+	atomic_set(&upgrading, 0);
+    return ret;
 }
 
 #if (0)  //使用新的升级函数,主要是新函数判断了升级的类型和地址等 苏 勇 2014年01月15日 17:47:38
@@ -1271,7 +1197,7 @@ E_UPGRADE_ERR_TYPE  fts_ctpm_fw_upgrade(FTS_BYTE* pbt_buf, FTS_DWRD dw_lenth)
 		ret =-1;
 		goto ERR;
 	}
-    /*********Step 3:check READ-ID***********************/        
+    /*********Step 3:check READ-ID***********************/
     cmd_write(0x90,0x00,0x00,0x00,4);
 	i=0;
 	i_ret=0;
@@ -1440,7 +1366,7 @@ static int fts_ctpm_fw_upgrade_with_i_file(void)
 	int fw_len = 0;
 	printk("[TSP]ID_ver=%x, fw_ver=%x\n", chipID, ft5x0x_read_fw_ver());
 	#if defined(FTS_VENDOR_DISTINCT_BY_LCM)
-	if(strcmp(lcm_drv->name,"hx8394_hd720_dsi_vdo_truly")==0) // truly TP's ID is 0x5a
+	if(strcmp(lcm_drv->name,LCM_NAME1)==0 || strcmp(lcm_drv->name,"hx8394d_hd720_dsi_vdo_truly")==0) // truly TP's ID is 0x5a
 	#else
 	if(chipID == CTPM_FW[sizeof(CTPM_FW)-1])
 	#endif
@@ -1450,7 +1376,7 @@ static int fts_ctpm_fw_upgrade_with_i_file(void)
 		compat_fw_ver = pbt_buf[fw_len-2];
 	}
 	#if defined(FTS_VENDOR_DISTINCT_BY_LCM)
-	else if(strcmp(lcm_drv->name,"otm1285a_hd720_dsi_vdo_tianma")==0) // tianma TP's ID is 0x55
+	else if(strcmp(lcm_drv->name,LCM_NAME2)==0) // tianma TP's ID is 0x55
 	#else
 	else if(chipID == CTPM_FW2[sizeof(CTPM_FW2)-1])
 	#endif
@@ -1652,6 +1578,12 @@ static  void tpd_down(int x, int y, int p) {
  
 static  void tpd_up(int x, int y,int *count) {
 	 //if(*count>0) {
+//	 	#ifdef FTS_PRESSURE
+//		input_report_abs(tpd->dev, ABS_MT_PRESSURE, 0);
+//		input_report_abs(tpd->dev, ABS_MT_TOUCH_MAJOR, 0);
+//		#else
+//		input_report_abs(tpd->dev, ABS_MT_PRESSURE, 0);
+//		#endif
 		 input_report_key(tpd->dev, BTN_TOUCH, 0);
 		 //input_report_abs(tpd->dev, ABS_MT_TOUCH_MAJOR, 0);
 		 //input_report_abs(tpd->dev, ABS_MT_POSITION_X, x);
@@ -1823,6 +1755,7 @@ static void check_gesture(int gesture_id)
 			//input_report_key(tpd->dev, KEY_U, 0);
 			input_report_key(tpd->dev, KEY_POWER, 0);
 			input_sync(tpd->dev);
+            custom_vibration_enable(50);
 			}
 			break;
 		case GESTURE_O:
@@ -2020,7 +1953,7 @@ static int ft5x0x_read_Touchdata(void)
 
 	 return 0;
  }
- 
+
  static int tpd_detect (struct i2c_client *client, struct i2c_board_info *info) 
  {
 	 strcpy(info->type, TPD_DEVICE);	
@@ -2401,11 +2334,11 @@ static ssize_t show_chipinfo(struct device *dev,struct device_attribute *attr, c
 	//ft5x0x_read_reg(client,TOUCH_FMV_ID,&ver);
 	//return sprintf(buf, "[ft5336] ID_ver=%x,fw_ver=%x\n", ft5x0x_read_ID_ver(), ft5x0x_read_fw_ver()); 
 	#if defined(FTS_VENDOR_DISTINCT_BY_LCM)
-	if(strcmp(lcm_drv->name,"hx8394_hd720_dsi_vdo_truly") == 0)
+	if(strcmp(lcm_drv->name,LCM_NAME1) == 0 || strcmp(lcm_drv->name,"hx8394d_hd720_dsi_vdo_truly") == 0)
 	{
 		id = 0x5a; // truly TP's ID
 	}
-	else if(strcmp(lcm_drv->name,"otm1285a_hd720_dsi_vdo_tianma") == 0)
+	else if(strcmp(lcm_drv->name,LCM_NAME2) == 0)
 	{
 		id = 0x55; // tianma TP's ID
 	}
@@ -2442,7 +2375,7 @@ static ssize_t show_chipinfo(struct device *dev,struct device_attribute *attr, c
 
 }
 
-static DEVICE_ATTR(chipinfo, 0444, show_chipinfo, NULL);
+static DEVICE_ATTR(chipinfo, 0664, show_chipinfo, NULL);	//Modify by EminHuang 20120613   0444 -> 0664 [CTS Test]				android.permission.cts.FileSystemPermissionTest#testAllFilesInSysAreNotWritable FAIL
 
 
 #ifdef FTS_GESTRUE
