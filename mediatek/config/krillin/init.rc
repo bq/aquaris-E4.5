@@ -264,10 +264,6 @@ on fs_property:ro.persist.partition.support=yes
 # checker programs.
     mkdir /dev/fscklogs 0770 root system
 
-# Create directory used by the camera-service to store its trust-store socket
-    mkdir /dev/socket/camera_service 0770 media media
-    chmod 2770 /dev/socket/camera_service
-
 on fs
 
    mount iso9660 loop@/system/mobile_toolkit/iAmCdRom.iso /mnt/cd-rom ro
@@ -910,6 +906,10 @@ on boot
     chown radio system /sys/power/tuxonice/do_hibernate
     chmod 0770 /sys/power/tuxonice
     chmod 0220 /sys/power/tuxonice/do_hibernate
+
+# Create directory used by the camera-service to store its trust-store socket
+    mkdir /dev/socket/camera_service 0770 media media
+    chmod 2770 /dev/socket/camera_service
 
 # AGPS
     mkdir /data/agps_supl 0771 gps system

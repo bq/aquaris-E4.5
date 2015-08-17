@@ -885,6 +885,10 @@ on boot
     chmod 0770 /sys/power/tuxonice
     chmod 0220 /sys/power/tuxonice/do_hibernate
 
+# Create directory used by the camera-service to store its trust-store socket
+    mkdir /dev/socket/camera_service 0770 media media
+    chmod 2770 /dev/socket/camera_service
+
 # AGPS
     mkdir /data/agps_supl 0771 gps system
 
