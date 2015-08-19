@@ -27,6 +27,8 @@ NOSTDINC_FLAGS := \
 	-I$(backport_srctree)/include/ \
 	-I$(backport_srctree)/include/uapi \
 	-include $(backport_srctree)/backport-include/backport/backport.h \
+	-I$(backport_srctree)/../../mediatek/kernel/drivers/combo/common_mt6630/include \
+	-I$(backport_srctree)/../../mediatek/kernel/drivers/combo/common_mt6630/linux/include \
 	$(CFLAGS)
 endif
 
