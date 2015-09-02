@@ -317,7 +317,7 @@ static int uhid_dev_create(struct uhid_device *uhid,
 	hid->hid_output_raw_report = uhid_hid_output_raw;
 	hid->bus = ev->u.create.bus;
 	hid->vendor = ev->u.create.vendor;
-	hid->product = ev->u.create.product;	
+	hid->product = ev->u.create.product;
 	hid->version = ev->u.create.version;
 	hid->country = ev->u.create.country;
 	hid->driver_data = uhid;
@@ -365,8 +365,10 @@ static int uhid_dev_input(struct uhid_device *uhid, struct uhid_event *ev)
 	if (!uhid->running)
 		return -EINVAL;
 
-	return hid_input_report(uhid->hid, HID_INPUT_REPORT, ev->u.input.data,
+	hid_input_report(uhid->hid, HID_INPUT_REPORT, ev->u.input.data,
 			 min_t(size_t, ev->u.input.size, UHID_DATA_MAX), 0);
+
+	return 0;
 }
 
 static int uhid_dev_feature_answer(struct uhid_device *uhid,
@@ -510,7 +512,6 @@ static ssize_t uhid_char_write(struct file *file, const char __user *buffer,
 		break;
 	case UHID_INPUT:
 		ret = uhid_dev_input(uhid, &uhid->input_buf);
-		
 		break;
 	case UHID_FEATURE_ANSWER:
 		ret = uhid_dev_feature_answer(uhid, &uhid->input_buf);
@@ -538,16 +539,6 @@ static unsigned int uhid_char_poll(struct file *file, poll_table *wait)
 	return 0;
 }
 
-static const struct hid_device_id uhid_table[] = {
-	{ HID_BLUETOOTH_DEVICE(HID_ANY_ID, HID_ANY_ID) },
-	{ }
-};
-
-static struct hid_driver uhid_driver = {
-	.name = "generic-bluetooth",
-	.id_table = uhid_table,
-};
-
 static const struct file_operations uhid_fops = {
 	.owner		= THIS_MODULE,
 	.open		= uhid_char_open,
@@ -566,23 +557,12 @@ static struct miscdevice uhid_misc = {
 
 static int __init uhid_init(void)
 {
-    int ret;
-	ret = hid_register_driver(&uhid_driver);
-	//hid_warn(uhid->hid, "[hid]hid_register_driver ret = %d\n",ret);
-	if (ret)
-		return ret;
-
-	ret = misc_register(&uhid_misc);
-
-	//hid_warn(uhid->hid, "[hid]misc_register ret = %d\n",ret);
-	
-	return ret;
+	return misc_register(&uhid_misc);
 }
 
 static void __exit uhid_exit(void)
 {
 	misc_deregister(&uhid_misc);
-	hid_unregister_driver(&uhid_driver);
 }
 
 module_init(uhid_init);
