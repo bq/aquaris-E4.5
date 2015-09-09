@@ -104,6 +104,10 @@ endif
 PRODUCT_COPY_FILES += \
     $(MTK_ROOT_CONFIG_OUT)/inexversion.sh:system/etc/inexversion.sh
 
+#wlan_status.sh
+PRODUCT_COPY_FILES += \
+    $(MTK_ROOT_CONFIG_OUT)/wlan_status.sh:system/etc/wlan_status.sh
+
 # Ubuntu Overlay Files
 PRODUCT_COPY_FILES += \
     $(MTK_ROOT_CONFIG_OUT)/ubuntu/udev.rules:system/ubuntu/lib/udev/rules.d/70-android.rules \
