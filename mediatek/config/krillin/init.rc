@@ -762,6 +762,9 @@ on early-boot
     chown root system /system/etc/inexversion.sh
     chmod 0750 /system/etc/inexversion.sh
 
+    chown root system /system/etc/wlan_status.sh
+    chmod 0750 /system/etc/wlan_status.sh
+
 # End of adding by MTK drivers
 # -----------------------
 
@@ -1228,13 +1231,19 @@ service aal /system/bin/aal
 #    user system
 #    group system radio mount wifi inet net_admin 
 
-# monitor property and power on/off wlan 
+# monitor property and power on/off wlan
+service wlan_status /system/bin/sh /system/etc/wlan_status.sh
+    class main
+    user system
+    group system wifi
+    oneshot
+
 on property:wlan.driver.status=ok
-	write /dev/wmtWifi "1"
+    start wlan_status
 
 on property:wlan.driver.status=unloaded
-	write /dev/wmtWifi "0"
-    
+    start wlan_status
+
 service insmod insmod 
     disabled
     oneshot    
