@@ -111,5 +111,5 @@ PRODUCT_COPY_FILES += \
     $(MTK_ROOT_CONFIG_OUT)/ubuntu/device-hacks.conf:system/ubuntu/etc/init/device-hacks.conf \
     $(MTK_ROOT_CONFIG_OUT)/ubuntu/limits.conf:system/ubuntu/etc/security/limits.conf \
     $(MTK_ROOT_CONFIG_OUT)/ubuntu/ubuntu-location-service.conf:system/ubuntu/etc/init/ubuntu-location-service.conf \
-    $(MTK_ROOT_CONFIG_OUT)/ubuntu/display.conf:system/ubuntu/etc/ubuntu-touch-session.d/android.conf \
+    $(MTK_ROOT_CONFIG_OUT)/ubuntu/android.conf:system/ubuntu/etc/ubuntu-touch-session.d/android.conf \
     $(MTK_ROOT_CONFIG_OUT)/ubuntu/gps.conf:system/etc/gps.conf
