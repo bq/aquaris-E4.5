@@ -20,7 +20,7 @@ commits. First, you should clone the project:
 After it, choose the branch you would like to build:
 
 	$ cd aquaris-E4.5/
-	$ git checkout aquaris-E4.5-ubuntu-rtm
+	$ git checkout aquaris-E4.5-ubuntu-master
 
 Then, build the kernel:
 
@@ -29,7 +29,7 @@ Then, build the kernel:
 You can build a flashable image with
 
 	$ cd testboot
-        $ ./mkbootimg.sh
+        $ ./mkbootimg.sh krillin
 
 You can flash this with:
 
