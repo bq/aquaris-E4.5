@@ -299,6 +299,8 @@ typedef enum __VENC_DRV_VIDEO_LEVEL_T
     VENC_DRV_VIDEO_LEVEL_MEDIUM,            ///< VC1, MPEG2
     VENC_DRV_VIDEO_LEVEL_HIGH1440,          ///< MPEG2
     VENC_DRV_VIDEO_LEVEL_HIGH,              ///< VC1, MPEG2
+    VENC_DRV_VIDEO_LEVEL_6,                 ///< H263
+    VENC_DRV_VIDEO_LEVEL_7,               ///< H263
     VENC_DRV_VIDEO_LEVEL_MAX = 0xFFFFFFFF   ///< Max VENC_DRV_VIDEO_LEVEL_T value
 } VENC_DRV_VIDEO_LEVEL_T;
 

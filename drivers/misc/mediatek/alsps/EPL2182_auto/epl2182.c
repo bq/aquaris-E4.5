@@ -373,7 +373,7 @@ static int PS_MAX_XTALK = 50000;
 /*----------------------------------------------------------------------------*/
 static struct i2c_client *epl2182_i2c_client = NULL;
 
-
+static DEFINE_MUTEX(EPL2182_mutex);
 /*----------------------------------------------------------------------------*/
 static const struct i2c_device_id epl2182_i2c_id[] = {{"EPL2182",0},{}};
 static struct i2c_board_info __initdata i2c_EPL2182= { I2C_BOARD_INFO("EPL2182", (0X92>>1))};
@@ -536,6 +536,7 @@ static int elan_epl2182_I2C_Write(struct i2c_client *client, uint8_t regaddr, ui
     int ret = 0;
     int retry;
 
+    mutex_lock(&EPL2182_mutex);
     buffer[0] = (regaddr<<3) | bytecount ;
     buffer[1] = data;
 
@@ -556,9 +557,11 @@ static int elan_epl2182_I2C_Write(struct i2c_client *client, uint8_t regaddr, ui
     if(retry>=I2C_RETRY_COUNT)
     {
         APS_ERR("i2c write retry over %d\n", I2C_RETRY_COUNT);
+        mutex_unlock(&EPL2182_mutex);
         return -EINVAL;
     }
 
+    mutex_unlock(&EPL2182_mutex);
     return ret;
 }
 
@@ -574,6 +577,7 @@ static int elan_epl2182_I2C_Read(struct i2c_client *client)
     int ret = 0, i =0;
     int retry;
 
+    mutex_lock(&EPL2182_mutex);
     for(retry = 0; retry < I2C_RETRY_COUNT; retry++)
     {
         ret = i2c_master_recv(client, buffer, RXBYTES);
@@ -588,12 +592,14 @@ static int elan_epl2182_I2C_Read(struct i2c_client *client)
     if(retry>=I2C_RETRY_COUNT)
     {
         APS_ERR("i2c read retry over %d\n", I2C_RETRY_COUNT);
+        mutex_unlock(&EPL2182_mutex);
         return -EINVAL;
     }
 
     for(i=0; i<PACKAGE_SIZE; i++)
         gRawData.raw_bytes[i] = buffer[i];
 
+    mutex_unlock(&EPL2182_mutex);
     return ret;
 }
 static int elan_epl2182_I2C_Read_long(struct i2c_client *client, int bytecount)
@@ -602,6 +608,7 @@ static int elan_epl2182_I2C_Read_long(struct i2c_client *client, int bytecount)
     int ret = 0, i =0;
     int retry;
 
+    mutex_lock(&EPL2182_mutex);
     for(retry = 0; retry < I2C_RETRY_COUNT; retry++)
     {
         ret = i2c_master_recv(client, buffer, bytecount);
@@ -616,12 +623,14 @@ static int elan_epl2182_I2C_Read_long(struct i2c_client *client, int bytecount)
     if(retry>=I2C_RETRY_COUNT)
     {
         APS_ERR("i2c read retry over %d\n", I2C_RETRY_COUNT);
+        mutex_unlock(&EPL2182_mutex);
         return -EINVAL;
     }
 
     for(i=0; i<bytecount; i++)
         gRawData.raw_bytes[i] = buffer[i];
 
+    mutex_unlock(&EPL2182_mutex);
     return ret;
 }
 
@@ -1330,7 +1339,7 @@ int epl2182_read_als(struct i2c_client *client)
     }
     else
     {
-        if(ch1 < 15) //过滤掉小值部分,优化工厂反馈工厂模式覆盖ps孔als不稳定的问题,此芯片16bits,感光度太高,无法彻底解决
+        if(ch1 < 15) //\B9\FD\C2说\F4小值\B2\BF\B7\D6,\D3呕\AF\B9\A4\B3\A7\B7\B4\C0\A1\B9\A4\B3\A7模式\B8\B2\B8\C7ps\BF\D7als\B2\BB\CE榷\A8\B5\C4\CE\CA\CC\E2,\B4\CB芯片16bits,\B8泄\E2\B6\C8太\B8\DF,\CE薹\A8\B3\B9\B5捉\E2\BE\F6
             ch1 = 0;
         gRawData.als_ch1_raw = ch1;
         APS_LOG("read als raw data = %d\n", gRawData.als_ch1_raw);

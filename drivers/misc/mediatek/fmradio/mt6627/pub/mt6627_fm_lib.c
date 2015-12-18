@@ -673,7 +673,9 @@ static fm_s32 mt6627_PowerUp(fm_u16 *chip_id, fm_u16 *device_id)
 	fm_s32 ret = 0;
 	fm_u16 pkt_size;
 	fm_u16 tmp_reg = 0;
+#if	defined(MT6625_FM)
 	fm_u32 host_reg = 0;
+#endif
 
 	const fm_s8 *path_patch = NULL;
 	const fm_s8 *path_coeff = NULL;
@@ -693,7 +695,7 @@ static fm_s32 mt6627_PowerUp(fm_u16 *chip_id, fm_u16 *device_id)
 		WCN_DBG(FM_ALT | CHIP, " pwrup set CSPI failed\n");
 		return ret;
 	}
-
+#if	defined(MT6625_FM)
 	ret = mt6627_host_read(0x80101030,&host_reg);
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " pwrup read 0x80100030 failed\n");
@@ -704,7 +706,19 @@ static fm_s32 mt6627_PowerUp(fm_u16 *chip_id, fm_u16 *device_id)
 		WCN_DBG(FM_ALT | CHIP, " pwrup enable top_ck_en_adie failed\n");
 		return ret;
 	}
-	
+
+	/* enable bgldo */
+	ret = mt6627_top_read(0x00c0, &tmp_reg);
+	if (ret) {
+		WCN_DBG(FM_ERR | CHIP, "power up read top 0xc0 failed\n");
+		return ret;
+	}
+	ret = mt6627_top_write(0x00c0, tmp_reg|(0x3<<27));
+	if (ret) {
+		WCN_DBG(FM_ERR | CHIP, "power up write top 0xc0 failed\n");
+		return ret;
+	}
+#endif
 	if (FM_LOCK(cmd_buf_lock))
 		return (-FM_ELOCK);
 	pkt_size = mt6627_pwrup_clock_on(cmd_buf, TX_BUF_SIZE);
@@ -867,7 +881,7 @@ static fm_s32 mt6627_PowerDown(void)
 	/* FIX_ME, disable ext interrupt */
 	mt6627_write(FM_MAIN_EXTINTRMASK, 0x00);
 
-	
+#if	defined(MT6625_FM)
 	ret = mt6627_host_read(0x80101030,&host_reg);
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " pwroff read 0x80100030 failed\n");
@@ -878,6 +892,7 @@ static fm_s32 mt6627_PowerDown(void)
 		WCN_DBG(FM_ALT | CHIP, " pwroff diable top_ck_en_adie failed\n");
 		return ret;
 	}
+#endif
 
 /* rssi_th_set = fm_false; */
 	return ret;
@@ -969,6 +984,10 @@ static fm_bool mt6627_SetFreq(fm_u16 freq)
 		return fm_false;
 	}
 	
+	/* enable connsys FM 2 wire RX */
+	mt6627_write(0x9B, 0xF9AB);
+	mt6627_host_write(0x80101054, 0x00003f35);
+
 	if ((mt6627_hw_info.chip_id == 0x6625) && ((mtk_wcn_wmt_chipid_query() == 0x6592) || (mtk_wcn_wmt_chipid_query() == 0x6752))) {
 		if (mt6627_I2S_hopping_check(freq)) {
 			/* set i2s TX desense mode */

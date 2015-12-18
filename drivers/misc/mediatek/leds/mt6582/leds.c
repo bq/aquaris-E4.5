@@ -1231,6 +1231,8 @@ int  mt_mt65xx_blink_set(struct led_classdev *led_cdev,
 	return 0;
 }
 
+//ckt liutao 20150430 for global level should be syncronized here [VEGETA-2867]
+extern struct mt65xx_led_data *g_leds_data[MT65XX_LED_TYPE_TOTAL];
 #ifdef RESPIRATION_LAMP
 int mt_led_blink_pmic_cust(struct nled_setting* led) {
 	int time_index = 0;
@@ -1257,7 +1259,30 @@ int mt_led_blink_pmic_cust(struct nled_setting* led) {
 	rgb[0] = (led->level & 0x00FF0000) >> 16;
 	rgb[1] = (led->level & 0x0000FF00) >> 8;
 	rgb[2] = led->level & 0x000000FF;
-	
+
+        //ckt liutao 20150430 for global level should be syncronized here [VEGETA-2867]
+        for(i=0;i<MT65XX_LED_TYPE_TOTAL;i++)
+        {
+            if (!g_leds_data[i])
+            {
+                continue;
+            }
+            if(strcmp(g_leds_data[i]->cust.name,"red") == 0)
+            {
+                g_leds_data[i]->level = (led->level & 0x00FF0000) >> 16;
+                printk("[liutao] red:%d\n",g_leds_data[i]->level);
+            }
+            else if(strcmp(g_leds_data[i]->cust.name,"green") == 0)
+            {
+                g_leds_data[i]->level = (led->level & 0x0000FF00) >> 8;
+                printk("[liutao] green:%d\n",g_leds_data[i]->level);
+            }
+            else if(strcmp(g_leds_data[i]->cust.name,"blue") == 0)
+            {
+                g_leds_data[i]->level = led->level & 0x000000FF;
+                printk("[liutao] blue:%d\n",g_leds_data[i]->level);
+            }
+        }
 	//upmu_set_rg_drv_2m_ck_pdn(0x0); // Disable power down (Indicator no need)
 	upmu_set_rg_drv_32k_ck_pdn(0x0); // Disable power down
 	// turn off all RGB led first

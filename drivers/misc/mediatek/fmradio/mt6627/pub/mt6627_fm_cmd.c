@@ -197,7 +197,6 @@ fm_s32 mt6627_pwrup_clock_on(fm_u8 *buf, fm_s32 buf_size)
 	pkt_size = 4;
 
 	/* 2,turn on top clock */
-	pkt_size += fm_bop_top_write(0xC0, 0x38200000, &buf[pkt_size], buf_size - pkt_size);	/* enable bgldo */
 	pkt_size += fm_bop_top_write(0xA10, 0xFFFFFFFF, &buf[pkt_size], buf_size - pkt_size);	/* wr a10 ffffffff */
 	/* 3,enable MTCMOS */
 	pkt_size += fm_bop_top_write(0x60, 0x00000030, &buf[pkt_size], buf_size - pkt_size);	/* wr 60 30 */

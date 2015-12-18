@@ -110,6 +110,7 @@ $(warning MT6627_FM)
 	FM_CHIP := mt6627
 	FM_CHIP_PATH := $(FM_CHIP)/pub/$(FM_CHIP)
 	ccflags-y += -DMT6627_FM
+	ccflags-y += -DMT6625_FM
 	ccflags-y += -I$(src)/inc \
 					-I$(src)/$(FM_CHIP)/inc \
 					-I$(src)/../connectivity/conn_soc/common/include \

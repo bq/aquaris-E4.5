@@ -373,7 +373,7 @@ ssize_t WIFI_write(struct file *filp, const char __user *buf, size_t count, loff
 
             if (MTK_WCN_BOOL_FALSE == mtk_wcn_wmt_func_off(WMTDRV_TYPE_WIFI)) {
                 WIFI_ERR_FUNC("WMT turn off WIFI fail!\n");
-                powered = 2;
+				powered = 0;
             }
             else {
                 WIFI_INFO_FUNC("WMT turn off WIFI OK!\n");
@@ -390,11 +390,6 @@ ssize_t WIFI_write(struct file *filp, const char __user *buf, size_t count, loff
             if (powered == 1) {
                 WIFI_INFO_FUNC("WIFI is already power on!\n");
                 retval = count;
-                goto done;
-            } else if (powered == 2) {
-            	/* workaround for wifi turn off fail. otherwise, 
-            	   will KE in register_netdevice with wrong dev->state */
-                WIFI_ERR_FUNC("WIFI turn off fail last time, can't turn on again!\n");
                 goto done;
             }
 
@@ -483,13 +478,6 @@ ssize_t WIFI_write(struct file *filp, const char __user *buf, size_t count, loff
             }
         }
         else if (local[0] == 'S' || local[0] == 'P' || local[0] == 'A') {
-            if (powered == 2) {
-                /* workaround for wifi turn off fail. otherwise, 
-                   will KE in register_netdevice with wrong dev->state */
-                WIFI_ERR_FUNC("WIFI turn off fail last time, can't turn on again!\n");
-                goto done;
-            }
-
             if (powered == 0) {
                 /* If WIFI is off, turn on WIFI first */
                 if (MTK_WCN_BOOL_FALSE == mtk_wcn_wmt_func_on(WMTDRV_TYPE_WIFI)) {

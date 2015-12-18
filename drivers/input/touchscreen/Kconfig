@@ -429,6 +429,10 @@ config TOUCHSCREEN_MTK_GT9XX
 	bool "GT9XX for Mediatek package"
 	depends on TOUCHSCREEN_MTK
 
+config TOUCHSCREEN_MTK_GT9147
+	bool "GT9147 for Mediatek package"
+	depends on TOUCHSCREEN_MTK
+
 config TOUCHSCREEN_MTK_GT9XX_HOTKNOT_SCP
 	bool "GT9XX with SCP for Mediatek package"
 	depends on TOUCHSCREEN_MTK
